@@ -11,8 +11,8 @@ const versionRoutes = require('./routes/versions.routes');
 
 const app = express();
 
-// Security middleware
-app.use(helmet());
+// Security middleware (temporarily disabled for debugging)
+// app.use(helmet());
 
 // Body parsing
 app.use(express.json());
@@ -24,6 +24,17 @@ const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 10, // 10 requests per windowMs
   message: 'Too many requests from this IP, please try again later.',
+});
+
+// Debug middleware
+app.use((req, res, next) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.path}`);
+  next();
+});
+
+// Simple root route for testing
+app.get('/', (req, res) => {
+  res.send('Timeline Studio Backend Running');
 });
 
 // API routes
