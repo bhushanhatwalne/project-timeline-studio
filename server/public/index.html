@@ -624,7 +624,8 @@ function renderAuthScreen(){
       });
 
       if(res && res.ok){
-        authUser = await res.json();
+        const data = await res.json();
+        authUser = data.user;
         await loadProjectList();
         currentProjectId = myProjects[0]?.id;
         if(!currentProjectId){
@@ -669,7 +670,8 @@ function renderAuthScreen(){
     });
 
     if(res && res.ok){
-      authUser = await res.json();
+      const data = await res.json();
+      authUser = data.user;
       await loadProjectList();
       if(myProjects.length > 0){
         await openProject(myProjects[0].id);
@@ -803,7 +805,7 @@ function render(){
         <button class="tab-btn ${activeTab==='data'?'active':''}" onclick="setTab('data')">☰ Data</button>
         <button class="tab-btn ${activeTab==='timeline'?'active':''}" onclick="setTab('timeline')">📈 Timeline</button>
         <button class="tab-btn ${activeTab==='versions'?'active':''}" onclick="setTab('versions')">🗂 Versions</button>
-        <button class="tab-btn ${activeTab==='account'?'active':''}" onclick="setTab('account')">⚙ Account</button>
+        <button class="tab-btn ${activeTab==='account'?'active':''}" onclick="setTab('account')" title="Account Settings">⚙</button>
       </div>
       <div class="toolbar" id="toolbar"></div>
     </div>
