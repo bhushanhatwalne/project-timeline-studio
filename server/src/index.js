@@ -61,11 +61,6 @@ app.use((req, res, next) => {
   next();
 });
 
-// Simple root route for testing
-app.get('/', (req, res) => {
-  res.send('Timeline Studio Backend Running');
-});
-
 console.log('[INIT] Mounting API routes...');
 // API routes
 app.use('/api/v1/auth', authLimiter, authRoutes);

@@ -1,13 +1,13 @@
 {
-  "permissions": [
-    "bash",
-    "read",
-    "glob",
-    "grep",
-    "edit",
-    "write",
-    "powershell"
-  ],
+  "permissions": {
+    "bash": true,
+    "read": true,
+    "glob": true,
+    "grep": true,
+    "edit": true,
+    "write": true,
+    "powershell": true
+  },
   "rules": [
     {
       "name": "Prevent Breaking HTML Structure",
