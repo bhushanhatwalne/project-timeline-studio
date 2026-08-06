@@ -9,6 +9,10 @@ const router = express.Router({ mergeParams: true });
 const CreateVersionSchema = z.object({
   name: z.string().min(1).max(255),
   group: z.string().max(255).optional(),
+  data: z.object({
+    swimlanes: z.array(z.any()).optional(),
+    projectTitle: z.string().optional(),
+  }).optional(),
 });
 
 const UpdateVersionSchema = z.object({
@@ -94,15 +98,24 @@ router.post('/', authMiddleware, ownershipMiddleware, async (req, res) => {
       });
     }
 
-    const { name, group } = parsed.data;
+    const { name, group, data } = parsed.data;
 
-    // Get current project state
-    const projectResult = await pool.query('SELECT title, swimlanes FROM projects WHERE id = $1', [req.projectId]);
-    const project = projectResult.rows[0];
+    let projectTitle, swimlanes;
+
+    // Use provided data (for imports) or current project state
+    if (data && (data.swimlanes || data.projectTitle)) {
+      projectTitle = data.projectTitle;
+      swimlanes = data.swimlanes || [];
+    } else {
+      const projectResult = await pool.query('SELECT title, swimlanes FROM projects WHERE id = $1', [req.projectId]);
+      const project = projectResult.rows[0];
+      projectTitle = project.title;
+      swimlanes = project.swimlanes;
+    }
 
     const result = await pool.query(
       'INSERT INTO versions (project_id, name, business_group, project_title, swimlanes) VALUES ($1, $2, $3, $4, $5) RETURNING id, name, business_group, saved_at',
-      [req.projectId, name, group || null, project.title, JSON.stringify(project.swimlanes)]
+      [req.projectId, name, group || null, projectTitle, JSON.stringify(swimlanes)]
     );
 
     const version = result.rows[0];
