@@ -61,4 +61,5 @@ app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Timeline Studio server running on port ${PORT}`);
   console.log(`Environment: ${config.nodeEnv}`);
   console.log(`Available at: http://127.0.0.1:${PORT} or http://localhost:${PORT}`);
+  console.log(`Public directory: ${path.join(__dirname, '../public')}`);
 });
