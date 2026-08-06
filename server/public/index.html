@@ -617,29 +617,45 @@ function renderAuthScreen(){
     const password = document.getElementById("authPassword").value;
     const displayName = document.getElementById("authName").value;
 
-    const res = await apiFetch('/api/v1/auth/register', {
-      method: 'POST',
-      body: JSON.stringify({ email, password, displayName: displayName || undefined })
-    });
+    try {
+      const res = await apiFetch('/api/v1/auth/register', {
+        method: 'POST',
+        body: JSON.stringify({ email, password, displayName: displayName || undefined })
+      });
 
-    if(res && res.ok){
-      authUser = await res.json();
-      await loadProjectList();
-      currentProjectId = myProjects[0]?.id;
-      if(!currentProjectId){
-        const createRes = await apiFetch('/api/v1/projects', {
-          method: 'POST',
-          body: JSON.stringify({ title: 'My First Project' })
-        });
-        if(createRes && createRes.ok){
-          const newProj = await createRes.json();
-          currentProjectId = newProj.id;
-          await loadProjectList();
+      if(res && res.ok){
+        authUser = await res.json();
+        await loadProjectList();
+        currentProjectId = myProjects[0]?.id;
+        if(!currentProjectId){
+          const createRes = await apiFetch('/api/v1/projects', {
+            method: 'POST',
+            body: JSON.stringify({ title: 'My First Project' })
+          });
+          if(createRes && createRes.ok){
+            const newProj = await createRes.json();
+            currentProjectId = newProj.id;
+            await loadProjectList();
+          } else {
+            console.error('Failed to create first project:', createRes?.status);
+            alert('Account created but could not create first project. Please try again.');
+            return;
+          }
         }
+        if(currentProjectId) {
+          await openProject(currentProjectId);
+        } else {
+          alert('Account created but could not load projects. Please refresh the page.');
+        }
+      } else if(res?.status === 409){
+        alert('Email already registered.');
+      } else {
+        const errData = res ? await res.json() : {};
+        alert('Registration failed: ' + (errData.detail || 'Unknown error'));
       }
-      await openProject(currentProjectId);
-    } else {
-      alert('Registration failed. Please check your email/password.');
+    } catch(err){
+      console.error('Registration error:', err);
+      alert('Registration error: ' + err.message);
     }
   };
 
