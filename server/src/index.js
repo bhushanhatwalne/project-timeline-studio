@@ -34,15 +34,19 @@ try {
   throw err;
 }
 
+console.log('[INIT] Creating Express app...');
 const app = express();
+console.log('[INIT] ✓ Express app created');
 
 // Security middleware (temporarily disabled for debugging)
 // app.use(helmet());
 
+console.log('[INIT] Configuring middleware...');
 // Body parsing
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
+console.log('[INIT] ✓ Middleware configured');
 
 // Rate limiting
 const authLimiter = rateLimit({
@@ -62,20 +66,27 @@ app.get('/', (req, res) => {
   res.send('Timeline Studio Backend Running');
 });
 
+console.log('[INIT] Mounting API routes...');
 // API routes
 app.use('/api/v1/auth', authLimiter, authRoutes);
 app.use('/api/v1/projects', projectRoutes);
 app.use('/api/v1/projects/:projectId/versions', versionRoutes);
+console.log('[INIT] ✓ API routes mounted');
 
 // Health check
+console.log('[INIT] Adding health check route...');
 app.get('/api/v1/health', (req, res) => {
   res.json({ status: 'ok' });
 });
+console.log('[INIT] ✓ Health check route added');
 
 // Serve static frontend
+console.log('[INIT] Configuring static file serving...');
 app.use(express.static(path.join(__dirname, '../public')));
+console.log('[INIT] ✓ Static file serving configured');
 
 // Catch-all: serve index.html for client-side routing
+console.log('[INIT] Adding catch-all route...');
 app.get('*', (req, res) => {
   const filePath = path.join(__dirname, '../public/index.html');
   console.log(`[${new Date().toISOString()}] Catch-all route: ${req.path} → ${filePath}`);
@@ -86,8 +97,10 @@ app.get('*', (req, res) => {
     }
   });
 });
+console.log('[INIT] ✓ Catch-all route added');
 
 // Error handling middleware
+console.log('[INIT] Adding error handling middleware...');
 app.use((err, req, res, next) => {
   console.error(`[${new Date().toISOString()}] Unhandled error:`, err.message || err);
   if (res.headersSent) return;
@@ -98,6 +111,7 @@ app.use((err, req, res, next) => {
     detail: 'An unexpected error occurred',
   });
 });
+console.log('[INIT] ✓ Error handling middleware added');
 
 // Start server
 const PORT = config.port;
