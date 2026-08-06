@@ -1,13 +1,38 @@
+console.log('[INIT] Starting Timeline Studio server...');
 const express = require('express');
 const cookieParser = require('cookie-parser');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const path = require('path');
-const config = require('./config');
+const fs = require('fs');
 
-const authRoutes = require('./routes/auth.routes');
-const projectRoutes = require('./routes/projects.routes');
-const versionRoutes = require('./routes/versions.routes');
+console.log('[INIT] Loading config...');
+const config = require('./config');
+console.log('[INIT] ✓ config loaded');
+
+console.log('[INIT] Loading routes...');
+let authRoutes, projectRoutes, versionRoutes;
+try {
+  authRoutes = require('./routes/auth.routes');
+  console.log('[INIT] ✓ auth.routes loaded');
+} catch (err) {
+  console.error('[INIT] ✗ Failed to load auth.routes:', err.message);
+  throw err;
+}
+try {
+  projectRoutes = require('./routes/projects.routes');
+  console.log('[INIT] ✓ projects.routes loaded');
+} catch (err) {
+  console.error('[INIT] ✗ Failed to load projects.routes:', err.message);
+  throw err;
+}
+try {
+  versionRoutes = require('./routes/versions.routes');
+  console.log('[INIT] ✓ versions.routes loaded');
+} catch (err) {
+  console.error('[INIT] ✗ Failed to load versions.routes:', err.message);
+  throw err;
+}
 
 const app = express();
 
@@ -77,7 +102,6 @@ app.use((err, req, res, next) => {
 // Start server
 const PORT = config.port;
 const publicDir = path.join(__dirname, '../public');
-const fs = require('fs');
 
 console.log(`[STARTUP] Public directory path: ${publicDir}`);
 console.log(`[STARTUP] Public directory exists: ${fs.existsSync(publicDir)}`);
