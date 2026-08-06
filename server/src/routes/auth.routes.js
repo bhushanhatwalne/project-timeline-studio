@@ -315,4 +315,124 @@ router.get('/me', authMiddleware, async (req, res) => {
   }
 });
 
+// PUT /api/v1/auth/change-password
+router.put('/change-password', authMiddleware, async (req, res) => {
+  try {
+    const schema = z.object({
+      currentPassword: z.string(),
+      newPassword: z.string().min(8).regex(/[A-Z]/).regex(/[0-9]/).regex(/[!@#$%^&*]/),
+    });
+
+    const parsed = schema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({
+        type: 'https://api.timeline.studio/errors#validation_error',
+        title: 'Validation Error',
+        status: 400,
+        detail: parsed.error.errors[0]?.message || 'Invalid input',
+      });
+    }
+
+    const { currentPassword, newPassword } = parsed.data;
+    const result = await pool.query('SELECT password_hash FROM users WHERE id = $1', [req.user.id]);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        type: 'https://api.timeline.studio/errors#not_found',
+        title: 'Not Found',
+        status: 404,
+        detail: 'User not found',
+      });
+    }
+
+    const passwordMatch = await comparePassword(currentPassword, result.rows[0].password_hash);
+    if (!passwordMatch) {
+      return res.status(401).json({
+        type: 'https://api.timeline.studio/errors#unauthorized',
+        title: 'Unauthorized',
+        status: 401,
+        detail: 'Current password is incorrect',
+      });
+    }
+
+    const newPasswordHash = await hashPassword(newPassword);
+    await pool.query('UPDATE users SET password_hash = $1 WHERE id = $2', [newPasswordHash, req.user.id]);
+
+    res.json({ success: true, message: 'Password changed successfully' });
+  } catch (err) {
+    console.error('Error in change-password:', err);
+    res.status(500).json({
+      type: 'https://api.timeline.studio/errors#internal_error',
+      title: 'Internal Server Error',
+      status: 500,
+      detail: 'An unexpected error occurred',
+    });
+  }
+});
+
+// PUT /api/v1/auth/change-email
+router.put('/change-email', authMiddleware, async (req, res) => {
+  try {
+    const schema = z.object({
+      newEmail: z.string().email(),
+      password: z.string(),
+    });
+
+    const parsed = schema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({
+        type: 'https://api.timeline.studio/errors#validation_error',
+        title: 'Validation Error',
+        status: 400,
+        detail: parsed.error.errors[0]?.message || 'Invalid input',
+      });
+    }
+
+    const { newEmail, password } = parsed.data;
+
+    // Check if new email already exists
+    const existing = await pool.query('SELECT id FROM users WHERE email = $1 AND id != $2', [newEmail, req.user.id]);
+    if (existing.rows.length > 0) {
+      return res.status(409).json({
+        type: 'https://api.timeline.studio/errors#conflict',
+        title: 'Conflict',
+        status: 409,
+        detail: 'Email already in use',
+      });
+    }
+
+    // Verify current password
+    const result = await pool.query('SELECT password_hash FROM users WHERE id = $1', [req.user.id]);
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        type: 'https://api.timeline.studio/errors#not_found',
+        title: 'Not Found',
+        status: 404,
+        detail: 'User not found',
+      });
+    }
+
+    const passwordMatch = await comparePassword(password, result.rows[0].password_hash);
+    if (!passwordMatch) {
+      return res.status(401).json({
+        type: 'https://api.timeline.studio/errors#unauthorized',
+        title: 'Unauthorized',
+        status: 401,
+        detail: 'Password is incorrect',
+      });
+    }
+
+    await pool.query('UPDATE users SET email = $1 WHERE id = $2', [newEmail, req.user.id]);
+    res.json({ success: true, message: 'Email changed successfully' });
+  } catch (err) {
+    console.error('Error in change-email:', err);
+    res.status(500).json({
+      type: 'https://api.timeline.studio/errors#internal_error',
+      title: 'Internal Server Error',
+      status: 500,
+      detail: 'An unexpected error occurred',
+    });
+  }
+});
+
 module.exports = router;

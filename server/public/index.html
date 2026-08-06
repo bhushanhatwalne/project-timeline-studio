@@ -218,7 +218,7 @@
 /* ---------------- state ---------------- */
 let uid = 100;
 let projectTitle = "Untitled Project";
-let activeTab = "data"; // data | timeline | versions
+let activeTab = "data"; // data | timeline | versions | account
 let openMenuKey = null; // "<slId>-<rowId>-<isPhase>" of currently open row menu
 let dragSrc = null; // {slId, rowId, isPhase} of the row currently being dragged
 let compactMode = false; // when true, halves the vertical spacing between timeline rows
@@ -803,6 +803,7 @@ function render(){
         <button class="tab-btn ${activeTab==='data'?'active':''}" onclick="setTab('data')">☰ Data</button>
         <button class="tab-btn ${activeTab==='timeline'?'active':''}" onclick="setTab('timeline')">📈 Timeline</button>
         <button class="tab-btn ${activeTab==='versions'?'active':''}" onclick="setTab('versions')">🗂 Versions</button>
+        <button class="tab-btn ${activeTab==='account'?'active':''}" onclick="setTab('account')">⚙ Account</button>
       </div>
       <div class="toolbar" id="toolbar"></div>
     </div>
@@ -812,7 +813,8 @@ function render(){
   renderToolbar();
   if(activeTab==="data") renderData();
   else if(activeTab==="timeline") renderTimeline();
-  else renderVersions();
+  else if(activeTab==="versions") renderVersions();
+  else if(activeTab==="account") renderAccountSettings();
 }
 function setTab(t){ activeTab=t; render(); }
 function toggleCompact(){ compactMode = !compactMode; render(); }
@@ -820,6 +822,10 @@ function renderToolbar(){
   const tb = document.getElementById("toolbar");
   if(activeTab==="versions"){
     tb.innerHTML = `<button class="btn primary" onclick="openSaveModal()">💾 Save current as version</button>`;
+    return;
+  }
+  if(activeTab==="account"){
+    tb.innerHTML = "";
     return;
   }
   tb.innerHTML = `<button class="btn" onclick="addBottomRow('task')">+ Task</button>
@@ -986,6 +992,146 @@ async function deleteVersion(id){
   versionMenuKey = null;
   if(res && res.status === 204) await loadVersions();
   render();
+}
+
+/* ---------------- account settings tab ---------------- */
+function renderAccountSettings(){
+  const view = document.getElementById("view");
+  view.innerHTML = `
+    <div style="max-width:600px; margin:30px auto; padding:0 20px;">
+      <h2 style="color:var(--header); margin-bottom:30px;">Account Settings</h2>
+
+      <div style="background:var(--surface); border-radius:8px; padding:20px; margin-bottom:20px; border:1px solid var(--line);">
+        <h3 style="margin-top:0; color:var(--ink);">Current Email</h3>
+        <div style="color:var(--ink-soft); margin-bottom:20px;">${escapeHtml(authUser.email)}</div>
+        <button class="btn primary" onclick="toggleChangeEmail()">Change Email</button>
+        <div id="changeEmailForm" style="display:none; margin-top:20px; border-top:1px solid var(--line); padding-top:20px;">
+          <div class="modal-field">
+            <label>New Email</label>
+            <input id="newEmailInput" type="email" placeholder="newemail@example.com" />
+          </div>
+          <div class="modal-field">
+            <label>Password (to confirm)</label>
+            <input id="emailChangePasswordInput" type="password" placeholder="••••••••" />
+          </div>
+          <div style="display:flex; gap:10px; margin-top:15px;">
+            <button class="btn primary" onclick="handleChangeEmail()">Update Email</button>
+            <button class="btn" onclick="toggleChangeEmail()">Cancel</button>
+          </div>
+          <div id="emailChangeMsg" style="margin-top:10px; color:var(--danger);"></div>
+        </div>
+      </div>
+
+      <div style="background:var(--surface); border-radius:8px; padding:20px; border:1px solid var(--line);">
+        <h3 style="margin-top:0; color:var(--ink);">Change Password</h3>
+        <button class="btn primary" onclick="toggleChangePassword()">Change Password</button>
+        <div id="changePasswordForm" style="display:none; margin-top:20px; border-top:1px solid var(--line); padding-top:20px;">
+          <div class="modal-field">
+            <label>Current Password</label>
+            <input id="currentPasswordInput" type="password" placeholder="••••••••" />
+          </div>
+          <div class="modal-field">
+            <label>New Password</label>
+            <input id="newPasswordInput" type="password" placeholder="••••••••" />
+            <small style="color:var(--ink-soft);">Min 8 chars, 1 uppercase, 1 number, 1 special char (!@#$%^&*)</small>
+          </div>
+          <div class="modal-field">
+            <label>Confirm New Password</label>
+            <input id="confirmPasswordInput" type="password" placeholder="••••••••" />
+          </div>
+          <div style="display:flex; gap:10px; margin-top:15px;">
+            <button class="btn primary" onclick="handleChangePassword()">Update Password</button>
+            <button class="btn" onclick="toggleChangePassword()">Cancel</button>
+          </div>
+          <div id="passwordChangeMsg" style="margin-top:10px; color:var(--danger);"></div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function toggleChangeEmail(){
+  const form = document.getElementById("changeEmailForm");
+  form.style.display = form.style.display === "none" ? "block" : "none";
+  document.getElementById("emailChangeMsg").textContent = "";
+}
+
+function toggleChangePassword(){
+  const form = document.getElementById("changePasswordForm");
+  form.style.display = form.style.display === "none" ? "block" : "none";
+  document.getElementById("passwordChangeMsg").textContent = "";
+}
+
+async function handleChangeEmail(){
+  const newEmail = document.getElementById("newEmailInput").value;
+  const password = document.getElementById("emailChangePasswordInput").value;
+  const msgDiv = document.getElementById("emailChangeMsg");
+
+  if(!newEmail || !password){
+    msgDiv.textContent = "Please fill in all fields";
+    return;
+  }
+
+  const res = await apiFetch('/api/v1/auth/change-email', {
+    method: 'PUT',
+    body: JSON.stringify({ newEmail, password })
+  });
+
+  if(res && res.ok){
+    msgDiv.style.color = "var(--st-complete)";
+    msgDiv.textContent = "Email changed successfully!";
+    await new Promise(r => setTimeout(r, 1500));
+    authUser.email = newEmail;
+    document.getElementById("newEmailInput").value = "";
+    document.getElementById("emailChangePasswordInput").value = "";
+    toggleChangeEmail();
+    render();
+  } else if(res?.status === 409){
+    msgDiv.textContent = "Email already in use";
+  } else if(res?.status === 401){
+    msgDiv.textContent = "Incorrect password";
+  } else {
+    const err = res ? await res.json() : {};
+    msgDiv.textContent = err.detail || "Failed to change email";
+  }
+}
+
+async function handleChangePassword(){
+  const currentPassword = document.getElementById("currentPasswordInput").value;
+  const newPassword = document.getElementById("newPasswordInput").value;
+  const confirmPassword = document.getElementById("confirmPasswordInput").value;
+  const msgDiv = document.getElementById("passwordChangeMsg");
+
+  if(!currentPassword || !newPassword || !confirmPassword){
+    msgDiv.textContent = "Please fill in all fields";
+    return;
+  }
+
+  if(newPassword !== confirmPassword){
+    msgDiv.textContent = "New passwords don't match";
+    return;
+  }
+
+  const res = await apiFetch('/api/v1/auth/change-password', {
+    method: 'PUT',
+    body: JSON.stringify({ currentPassword, newPassword })
+  });
+
+  if(res && res.ok){
+    msgDiv.style.color = "var(--st-complete)";
+    msgDiv.textContent = "Password changed successfully!";
+    await new Promise(r => setTimeout(r, 1500));
+    document.getElementById("currentPasswordInput").value = "";
+    document.getElementById("newPasswordInput").value = "";
+    document.getElementById("confirmPasswordInput").value = "";
+    toggleChangePassword();
+    render();
+  } else if(res?.status === 401){
+    msgDiv.textContent = "Incorrect current password";
+  } else {
+    const err = res ? await res.json() : {};
+    msgDiv.textContent = err.detail || "Failed to change password";
+  }
 }
 
 /* ---------------- save / edit modal ---------------- */
