@@ -38,6 +38,9 @@ console.log('[INIT] Creating Express app...');
 const app = express();
 console.log('[INIT] ✓ Express app created');
 
+// Trust proxy (required for Render and other reverse proxies)
+app.set('trust proxy', 1);
+
 // Security middleware (temporarily disabled for debugging)
 // app.use(helmet());
 
