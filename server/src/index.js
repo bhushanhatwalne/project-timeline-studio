@@ -113,25 +113,35 @@ app.use((err, req, res, next) => {
 });
 console.log('[INIT] ✓ Error handling middleware added');
 
-// Start server
-const PORT = config.port;
-const publicDir = path.join(__dirname, '../public');
+try {
+  console.log('[STARTUP] Starting server initialization...');
 
-console.log(`[STARTUP] Public directory path: ${publicDir}`);
-console.log(`[STARTUP] Public directory exists: ${fs.existsSync(publicDir)}`);
-if (fs.existsSync(publicDir)) {
-  const files = fs.readdirSync(publicDir);
-  console.log(`[STARTUP] Files in public dir:`, files);
-} else {
-  console.log(`[STARTUP] ⚠️ PUBLIC DIRECTORY DOES NOT EXIST`);
-  console.log(`[STARTUP] __dirname: ${__dirname}`);
+  // Start server
+  const PORT = config.port;
+  const publicDir = path.join(__dirname, '../public');
+
+  console.log(`[STARTUP] Public directory path: ${publicDir}`);
+  console.log(`[STARTUP] Public directory exists: ${fs.existsSync(publicDir)}`);
+  if (fs.existsSync(publicDir)) {
+    const files = fs.readdirSync(publicDir);
+    console.log(`[STARTUP] Files in public dir:`, files);
+  } else {
+    console.log(`[STARTUP] ⚠️ PUBLIC DIRECTORY DOES NOT EXIST`);
+    console.log(`[STARTUP] __dirname: ${__dirname}`);
+  }
+
+  const indexPath = path.join(publicDir, 'index.html');
+  console.log(`[STARTUP] index.html path: ${indexPath}`);
+  console.log(`[STARTUP] index.html exists: ${fs.existsSync(indexPath)}`);
+
+  console.log(`[STARTUP] Starting app.listen on port ${PORT}...`);
+  app.listen(PORT, '0.0.0.0', () => {
+    console.log(`🚀 Timeline Studio server running on port ${PORT}`);
+    console.log(`Environment: ${config.nodeEnv}`);
+  });
+  console.log('[STARTUP] ✓ app.listen() called successfully');
+} catch (err) {
+  console.error('[STARTUP] FATAL ERROR:', err.message);
+  console.error('[STARTUP] Stack:', err.stack);
+  process.exit(1);
 }
-
-const indexPath = path.join(publicDir, 'index.html');
-console.log(`[STARTUP] index.html path: ${indexPath}`);
-console.log(`[STARTUP] index.html exists: ${fs.existsSync(indexPath)}`);
-
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`🚀 Timeline Studio server running on port ${PORT}`);
-  console.log(`Environment: ${config.nodeEnv}`);
-});
