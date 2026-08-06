@@ -1005,9 +1005,24 @@ function renderAccountSettings(){
 
       <div style="background:var(--surface); border-radius:8px; padding:20px; margin-bottom:20px; border:1px solid var(--line);">
         <h3 style="margin-top:0; color:var(--ink);">Import Data from Original App</h3>
-        <p style="color:var(--ink-soft); margin-bottom:15px;">Import timeline data from the standalone HTML version. This will create a new project with all your tasks, milestones, and swimlanes.</p>
-        <button class="btn primary" onclick="checkForLocalStorageData()">Import from Browser</button>
-        <div id="importStatus" style="margin-top:10px; color:var(--danger);"></div>
+        <p style="color:var(--ink-soft); margin-bottom:15px;">Transfer your saved versions from the standalone HTML file to this app.</p>
+
+        <div style="border:1px solid var(--line); border-radius:6px; padding:15px; background:var(--paper); margin-bottom:15px;">
+          <strong style="color:var(--ink);">Step 1: Export your data</strong>
+          <ol style="color:var(--ink-soft); margin:10px 0;">
+            <li>Open the original file in a new tab: <code style="background:var(--surface); padding:2px 6px; border-radius:3px;">file:///C:/00-Bhushan/Projects/project-timeline-studio/project-timeline-studio.html</code></li>
+            <li>Open browser DevTools (F12), go to Console</li>
+            <li>Paste and run: <code style="background:var(--surface); padding:2px 6px; border-radius:3px; display:inline-block; margin:5px 0;">copy(localStorage.getItem('tlStudio.versions.v1'))</code></li>
+            <li>The data is now copied to clipboard</li>
+          </ol>
+        </div>
+
+        <div style="border:1px solid var(--line); border-radius:6px; padding:15px; background:var(--paper);">
+          <strong style="color:var(--ink);">Step 2: Paste here</strong>
+          <textarea id="importPasteArea" placeholder="Paste the data from Step 1 here..." style="width:100%; height:120px; padding:10px; border:1px solid var(--line); border-radius:4px; font-family:monospace; font-size:12px; margin:10px 0; box-sizing:border-box;"></textarea>
+          <button class="btn primary" onclick="handleManualImport()">Import Versions</button>
+          <div id="importStatus" style="margin-top:10px; color:var(--danger);"></div>
+        </div>
       </div>
 
       <div style="background:var(--surface); border-radius:8px; padding:20px; margin-bottom:20px; border:1px solid var(--line);">
@@ -1059,30 +1074,36 @@ function renderAccountSettings(){
   `;
 }
 
-function checkForLocalStorageData(){
+async function handleManualImport(){
   const statusDiv = document.getElementById("importStatus");
-  const versionKey = "tlStudio.versions.v1";
+  const pasteArea = document.getElementById("importPasteArea");
+  const pasted = pasteArea.value.trim();
 
-  // Try to find versions in localStorage
-  let versions = [];
-
-  // Check localStorage at current origin
-  try {
-    const versionsStr = localStorage.getItem(versionKey);
-    if(versionsStr){
-      versions = JSON.parse(versionsStr);
-    }
-  } catch(e){
-    console.error("Error reading localStorage:", e);
-  }
-
-  if(!versions || versions.length === 0){
-    statusDiv.textContent = "No saved versions found in browser localStorage. Open the original HTML file, create and save some versions, then try again.";
+  if(!pasted){
+    statusDiv.textContent = "Please paste the data first";
+    statusDiv.style.color = "var(--danger)";
     return;
   }
 
-  if(confirm(`Found ${versions.length} saved version(s) to import! This will create a new project with all your saved versions. Continue?`)){
-    importTimelineData(versions);
+  let versions;
+  try {
+    versions = JSON.parse(pasted);
+  } catch(e){
+    statusDiv.textContent = "Invalid data format. Make sure you copied the correct text.";
+    statusDiv.style.color = "var(--danger)";
+    console.error("Parse error:", e);
+    return;
+  }
+
+  if(!Array.isArray(versions) || versions.length === 0){
+    statusDiv.textContent = "No versions found in pasted data";
+    statusDiv.style.color = "var(--danger)";
+    return;
+  }
+
+  if(confirm(`Import ${versions.length} version(s)? This will create a new project with your timeline data.`)){
+    await importTimelineData(versions);
+    pasteArea.value = "";
   }
 }
 
