@@ -797,6 +797,7 @@ function render(){
           <button class="hist-btn" title="Undo (Ctrl+Z)" onclick="undo()" ${history.length===0?"disabled":""}>↶</button>
           <button class="hist-btn" title="Redo (Ctrl+Shift+Z)" onclick="redo()" ${future.length===0?"disabled":""}>↷</button>
         </div>
+        <button class="btn" style="background:transparent;color:#fff;border-color:rgba(255,255,255,.2);" onclick="setTab('account')" title="Account Settings">⚙</button>
         <button class="btn" style="background:transparent;color:#fff;border-color:rgba(255,255,255,.2);" onclick="logout()">Log Out</button>
       </div>
     </div>
@@ -805,7 +806,6 @@ function render(){
         <button class="tab-btn ${activeTab==='data'?'active':''}" onclick="setTab('data')">☰ Data</button>
         <button class="tab-btn ${activeTab==='timeline'?'active':''}" onclick="setTab('timeline')">📈 Timeline</button>
         <button class="tab-btn ${activeTab==='versions'?'active':''}" onclick="setTab('versions')">🗂 Versions</button>
-        <button class="tab-btn ${activeTab==='account'?'active':''}" onclick="setTab('account')" title="Account Settings">⚙</button>
       </div>
       <div class="toolbar" id="toolbar"></div>
     </div>
