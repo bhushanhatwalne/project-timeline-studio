@@ -41,12 +41,20 @@ app.use(express.static(path.join(__dirname, '../public')));
 
 // Catch-all: serve index.html for client-side routing
 app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, '../public/index.html'));
+  const filePath = path.join(__dirname, '../public/index.html');
+  console.log(`[${new Date().toISOString()}] Catch-all route: ${req.path} → ${filePath}`);
+  res.sendFile(filePath, (err) => {
+    if (err) {
+      console.error(`[${new Date().toISOString()}] sendFile error:`, err);
+      res.status(500).send('File not found');
+    }
+  });
 });
 
 // Error handling middleware
 app.use((err, req, res, next) => {
-  console.error('Unhandled error:', err);
+  console.error(`[${new Date().toISOString()}] Unhandled error:`, err.message || err);
+  if (res.headersSent) return;
   res.status(500).json({
     type: 'https://api.timeline.studio/errors#internal_error',
     title: 'Internal Server Error',
