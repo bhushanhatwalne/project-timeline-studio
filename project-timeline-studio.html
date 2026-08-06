@@ -1,0 +1,1343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Timeline Studio</title>
+<style>
+  :root{
+    --tl-gutter:150px;
+    --paper:#F3F6F9;
+    --surface:#FFFFFF;
+    --ink:#182430;
+    --ink-soft:#57697A;
+    --ink-faint:#9FB0BE;
+    --line:#E1E8EE;
+    --line-strong:#C9D4DD;
+    --header:#003057;
+    --header-soft:#0076BC;
+    --accent:#0076BC;
+    --accent-soft:#DCEEFB;
+    --phase:#77787B;
+    --phase-track:#E6E7E8;
+    --task:#0076BC;
+    --task-track:#D3E9F7;
+    --milestone:#003057;
+    --major:#0099D8;
+    --danger:#C0392B;
+    --danger-soft:#F7DAD5;
+    --st-notstarted:#77787B;
+    --st-notstarted-bar:#9AA3AC;
+    --st-notstarted-track:#E6E7E8;
+    --st-progress:#0076BC;
+    --st-progress-track:#D3E9F7;
+    --st-complete:#1B7A45;
+    --st-complete-track:#D7EBDD;
+    --st-risk:#C0392B;
+    --st-risk-track:#F7DAD5;
+    --st-behind:#D98324;
+    --st-behind-track:#F6E3CC;
+    --font-display: Georgia, 'Iowan Old Style', 'Times New Roman', serif;
+    --font-body: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    --font-mono: ui-monospace, 'SFMono-Regular', 'IBM Plex Mono', Menlo, Consolas, monospace;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:var(--paper);color:var(--ink);font-family:var(--font-body);}
+  .app{max-width:1500px;margin:0 auto;min-height:100vh;background:var(--paper);display:flex;flex-direction:column;}
+
+  /* header bar */
+  .topbar{background:var(--header);color:#fff;padding:16px 24px;display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap;}
+  .topbar-left{display:flex;align-items:baseline;gap:14px;min-width:0;flex:1 1 auto;}
+  .mark{width:9px;height:26px;background:var(--accent);flex:0 0 auto;border-radius:1px;}
+  .proj-title{font-family:var(--font-body);font-size:20px;font-weight:700;letter-spacing:.2px;background:transparent;border:none;color:#fff;outline:none;min-width:0;white-space:normal;word-break:break-word;border-bottom:1px solid transparent;padding:2px 0;cursor:text;}
+  .proj-title:hover, .proj-title:focus{border-bottom:1px solid rgba(255,255,255,.35);}
+
+  /* tab strip */
+  .tabstrip{display:flex;align-items:center;justify-content:space-between;padding:10px 24px;background:var(--surface);border-bottom:1px solid var(--line);gap:16px;flex-wrap:wrap;}
+  .tabs{display:flex;gap:4px;background:var(--paper);padding:3px;border-radius:8px;border:1px solid var(--line);}
+  .tab-btn{border:none;background:transparent;padding:7px 18px;font-size:13.5px;font-weight:600;color:var(--ink-soft);border-radius:6px;cursor:pointer;font-family:var(--font-body);letter-spacing:.02em;}
+  .tab-btn.active{background:var(--header);color:#fff;}
+  .toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+  .toolbar-sep{width:1px;height:22px;background:var(--line-strong);margin:0 2px;}
+  .compact-pill{border:1px solid rgba(255,255,255,.28);background:transparent;color:#fff;padding:5px 13px;border-radius:999px;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--font-body);display:inline-flex;align-items:center;gap:6px;}
+  .compact-pill:hover{border-color:rgba(255,255,255,.5);}
+  .compact-pill.active{background:var(--accent);border-color:var(--accent);color:var(--header);}
+  .btn{border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);padding:7px 14px;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font-body);display:inline-flex;align-items:center;gap:6px;}
+  .btn:hover{border-color:var(--accent);color:var(--accent);}
+  .btn.primary{background:var(--header);color:#fff;border-color:var(--header);}
+  .btn.primary:hover{background:var(--header-soft);color:#fff;}
+
+  /* ===== DATA VIEW ===== */
+  .view{flex:1;overflow:auto;}
+  .data-wrap{padding:0 24px 40px;}
+  table.data{width:100%;border-collapse:collapse;font-size:13px;}
+  table.data thead th{text-align:left;font-size:10.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-soft);font-weight:700;padding:12px 10px;border-bottom:2px solid var(--line-strong);position:sticky;top:0;background:var(--paper);white-space:nowrap;}
+  table.data td{padding:7px 10px;border-bottom:1px solid var(--line);vertical-align:middle;}
+  tr.hidden-row{opacity:.45;}
+  tr.hidden-row input, tr.hidden-row select{font-style:italic;}
+  .title-in{border:none;background:transparent;font-size:13.5px;width:100%;color:var(--ink);font-family:var(--font-body);padding:4px 2px;border-radius:4px;}
+  .title-in:focus{background:var(--accent-soft);outline:none;}
+  .type-pick{display:flex;align-items:center;gap:6px;}
+  .type-icon{width:13px;height:13px;flex:0 0 auto;display:inline-block;}
+  select.type-sel{border:1px solid var(--line);background:var(--surface);font-size:12px;border-radius:4px;padding:3px 4px;font-family:var(--font-body);color:var(--ink);}
+  .dur{font-family:var(--font-mono);font-size:12px;color:var(--ink-soft);white-space:nowrap;}
+  input.date-in{border:1px solid var(--line);background:var(--surface);font-size:12px;border-radius:4px;padding:4px 6px;font-family:var(--font-mono);color:var(--ink);width:128px;}
+  input.pct-in{border:1px solid var(--line);background:var(--surface);font-size:12px;border-radius:4px;padding:4px 6px;font-family:var(--font-mono);width:52px;color:var(--ink);}
+  input.assign-in{border:1px solid var(--line);background:var(--surface);font-size:12px;border-radius:4px;padding:4px 6px;font-family:var(--font-body);width:110px;color:var(--ink);}
+  select.status-sel{border:none;font-size:11.5px;font-weight:700;border-radius:20px;padding:4px 10px;font-family:var(--font-body);color:#fff;cursor:pointer;}
+  .eye-btn,.icon-btn{border:none;background:transparent;cursor:pointer;color:var(--ink-faint);font-size:14px;padding:4px;border-radius:4px;}
+  .eye-btn:hover,.icon-btn:hover{color:var(--ink);background:var(--paper);}
+  .icon-btn.del:hover{color:var(--danger);}
+  .drag-cell{width:22px; padding:7px 0 7px 8px !important; cursor:grab;}
+  .drag-handle{display:inline-flex; align-items:center; justify-content:center; width:16px; height:22px; border-radius:4px; color:var(--ink-faint);}
+  .drag-handle:hover{color:var(--ink-soft); background:var(--paper);}
+  .drag-handle svg{display:block;}
+  tr.dragging{opacity:.4;}
+  tr.drop-above{box-shadow: inset 0 2px 0 0 var(--danger);}
+  tr.drop-below{box-shadow: inset 0 -2px 0 0 var(--danger);}
+  .drag-ghost{position:fixed; top:-1000px; left:-1000px; background:var(--surface); border:1px solid var(--line-strong); border-radius:6px; box-shadow:0 4px 10px rgba(20,20,30,.18); padding:6px 14px; font-size:12.5px; font-weight:600; color:var(--ink); font-family:var(--font-body); pointer-events:none;}
+  .add-row-line{padding:12px 10px 6px 34px;}
+  .add-link{background:none;border:none;color:var(--accent);font-weight:700;font-size:12.5px;cursor:pointer;font-family:var(--font-body);padding:4px 0;}
+  .add-link:hover{text-decoration:underline;}
+  .note-lbl{display:block;font-size:11px;color:var(--ink-faint);font-style:italic;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:260px;}
+  .note-lbl::before{content:"📝 ";}
+
+  /* row menu */
+  .menu-cell{position:relative;}
+  .menu-trigger{border:none;background:transparent;cursor:pointer;color:var(--ink-faint);font-size:16px;padding:4px 6px;border-radius:4px;letter-spacing:-1px;}
+  .menu-trigger:hover{color:var(--ink);background:var(--paper);}
+  .row-menu{position:absolute;top:calc(100% + 2px);right:0;background:var(--surface);border:1px solid var(--line-strong);border-radius:8px;box-shadow:0 8px 24px rgba(20,20,30,.14);z-index:50;min-width:190px;padding:6px;}
+  .row-menu button{display:flex;align-items:center;gap:9px;width:100%;text-align:left;border:none;background:transparent;padding:8px 10px;font-size:12.5px;color:var(--ink);border-radius:5px;cursor:pointer;font-family:var(--font-body);}
+  .row-menu button:hover{background:var(--accent-soft);}
+  .row-menu button.danger:hover{background:var(--danger-soft);color:var(--danger);}
+  .row-menu hr{border:none;border-top:1px solid var(--line);margin:5px 2px;}
+
+  /* undo/redo */
+  .hist-controls{display:flex;gap:4px;margin-right:4px;}
+  .hist-btn{border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.06);color:#fff;width:30px;height:30px;border-radius:6px;cursor:pointer;font-size:14px;display:inline-flex;align-items:center;justify-content:center;}
+  .hist-btn:hover:not(:disabled){background:rgba(255,255,255,.16);}
+  .hist-btn:disabled{opacity:.3;cursor:default;}
+
+  /* ===== TIMELINE VIEW ===== */
+  .tl-wrap{padding:24px;}
+  .tl-card{background:var(--surface);border-radius:10px;border:1px solid var(--line);padding:36px 40px 44px;position:relative;}
+  .tl-title{font-family:var(--font-body);font-size:26px;font-weight:700;margin:0 0 34px;color:var(--ink);text-align:center;}
+  .tl-today-label{position:absolute;top:-28px;text-align:center;transform:translateX(-50%);z-index:2;}
+  .tl-today-label .lbl{font-size:11.5px;font-weight:700;color:var(--danger);white-space:nowrap;font-family:var(--font-body);}
+  .tl-today-label .today-arrow{font-size:13px;color:var(--danger);line-height:1;}
+  .tl-scale{position:relative;}
+  .tl-years{background:var(--header-soft);border-radius:5px 5px 0 0;overflow:hidden;height:22px;position:relative;border-bottom:1px solid rgba(255,255,255,.16);}
+  .tl-year-cell{position:absolute;top:0;bottom:0;display:flex;align-items:center;justify-content:center;color:#D7DBE4;font-size:11px;font-weight:700;font-family:var(--font-body);letter-spacing:.07em;border-right:1px solid rgba(255,255,255,.16);white-space:nowrap;overflow:hidden;}
+  .tl-months{background:var(--header);border-radius:0 0 5px 5px;overflow:hidden;height:36px;position:relative;}
+  .tl-month-cell{position:absolute;top:0;bottom:0;display:flex;align-items:center;justify-content:center;color:#EDEEF2;font-size:11.5px;font-weight:700;font-family:var(--font-body);letter-spacing:.03em;border-right:1px solid rgba(255,255,255,.16);white-space:nowrap;overflow:hidden;}
+  .tl-year-lbl{position:absolute;top:8px;font-family:var(--font-body);font-size:15px;font-weight:700;color:var(--accent);}
+  .tl-body-wrap{position:relative;}
+  .tl-vlines{position:absolute;top:0;bottom:0;right:var(--tl-gutter);pointer-events:none;z-index:0;}
+  .tl-vline{position:absolute;top:0;bottom:0;width:14px;transform:translateX(-50%);background:rgba(20,25,35,.05);}
+  .tl-vline.today{top:38px;width:2px;background:var(--danger);opacity:.55;}
+  .tl-scale-row{display:flex;align-items:flex-start;}
+  .tl-scale{flex:1;position:relative;min-width:0;margin-right:var(--tl-gutter);}
+  .tl-milestone-lane{position:relative;}
+  .tl-milestone-mark{position:absolute;top:0;text-align:center;transform:translateX(-50%);}
+  .tl-milestone-mark.today-mark{color:var(--danger);}
+  .tl-milestone-mark .lbl{font-size:11px;font-weight:700;color:var(--ink);white-space:nowrap;font-family:var(--font-body);margin-top:1px;line-height:1.2;}
+  .tl-milestone-mark .dt{font-size:10px;color:var(--ink-soft);font-family:var(--font-body);white-space:nowrap;line-height:1.2;}
+  .tl-milestone-mark svg{display:block;margin:0 auto;}
+  .tl-milestone-mark .today-arrow{font-size:13px;color:var(--danger);line-height:1;}
+  .tl-rows{margin-top:2px;position:relative;z-index:1;}
+  .tl-card.compact .tl-rows{margin-top:0;}
+  .tl-row{display:flex;align-items:center;height:40px;position:relative;}
+  .tl-card.compact .tl-row{height:20px;}
+  .tl-card.compact .tl-row-label{font-size:11.5px;}
+  .tl-card.compact .tl-row-label.phase-lbl{font-size:13px;}
+  .tl-card.compact .tl-bar-caption{font-size:10px;}
+  .tl-row-label{flex:0 0 auto;font-size:13px;font-weight:600;color:var(--ink);font-family:var(--font-body);display:flex;align-items:center;overflow:hidden;}
+  .tl-row-label.phase-lbl{font-family:var(--font-body);font-size:15px;font-weight:700;color:var(--ink);}
+  .tl-row-label .lbl-text{white-space:nowrap;flex:0 0 auto;padding-right:8px;}
+  .tl-row-label .lbl-fill{flex:1 1 auto;min-width:6px;height:0;border-top:1px dashed var(--line-strong);margin-right:6px;align-self:center;}
+  .tl-row-track{flex:1;position:relative;height:100%;margin-right:var(--tl-gutter);}
+  .tl-row-connector{position:absolute;left:0;top:50%;height:0;border-top:1px dashed var(--line-strong);}
+  .tl-bar-wrap{position:absolute;top:50%;transform:translateY(-50%);height:22px;}
+  .tl-card.compact .tl-bar-wrap{height:13px;}
+  .tl-bar-wrap.phase{height:32px;}
+  .tl-bar-track{position:absolute;inset:0;border-radius:5px;}
+  .tl-bar-fill{position:absolute;top:0;bottom:0;left:0;border-radius:5px;}
+  .tl-bar-caption{position:absolute;top:50%;transform:translateY(-50%);font-size:10.5px;color:var(--ink-soft);font-family:var(--font-body);white-space:nowrap;}
+  .tl-bar-caption.left{right:calc(100% + 10px);text-align:right;font-style:italic;}
+  .tl-bar-caption.right{left:calc(100% + 10px);}
+  .tl-bar-label-inside{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-family:var(--font-body);font-size:14px;white-space:nowrap;}
+  .legend{display:flex;gap:22px;margin-top:34px;padding-top:18px;border-top:1px solid var(--line);flex-wrap:wrap;align-items:center;}
+  .legend-divider{width:1px;height:14px;background:var(--line-strong);}
+  .legend-item{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--ink-soft);font-family:var(--font-body);}
+  .empty-note{color:var(--ink-faint);font-size:13px;font-style:italic;padding:20px 0;}
+
+  /* ===== VERSIONS TAB ===== */
+  .ver-wrap{padding:8px 24px 48px;}
+  .ver-group{margin-top:26px;}
+  .ver-group:first-child{margin-top:6px;}
+  .ver-group-head{display:flex;align-items:center;gap:10px;cursor:pointer;user-select:none;padding:6px 2px;}
+  .ver-group-dot{width:10px;height:10px;border-radius:3px;flex:0 0 auto;}
+  .ver-group-name{font-family:var(--font-body);font-size:14px;font-weight:700;color:var(--ink);letter-spacing:.01em;}
+  .ver-group-count{font-size:12.5px;color:var(--ink-faint);font-weight:600;}
+  .ver-group-line{flex:1;height:1px;background:var(--line);}
+  .ver-group-caret{color:var(--ink-faint);font-size:11px;transition:transform .12s;}
+  .ver-group-caret.collapsed{transform:rotate(-90deg);}
+  .ver-grid{display:grid;grid-template-columns:repeat(auto-fill, minmax(230px, 1fr));gap:16px;margin-top:14px;}
+  .ver-card{background:var(--surface);border:1px solid var(--line);border-radius:10px;overflow:hidden;position:relative;transition:box-shadow .12s, border-color .12s;}
+  .ver-card:hover{border-color:var(--line-strong);box-shadow:0 6px 18px rgba(20,20,30,.08);}
+  .ver-card-strip{height:8px;}
+  .ver-card-body{padding:14px 14px 12px;}
+  .ver-card-title{font-family:var(--font-body);font-size:13.5px;font-weight:700;color:var(--ink);line-height:1.35;margin:0 0 6px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+  .ver-card-meta{font-size:11.5px;color:var(--ink-faint);font-family:var(--font-mono);}
+  .ver-card-stats{display:flex;gap:10px;margin-top:10px;padding-top:10px;border-top:1px solid var(--line);font-size:11px;color:var(--ink-soft);}
+  .ver-stat{display:flex;align-items:center;gap:4px;}
+  .ver-card-menu-cell{position:absolute;top:8px;right:8px;}
+  .ver-empty{color:var(--ink-faint);font-size:13px;font-style:italic;padding:30px 4px;text-align:center;border:1px dashed var(--line-strong);border-radius:10px;margin-top:14px;}
+  .ver-current-banner{display:flex;align-items:center;justify-content:space-between;gap:14px;background:var(--accent-soft);border:1px solid var(--line);border-radius:10px;padding:14px 18px;margin-top:4px;}
+  .ver-current-banner .lbl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--accent);}
+  .ver-current-banner .name{font-size:14.5px;font-weight:700;color:var(--ink);margin-top:2px;}
+
+  /* modal */
+  .modal-overlay{position:fixed;inset:0;background:rgba(15,20,28,.42);display:flex;align-items:center;justify-content:center;z-index:200;}
+  .modal-card{background:var(--surface);border-radius:12px;box-shadow:0 20px 50px rgba(15,20,28,.28);width:420px;max-width:92vw;padding:22px 24px 20px;}
+  .modal-title{font-family:var(--font-body);font-size:16px;font-weight:700;color:var(--ink);margin:0 0 4px;}
+  .modal-sub{font-size:12.5px;color:var(--ink-soft);margin:0 0 18px;}
+  .modal-field{margin-bottom:14px;}
+  .modal-field label{display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-soft);margin-bottom:6px;}
+  .modal-field input{width:100%;border:1px solid var(--line-strong);background:var(--paper);font-size:13.5px;border-radius:6px;padding:9px 11px;font-family:var(--font-body);color:var(--ink);}
+  .modal-field input:focus{outline:none;border-color:var(--accent);background:var(--surface);}
+  .modal-hint{font-size:11px;color:var(--ink-faint);margin-top:5px;}
+  .modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:20px;}
+</style>
+</head>
+<body>
+<div class="app" id="app"></div>
+<div class="drag-ghost" id="dragGhost">Drag</div>
+
+<script src="https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js"></script>
+<script>
+/* ---------------- state ---------------- */
+let uid = 100;
+let projectTitle = "Credit Services Phase 1 (CRT) Timelines";
+let activeTab = "data"; // data | timeline
+let openMenuKey = null; // "<slId>-<rowId>-<isPhase>" of currently open row menu
+let dragSrc = null; // {slId, rowId, isPhase} of the row currently being dragged
+let compactMode = false; // when true, halves the vertical spacing between timeline rows
+
+/* ---------------- saved versions (by business group) ---------------- */
+const VER_STORAGE_KEY = "tlStudio.versions.v1";
+let versions = loadVersions();
+let collapsedGroups = new Set();
+let versionMenuKey = null; // id of version whose card menu is open
+let modalMode = null; // null | "save" | "edit"
+let modalEditId = null; // version id being edited, when modalMode === "edit"
+let modalName = "";
+let modalGroup = "";
+
+function loadVersions(){
+  try{
+    const raw = localStorage.getItem(VER_STORAGE_KEY);
+    return raw ? JSON.parse(raw) : [];
+  }catch(e){ return []; }
+}
+function persistVersions(){
+  try{ localStorage.setItem(VER_STORAGE_KEY, JSON.stringify(versions)); }catch(e){ /* storage unavailable */ }
+}
+
+/* ---------------- undo / redo history ---------------- */
+let history = [];
+let future = [];
+function snapshot(){ return JSON.stringify({ swimlanes, projectTitle }); }
+function pushHistory(){
+  history.push(snapshot());
+  if(history.length > 60) history.shift();
+  future = [];
+}
+function restoreSnapshot(json){
+  const obj = JSON.parse(json);
+  swimlanes = obj.swimlanes;
+  projectTitle = obj.projectTitle;
+}
+function undo(){
+  if(history.length === 0) return;
+  future.push(snapshot());
+  restoreSnapshot(history.pop());
+  saveFlash(); render();
+}
+function redo(){
+  if(future.length === 0) return;
+  history.push(snapshot());
+  restoreSnapshot(future.pop());
+  saveFlash(); render();
+}
+document.addEventListener("keydown", (e)=>{
+  const mod = e.ctrlKey || e.metaKey;
+  if(!mod) return;
+  if(e.key.toLowerCase()==="z" && !e.shiftKey){ e.preventDefault(); undo(); }
+  else if((e.key.toLowerCase()==="z" && e.shiftKey) || e.key.toLowerCase()==="y"){ e.preventDefault(); redo(); }
+});
+document.addEventListener("click", (e)=>{
+  if(!openMenuKey) return;
+  if(e.target.closest(".menu-trigger") || e.target.closest(".row-menu")) return;
+  openMenuKey = null;
+  render();
+});
+document.addEventListener("click", (e)=>{
+  if(!versionMenuKey) return;
+  if(e.target.closest(".ver-menu-trigger") || e.target.closest(".row-menu")) return;
+  versionMenuKey = null;
+  render();
+});
+
+let swimlanes = [
+  {
+    id: 1, name: "Credit Services Phase 1",
+    phase: null,
+    children: [
+      { id: 2, title:"Discovery", type:"task", start:"2025-09-01", end:"2026-01-04", percent:100, assignedTo:"Business, Commission Systems", status:"complete", visible:true },
+      { id: 3, title:"Requirements Gathering", type:"task", start:"2026-01-05", end:"2026-03-29", percent:100, assignedTo:"Business, Commission Systems", status:"complete", visible:true },
+      { id: 6, title:"Requirements Documentation", type:"task", start:"2026-04-01", end:"2026-05-26", percent:100, assignedTo:"Commission Systems", status:"complete", visible:true },
+      { id: 7, title:"IT Analysis and Design", type:"task", start:"2026-07-06", end:"2026-07-17", percent:100, assignedTo:"IT", status:"complete", visible:true },
+      { id: 8, title:"Requirement Freeze", type:"milestone", start:"2026-07-20", end:"2026-07-20", percent:100, assignedTo:"All", status:"complete", visible:true },
+      { id: 9, title:"IT Build & Unit Test", type:"task", start:"2026-07-20", end:"2026-09-18", percent:25, assignedTo:"IT", status:"in-progress", visible:true },
+      { id: 10, title:"SIT", type:"task", start:"2026-09-14", end:"2026-10-02", percent:0, assignedTo:"IT", status:"not-started", visible:true },
+      { id: 11, title:"UAT", type:"task", start:"2026-10-05", end:"2026-10-16", percent:0, assignedTo:"Business, Commission Systems", status:"not-started", visible:true },
+      { id: 12, title:"Go/No Go", type:"milestone", start:"2026-10-16", end:"2026-10-16", percent:0, assignedTo:"Business", status:"not-started", visible:true },
+      { id: 13, title:"Production Migration Prep", type:"task", start:"2026-10-19", end:"2026-10-23", percent:0, assignedTo:"IT", status:"not-started", visible:true },
+      { id: 15, title:"Production Migration", type:"milestone", start:"2026-10-26", end:"2026-10-26", percent:0, assignedTo:"IT", status:"not-started", visible:true },
+      { id: 16, title:"Production Validation (IT)", type:"task", start:"2026-11-02", end:"2026-11-03", percent:0, assignedTo:"IT", status:"not-started", visible:true },
+      { id: 17, title:"Production Validation (Business)", type:"task", start:"2026-11-04", end:"2026-11-05", percent:0, assignedTo:"Business, Commission Systems", status:"not-started", visible:true },
+      { id: 14, title:"Go Live", type:"major", start:"2026-11-06", end:"2026-11-06", percent:0, assignedTo:"", status:"not-started", visible:true }
+    ]
+  }
+];
+
+/* ---------------- helpers ---------------- */
+function parseD(s){ return new Date(s + "T00:00:00"); }
+function fmtD(d){
+  return (d.getMonth()+1) + "/" + String(d.getDate()).padStart(2,"0") + "/" + d.getFullYear();
+}
+function fmtShort(d){
+  const months=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  return months[d.getMonth()] + " " + d.getDate();
+}
+function durationLabel(startS, endS){
+  const s = parseD(startS), e = parseD(endS);
+  const rawDays = Math.round((e - s) / 86400000);
+  if(rawDays <= 0) return "0 days";
+  const days = rawDays + 1; // inclusive of both the start and end date
+  if(days < 7) return days + (days===1 ? " day" : " days");
+  const weeks = Math.round(days/7);
+  return weeks + (weeks===1 ? " week" : " weeks");
+}
+function todayISO(){
+  const d = new Date();
+  return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+}
+function saveFlash(){
+  const dot = document.querySelector(".save-dot");
+  const lbl = document.querySelector(".save-lbl");
+  if(!dot) return;
+  lbl.textContent = "Saving…";
+  dot.style.opacity = .3;
+  setTimeout(()=>{ lbl.textContent = "Saved"; dot.style.opacity = 1; }, 450);
+}
+
+function allRows(){
+  // returns flat list with swimlane context: {row, isPhase, swimlaneId}
+  const out = [];
+  swimlanes.forEach(sl=>{
+    if(sl.phase) out.push({row: sl.phase, isPhase:true, swimlaneId: sl.id});
+    sl.children.forEach(c=> out.push({row:c, isPhase:false, swimlaneId: sl.id}));
+  });
+  return out;
+}
+
+const STATUS_META = {
+  "not-started": {label:"Not Started", color:"var(--st-notstarted)", bar:"var(--st-notstarted-bar)", track:"var(--st-notstarted-track)"},
+  "in-progress": {label:"In Progress", color:"var(--st-progress)", bar:"var(--st-progress)", track:"var(--st-progress-track)"},
+  "complete": {label:"Complete", color:"var(--st-complete)", bar:"var(--st-complete)", track:"var(--st-complete-track)"},
+  "behind-schedule": {label:"Behind Schedule", color:"var(--st-behind)", bar:"var(--st-behind)", track:"var(--st-behind-track)"},
+  "at-risk": {label:"At Risk", color:"var(--st-risk)", bar:"var(--st-risk)", track:"var(--st-risk-track)"}
+};
+
+/* ---------------- mutations ---------------- */
+function blankChild(type, baseStart){
+  return {
+    id: ++uid,
+    title: type==="milestone" ? "New Milestone" : type==="major" ? "New Major Milestone" : "New Task",
+    type: type,
+    start: baseStart, end: baseStart,
+    percent:0, assignedTo:"", status:"not-started", visible:true, note:""
+  };
+}
+function addSwimlane(){
+  pushHistory();
+  const id = ++uid;
+  const start = todayISO();
+  const e = new Date(); e.setDate(e.getDate()+28);
+  const end = e.getFullYear()+"-"+String(e.getMonth()+1).padStart(2,"0")+"-"+String(e.getDate()).padStart(2,"0");
+  swimlanes.push({
+    id, name:"New Phase",
+    phase:{ id: ++uid, title:"New Phase", type:"phase", start, end, percent:0, assignedTo:"", status:"not-started", visible:true, note:"" },
+    children:[]
+  });
+  saveFlash(); render();
+}
+function swimlaneBaseStart(sl){
+  if(sl.phase) return sl.phase.start;
+  if(sl.children && sl.children.length) return sl.children[0].start;
+  return todayISO();
+}
+function addChild(swimlaneId, type){
+  pushHistory();
+  const sl = swimlanes.find(s=>s.id===swimlaneId);
+  if(!sl) return;
+  sl.children.push(blankChild(type, swimlaneBaseStart(sl)));
+  saveFlash(); render();
+}
+function addBottomRow(type){
+  pushHistory();
+  type = type || "task";
+  if(swimlanes.length===0){
+    const id = ++uid;
+    const start = todayISO();
+    const e = new Date(); e.setDate(e.getDate()+28);
+    const end = e.getFullYear()+"-"+String(e.getMonth()+1).padStart(2,"0")+"-"+String(e.getDate()).padStart(2,"0");
+    swimlanes.push({
+      id, name:"New Phase",
+      phase:{ id: ++uid, title:"New Phase", type:"phase", start, end, percent:0, assignedTo:"", status:"not-started", visible:true, note:"" },
+      children:[]
+    });
+  } else {
+    const sl = swimlanes[swimlanes.length-1];
+    sl.children.push(blankChild(type, swimlaneBaseStart(sl)));
+  }
+  saveFlash(); render();
+}
+function deleteRow(swimlaneId, rowId, isPhase){
+  pushHistory();
+  openMenuKey = null;
+  if(isPhase){
+    swimlanes = swimlanes.filter(s=>s.id!==swimlaneId);
+  } else {
+    const sl = swimlanes.find(s=>s.id===swimlaneId);
+    if(sl) sl.children = sl.children.filter(c=>c.id!==rowId);
+  }
+  saveFlash(); render();
+}
+function toggleVisible(row){
+  pushHistory();
+  row.visible = !row.visible;
+  saveFlash(); render();
+}
+function onFieldChange(slId, rowId, isPhase, field, val){
+  const row = findRow(slId, rowId, isPhase);
+  if(row){ pushHistory(); row[field] = val; saveFlash(); render(); }
+}
+
+/* ---------------- row menu ---------------- */
+function menuKey(slId, rowId, isPhase){ return slId+"-"+rowId+"-"+isPhase; }
+function toggleMenu(slId, rowId, isPhase){
+  const key = menuKey(slId, rowId, isPhase);
+  openMenuKey = (openMenuKey===key) ? null : key;
+  render();
+}
+function addRowRelative(slId, rowId, isPhase, where){
+  pushHistory();
+  openMenuKey = null;
+  if(isPhase){
+    // insert a new swimlane above/below this one
+    const idx = swimlanes.findIndex(s=>s.id===slId);
+    const start = todayISO();
+    const e = new Date(); e.setDate(e.getDate()+28);
+    const end = e.getFullYear()+"-"+String(e.getMonth()+1).padStart(2,"0")+"-"+String(e.getDate()).padStart(2,"0");
+    const newSl = { id: ++uid, name:"New Phase",
+      phase:{ id: ++uid, title:"New Phase", type:"phase", start, end, percent:0, assignedTo:"", status:"not-started", visible:true, note:"" },
+      children:[] };
+    swimlanes.splice(where==="above" ? idx : idx+1, 0, newSl);
+  } else {
+    const sl = swimlanes.find(s=>s.id===slId);
+    if(!sl) return;
+    const idx = sl.children.findIndex(c=>c.id===rowId);
+    const ref = sl.children[idx];
+    const newChild = blankChild(ref ? ref.type : "task", ref ? ref.start : swimlaneBaseStart(sl));
+    sl.children.splice(where==="above" ? idx : idx+1, 0, newChild);
+  }
+  saveFlash(); render();
+}
+function duplicateRow(slId, rowId, isPhase){
+  pushHistory();
+  openMenuKey = null;
+  if(isPhase){
+    const idx = swimlanes.findIndex(s=>s.id===slId);
+    const original = swimlanes[idx];
+    const clone = JSON.parse(JSON.stringify(original));
+    clone.id = ++uid;
+    clone.phase.id = ++uid;
+    clone.phase.title = clone.phase.title + " (copy)";
+    clone.children.forEach(c=> c.id = ++uid);
+    swimlanes.splice(idx+1, 0, clone);
+  } else {
+    const sl = swimlanes.find(s=>s.id===slId);
+    if(!sl) return;
+    const idx = sl.children.findIndex(c=>c.id===rowId);
+    const clone = JSON.parse(JSON.stringify(sl.children[idx]));
+    clone.id = ++uid;
+    clone.title = clone.title + " (copy)";
+    sl.children.splice(idx+1, 0, clone);
+  }
+  saveFlash(); render();
+}
+function addNote(slId, rowId, isPhase){
+  const row = findRow(slId, rowId, isPhase);
+  if(!row) return;
+  const val = window.prompt("Note for \"" + row.title + "\":", row.note || "");
+  openMenuKey = null;
+  if(val !== null){
+    pushHistory();
+    row.note = val;
+    saveFlash();
+  }
+  render();
+}
+function hideFromTimeline(slId, rowId, isPhase){
+  const row = findRow(slId, rowId, isPhase);
+  if(!row) return;
+  pushHistory();
+  openMenuKey = null;
+  row.visible = !row.visible;
+  saveFlash(); render();
+}
+
+/* ---------------- rendering: shell ---------------- */
+function render(){
+  const app = document.getElementById("app");
+  app.innerHTML = `
+    <div class="topbar">
+      <div class="topbar-left">
+        <div class="mark"></div>
+        <div class="proj-title" contenteditable="true" spellcheck="false" onblur="onTitleChange(this.textContent)" onkeydown="if(event.key==='Enter'){event.preventDefault(); this.blur();}">${escapeHtml(projectTitle)}</div>
+      </div>
+      <div style="display:flex; align-items:center; gap:14px;">
+        <button class="compact-pill ${compactMode?'active':''}" onclick="toggleCompact()" title="Halve the vertical spacing between timeline rows">${compactMode?"☑":"☐"} Compact</button>
+        <div class="hist-controls">
+          <button class="hist-btn" title="Undo (Ctrl+Z)" onclick="undo()" ${history.length===0?"disabled":""}>↶</button>
+          <button class="hist-btn" title="Redo (Ctrl+Shift+Z)" onclick="redo()" ${future.length===0?"disabled":""}>↷</button>
+        </div>
+      </div>
+    </div>
+    <div class="tabstrip">
+      <div class="tabs">
+        <button class="tab-btn ${activeTab==='data'?'active':''}" onclick="setTab('data')">☰ Data</button>
+        <button class="tab-btn ${activeTab==='timeline'?'active':''}" onclick="setTab('timeline')">📈 Timeline</button>
+        <button class="tab-btn ${activeTab==='versions'?'active':''}" onclick="setTab('versions')">🗂 Versions</button>
+      </div>
+      <div class="toolbar" id="toolbar"></div>
+    </div>
+    <div class="view" id="view"></div>
+    ${modalMode ? renderModal() : ""}
+  `;
+  renderToolbar();
+  if(activeTab==="data") renderData();
+  else if(activeTab==="timeline") renderTimeline();
+  else renderVersions();
+}
+function setTab(t){ activeTab=t; render(); }
+function toggleCompact(){ compactMode = !compactMode; render(); }
+function renderToolbar(){
+  const tb = document.getElementById("toolbar");
+  if(activeTab==="versions"){
+    tb.innerHTML = `<button class="btn primary" onclick="openSaveModal()">💾 Save current as version</button>`;
+    return;
+  }
+  tb.innerHTML = `<button class="btn" onclick="addBottomRow('task')">+ Task</button>
+                  <button class="btn" onclick="addBottomRow('milestone')">+ Milestone</button>
+                  <button class="btn" onclick="addSwimlane()">+ Swimlane</button>
+                  <span class="toolbar-sep"></span>
+                  <button class="btn" onclick="openSaveModal()">💾 Save version</button>
+                  <button class="btn" id="pptxBtn" onclick="exportPptx()">⬇ Export PPTX</button>`;
+}
+function escapeAttr(s){ return String(s).replace(/"/g,"&quot;"); }
+function escapeHtml(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+function onTitleChange(val){ pushHistory(); projectTitle = val; saveFlash(); renderTimelineOnly(); }
+
+/* ---------------- rendering: VERSIONS TAB ---------------- */
+const GROUP_PALETTE = ["#0076BC","#1B7A45","#D98324","#77787B","#8E44AD","#C0392B","#0099D8","#B7950B"];
+function groupColor(name){
+  let h = 0;
+  const s = name || "Ungrouped";
+  for(let i=0;i<s.length;i++) h = (h*31 + s.charCodeAt(i)) >>> 0;
+  return GROUP_PALETTE[h % GROUP_PALETTE.length];
+}
+function fmtSavedAt(iso){
+  const d = new Date(iso);
+  const months=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  return months[d.getMonth()]+" "+d.getDate()+", "+d.getFullYear();
+}
+function versionStats(data){
+  let tasks=0, milestones=0, phases=data.swimlanes.length;
+  data.swimlanes.forEach(sl=> sl.children.forEach(c=>{
+    if(c.type==="milestone" || c.type==="major") milestones++; else tasks++;
+  }));
+  return {phases, tasks, milestones};
+}
+function toggleGroupCollapse(name){
+  if(collapsedGroups.has(name)) collapsedGroups.delete(name); else collapsedGroups.add(name);
+  render();
+}
+function toggleVersionMenu(id){
+  versionMenuKey = (versionMenuKey===id) ? null : id;
+  render();
+}
+function renderVersions(){
+  const view = document.getElementById("view");
+  const groups = {};
+  versions.forEach(v=>{
+    const g = v.group && v.group.trim() ? v.group.trim() : "Ungrouped";
+    (groups[g] = groups[g] || []).push(v);
+  });
+  const groupNames = Object.keys(groups).sort((a,b)=> a==="Ungrouped"?1: b==="Ungrouped"?-1: a.localeCompare(b));
+
+  let groupsHtml = "";
+  groupNames.forEach(g=>{
+    const list = groups[g].slice().sort((a,b)=> b.savedAt.localeCompare(a.savedAt));
+    const collapsed = collapsedGroups.has(g);
+    const color = groupColor(g);
+    groupsHtml += `
+      <div class="ver-group">
+        <div class="ver-group-head" onclick="toggleGroupCollapse('${escapeAttr(g)}')">
+          <span class="ver-group-dot" style="background:${color}"></span>
+          <span class="ver-group-name">${escapeHtml(g)}</span>
+          <span class="ver-group-count">(${list.length})</span>
+          <span class="ver-group-line"></span>
+          <span class="ver-group-caret ${collapsed?'collapsed':''}">▾</span>
+        </div>
+        ${collapsed ? "" : `<div class="ver-grid">${list.map(v=>versionCardHtml(v)).join("")}</div>`}
+      </div>`;
+  });
+
+  view.innerHTML = `
+    <div class="ver-wrap">
+      <div class="ver-current-banner">
+        <div>
+          <div class="lbl">Currently open</div>
+          <div class="name">${escapeHtml(projectTitle)}</div>
+        </div>
+        <button class="btn primary" onclick="openSaveModal()">💾 Save as version</button>
+      </div>
+      ${versions.length===0 ? `<div class="ver-empty">No saved versions yet. Save the current timeline to start building a library by business group.</div>` : groupsHtml}
+    </div>
+  `;
+}
+function versionCardHtml(v){
+  const stats = versionStats(v.data);
+  const color = groupColor(v.group);
+  return `
+    <div class="ver-card">
+      <div class="ver-card-strip" style="background:${color}"></div>
+      <div class="ver-card-menu-cell">
+        <button class="menu-trigger ver-menu-trigger" onclick="event.stopPropagation(); toggleVersionMenu(${v.id})" title="More">⋯</button>
+        ${versionMenuKey===v.id ? versionMenuHtml(v) : ""}
+      </div>
+      <div class="ver-card-body" onclick="loadVersion(${v.id})" style="cursor:pointer;" title="Open this version">
+        <p class="ver-card-title">${escapeHtml(v.name)}</p>
+        <div class="ver-card-meta">Saved ${fmtSavedAt(v.savedAt)}</div>
+        <div class="ver-card-stats">
+          <span class="ver-stat">🧭 ${stats.phases} swimlane${stats.phases===1?"":"s"}</span>
+          <span class="ver-stat">📌 ${stats.milestones}</span>
+          <span class="ver-stat">▤ ${stats.tasks}</span>
+        </div>
+      </div>
+    </div>`;
+}
+function versionMenuHtml(v){
+  return `<div class="row-menu" onclick="event.stopPropagation()">
+    <button onclick="loadVersion(${v.id})">📂 Open in editor</button>
+    <button onclick="updateVersionWithCurrent(${v.id})">🔄 Overwrite with current</button>
+    <button onclick="duplicateVersion(${v.id})">⧉ Duplicate</button>
+    <button onclick="openEditModal(${v.id})">✎ Rename / move group</button>
+    <hr/>
+    <button class="danger" onclick="deleteVersion(${v.id})">🗑 Delete</button>
+  </div>`;
+}
+
+function loadVersion(id){
+  const v = versions.find(x=>x.id===id);
+  if(!v) return;
+  if(!confirm(`Open "${v.name}"? Any unsaved changes to the current timeline will be replaced (use Undo to recover).`)) return;
+  pushHistory();
+  swimlanes = JSON.parse(JSON.stringify(v.data.swimlanes));
+  projectTitle = v.data.projectTitle;
+  versionMenuKey = null;
+  activeTab = "data";
+  saveFlash(); render();
+}
+function duplicateVersion(id){
+  const v = versions.find(x=>x.id===id);
+  if(!v) return;
+  const copy = { id: Date.now(), name: v.name + " (copy)", group: v.group, savedAt: new Date().toISOString(), data: JSON.parse(JSON.stringify(v.data)) };
+  versions.push(copy);
+  versionMenuKey = null;
+  persistVersions(); render();
+}
+function updateVersionWithCurrent(id){
+  const v = versions.find(x=>x.id===id);
+  if(!v) return;
+  if(!confirm(`Overwrite "${v.name}" with the timeline currently open in the editor?`)) return;
+  v.data = { swimlanes: JSON.parse(JSON.stringify(swimlanes)), projectTitle };
+  v.savedAt = new Date().toISOString();
+  versionMenuKey = null;
+  persistVersions(); render();
+}
+function deleteVersion(id){
+  const v = versions.find(x=>x.id===id);
+  if(!v) return;
+  if(!confirm(`Delete "${v.name}"? This can't be undone.`)) return;
+  versions = versions.filter(x=>x.id!==id);
+  versionMenuKey = null;
+  persistVersions(); render();
+}
+
+/* ---------------- save / edit modal ---------------- */
+function existingGroups(){
+  const set = new Set(versions.map(v=> v.group && v.group.trim() ? v.group.trim() : "Ungrouped"));
+  return Array.from(set).sort();
+}
+function openSaveModal(){
+  modalMode = "save";
+  modalEditId = null;
+  modalName = projectTitle;
+  modalGroup = versions.length ? versions[versions.length-1].group : "";
+  versionMenuKey = null;
+  render();
+  setTimeout(()=>{ const el=document.getElementById("modalNameInput"); if(el){ el.focus(); el.select(); } }, 0);
+}
+function openEditModal(id){
+  const v = versions.find(x=>x.id===id);
+  if(!v) return;
+  modalMode = "edit";
+  modalEditId = id;
+  modalName = v.name;
+  modalGroup = v.group;
+  versionMenuKey = null;
+  render();
+  setTimeout(()=>{ const el=document.getElementById("modalNameInput"); if(el){ el.focus(); el.select(); } }, 0);
+}
+function closeModal(){ modalMode = null; modalEditId = null; render(); }
+function updateModalName(val){ modalName = val; }
+function updateModalGroup(val){ modalGroup = val; }
+function confirmModal(){
+  const name = (modalName||"").trim() || "Untitled version";
+  const group = (modalGroup||"").trim();
+  if(modalMode==="save"){
+    versions.push({
+      id: Date.now(),
+      name, group,
+      savedAt: new Date().toISOString(),
+      data: { swimlanes: JSON.parse(JSON.stringify(swimlanes)), projectTitle }
+    });
+  } else if(modalMode==="edit" && modalEditId!=null){
+    const v = versions.find(x=>x.id===modalEditId);
+    if(v){ v.name = name; v.group = group; }
+  }
+  persistVersions();
+  modalMode = null; modalEditId = null;
+  activeTab = "versions";
+  render();
+}
+function renderModal(){
+  const dl = existingGroups().map(g=>`<option value="${escapeAttr(g)}"></option>`).join("");
+  const isEdit = modalMode==="edit";
+  return `
+    <div class="modal-overlay" onclick="if(event.target===this) closeModal()">
+      <div class="modal-card">
+        <p class="modal-title">${isEdit ? "Rename version" : "Save current timeline as a version"}</p>
+        <p class="modal-sub">${isEdit ? "Update the name or move this version to a different business group." : "Store a snapshot of this timeline under a business group so you can find it again later."}</p>
+        <div class="modal-field">
+          <label>Version name</label>
+          <input id="modalNameInput" type="text" value="${escapeAttr(modalName)}" oninput="updateModalName(this.value)" onkeydown="if(event.key==='Enter'){event.preventDefault(); confirmModal();}"/>
+        </div>
+        <div class="modal-field">
+          <label>Business group</label>
+          <input type="text" list="groupList" value="${escapeAttr(modalGroup)}" placeholder="e.g. Commission Systems, Credit Services..." oninput="updateModalGroup(this.value)" onkeydown="if(event.key==='Enter'){event.preventDefault(); confirmModal();}"/>
+          <datalist id="groupList">${dl}</datalist>
+          <div class="modal-hint">Pick an existing group or type a new one — versions are organized by this on the Versions tab.</div>
+        </div>
+        <div class="modal-actions">
+          <button class="btn" onclick="closeModal()">Cancel</button>
+          <button class="btn primary" onclick="confirmModal()">${isEdit ? "Save changes" : "Save version"}</button>
+        </div>
+      </div>
+    </div>`;
+}
+
+/* ---------------- rendering: DATA TAB ---------------- */
+function renderData(){
+  const view = document.getElementById("view");
+  let rowsHtml = "";
+  swimlanes.forEach(sl=>{
+    const p = sl.phase;
+    if(p) rowsHtml += swimlaneHeaderRow(sl, p);
+    sl.children.forEach(c=> rowsHtml += childRow(sl, c));
+  });
+
+  view.innerHTML = `
+    <div class="data-wrap">
+      <table class="data">
+        <thead>
+          <tr>
+            <th class="drag-cell"></th>
+            <th style="width:26px"></th>
+            <th>Title</th>
+            <th style="width:150px">Type</th>
+            <th style="width:90px">Duration</th>
+            <th style="width:150px">Start</th>
+            <th style="width:150px">End</th>
+            <th style="width:60px">%</th>
+            <th style="width:130px">Assigned to</th>
+            <th style="width:140px">Status</th>
+            <th style="width:34px"></th>
+            <th style="width:34px"></th>
+          </tr>
+        </thead>
+        <tbody>${rowsHtml}</tbody>
+      </table>
+    </div>
+  `;
+}
+
+function typeIconSvg(type, color){
+  if(type==="phase") return `<svg class="type-icon" viewBox="0 0 14 14"><rect x="1" y="4" width="12" height="6" rx="1" fill="${color}"/></svg>`;
+  if(type==="task") return `<svg class="type-icon" viewBox="0 0 14 14"><rect x="1" y="4" width="12" height="6" rx="1" fill="${color}"/></svg>`;
+  if(type==="milestone") return `<svg class="type-icon" viewBox="0 0 14 14"><rect x="3" y="3" width="8" height="8" fill="${color}" transform="rotate(45 7 7)"/></svg>`;
+  if(type==="major") return `<svg class="type-icon" viewBox="0 0 14 14"><polygon points="7,1 8.7,5.1 13,5.4 9.7,8.2 10.8,12.5 7,10.1 3.2,12.5 4.3,8.2 1,5.4 5.3,5.1" fill="${color}"/></svg>`;
+  return "";
+}
+function typeColor(type){
+  return type==="phase" ? "var(--phase)" : type==="task" ? "var(--task)" : type==="milestone" ? "var(--milestone)" : "var(--major)";
+}
+function findRow(slId, rowId, isPhase){
+  const sl = swimlanes.find(s=>s.id===slId);
+  if(!sl) return null;
+  return isPhase ? sl.phase : sl.children.find(c=>c.id===rowId);
+}
+function onTypeChange(slId, rowId, isPhase, val){
+  const row = findRow(slId, rowId, isPhase);
+  if(row){ pushHistory(); row.type = val; saveFlash(); render(); }
+}
+function onStatusChange(slId, rowId, isPhase, val){
+  const row = findRow(slId, rowId, isPhase);
+  if(row){ pushHistory(); row.status = val; saveFlash(); render(); }
+}
+
+function typeSelect(row, slId, rowId, isPhase){
+  const opts = [["phase","Phase"],["task","Task"],["milestone","Milestone"],["major","Major Milestone"]];
+  return `<select class="type-sel" onchange="onTypeChange(${slId}, ${rowId}, ${isPhase}, this.value)">
+    ${opts.map(([v,l])=>`<option value="${v}" ${row.type===v?"selected":""}>${l}</option>`).join("")}
+  </select>`;
+}
+function statusSelect(row, slId, rowId, isPhase){
+  return `<select class="status-sel" style="background:${STATUS_META[row.status]?.color || 'var(--st-notstarted)'}" onchange="onStatusChange(${slId}, ${rowId}, ${isPhase}, this.value)">
+    ${Object.entries(STATUS_META).map(([k,m])=>`<option value="${k}" ${row.status===k?"selected":""}>${m.label}</option>`).join("")}
+  </select>`;
+}
+
+function rowMenuHtml(slId, rowId, isPhase, row){
+  const key = menuKey(slId, rowId, isPhase);
+  if(openMenuKey !== key) return "";
+  return `<div class="row-menu">
+    <button onclick="addRowRelative(${slId}, ${rowId}, ${isPhase}, 'above')">⬆ Add row above</button>
+    <button onclick="addRowRelative(${slId}, ${rowId}, ${isPhase}, 'below')">⬇ Add row below</button>
+    <button onclick="duplicateRow(${slId}, ${rowId}, ${isPhase})">⧉ Duplicate</button>
+    <button onclick="addNote(${slId}, ${rowId}, ${isPhase})">🗒 Add note</button>
+    <hr/>
+    <button onclick="hideFromTimeline(${slId}, ${rowId}, ${isPhase})">${row.visible ? "🚫 Hide from timeline" : "👁 Show on timeline"}</button>
+    <hr/>
+    <button class="danger" onclick="deleteRow(${slId}, ${rowId}, ${isPhase})">🗑 Delete row</button>
+  </div>`;
+}
+function noteHtml(row){
+  return row.note ? `<span class="note-lbl" title="${escapeAttr(row.note)}">${escapeAttr(row.note)}</span>` : "";
+}
+function menuCell(slId, rowId, isPhase, row){
+  return `<td class="menu-cell">
+    <button class="menu-trigger" onclick="event.stopPropagation(); toggleMenu(${slId}, ${rowId}, ${isPhase})" title="More options">⋯</button>
+    ${rowMenuHtml(slId, rowId, isPhase, row)}
+  </td>`;
+}
+
+function dragHandleSvg(){
+  return `<svg width="10" height="16" viewBox="0 0 10 16"><circle cx="2.5" cy="2.5" r="1.4" fill="currentColor"/><circle cx="7.5" cy="2.5" r="1.4" fill="currentColor"/><circle cx="2.5" cy="8" r="1.4" fill="currentColor"/><circle cx="7.5" cy="8" r="1.4" fill="currentColor"/><circle cx="2.5" cy="13.5" r="1.4" fill="currentColor"/><circle cx="7.5" cy="13.5" r="1.4" fill="currentColor"/></svg>`;
+}
+function dragCell(slId, rowId, isPhase){
+  return `<td class="drag-cell" draggable="true"
+      ondragstart="onRowDragStart(event, ${slId}, ${rowId}, ${isPhase})"
+      ondragend="onRowDragEnd(event)">
+      <span class="drag-handle">${dragHandleSvg()}</span>
+    </td>`;
+}
+function onRowDragStart(e, slId, rowId, isPhase){
+  dragSrc = { slId, rowId, isPhase };
+  e.dataTransfer.effectAllowed = "move";
+  try{ e.dataTransfer.setData("text/plain", String(rowId)); }catch(err){}
+  const ghost = document.getElementById("dragGhost");
+  if(ghost) e.dataTransfer.setDragImage(ghost, 14, 16);
+  const tr = e.target.closest("tr");
+  if(tr) setTimeout(()=> tr.classList.add("dragging"), 0);
+}
+function onRowDragOver(e, slId, rowId, isPhase){
+  if(!dragSrc) return;
+  e.preventDefault();
+  e.dataTransfer.dropEffect = "move";
+  const tr = e.currentTarget;
+  const rect = tr.getBoundingClientRect();
+  const isAfter = (e.clientY - rect.top) > rect.height/2;
+  document.querySelectorAll("table.data tbody tr").forEach(r=>{ r.classList.remove("drop-above","drop-below"); });
+  tr.classList.add(isAfter ? "drop-below" : "drop-above");
+}
+function onRowDrop(e, slId, rowId, isPhase){
+  e.preventDefault();
+  if(!dragSrc) return;
+  const tr = e.currentTarget;
+  const rect = tr.getBoundingClientRect();
+  const isAfter = (e.clientY - rect.top) > rect.height/2;
+  moveRow(dragSrc, { slId, rowId, isPhase }, isAfter);
+  dragSrc = null;
+  render();
+}
+function onRowDragEnd(e){
+  dragSrc = null;
+  document.querySelectorAll("table.data tbody tr").forEach(r=>{ r.classList.remove("drop-above","drop-below","dragging"); });
+}
+function moveRow(src, target, after){
+  if(src.slId===target.slId && src.rowId===target.rowId && src.isPhase===target.isPhase) return;
+
+  if(src.isPhase){
+    // dragging an entire swimlane (its header + all its children) — reposition it
+    // relative to whichever swimlane owns the row it was dropped on, whether that
+    // row is another header or one of that swimlane's tasks/milestones.
+    if(src.slId===target.slId) return; // dropped on its own header/children — no-op
+    const fromIdx = swimlanes.findIndex(s=>s.id===src.slId);
+    if(fromIdx===-1) return;
+    pushHistory();
+    const [moved] = swimlanes.splice(fromIdx,1);
+    let toIdx = swimlanes.findIndex(s=>s.id===target.slId);
+    if(toIdx===-1) toIdx = swimlanes.length;
+    swimlanes.splice(after ? toIdx+1 : toIdx, 0, moved);
+    saveFlash();
+    return;
+  }
+
+  if(target.isPhase){
+    // dragging a task/milestone onto a (different) swimlane's header — move it
+    // into that swimlane, at the start or end depending on drop position.
+    const srcSl = swimlanes.find(s=>s.id===src.slId);
+    const tgtSl = swimlanes.find(s=>s.id===target.slId);
+    if(!srcSl || !tgtSl) return;
+    const fromIdx = srcSl.children.findIndex(c=>c.id===src.rowId);
+    if(fromIdx===-1) return;
+    pushHistory();
+    const [moved] = srcSl.children.splice(fromIdx,1);
+    tgtSl.children.splice(after ? tgtSl.children.length : 0, 0, moved);
+    saveFlash();
+    return;
+  }
+
+  // both are child rows — reorder within/into a swimlane's children list
+  const srcSl = swimlanes.find(s=>s.id===src.slId);
+  const tgtSl = swimlanes.find(s=>s.id===target.slId);
+  if(!srcSl || !tgtSl) return;
+  const fromIdx = srcSl.children.findIndex(c=>c.id===src.rowId);
+  if(fromIdx===-1) return;
+  pushHistory();
+  const [moved] = srcSl.children.splice(fromIdx,1);
+  let toIdx = tgtSl.children.findIndex(c=>c.id===target.rowId);
+  if(toIdx===-1) toIdx = tgtSl.children.length;
+  tgtSl.children.splice(after ? toIdx+1 : toIdx, 0, moved);
+  saveFlash();
+}
+
+function swimlaneHeaderRow(sl, p){
+  const slId = sl.id, rowId = p.id;
+  return `<tr class="swimlane-header ${p.visible? "":"hidden-row"}"
+      ondragover="onRowDragOver(event, ${slId}, ${rowId}, true)"
+      ondrop="onRowDrop(event, ${slId}, ${rowId}, true)">
+    ${dragCell(slId, rowId, true)}
+    <td><button class="eye-btn" onclick="toggleVisible(findRow(${slId}, ${rowId}, true))" title="Show/hide in timeline">${p.visible?"👁":"🚫"}</button></td>
+    <td class="title-cell"><input class="title-in" value="${escapeAttr(p.title)}" onchange="onFieldChange(${slId}, ${rowId}, true, 'title', this.value)" />${noteHtml(p)}</td>
+    <td class="type-pick">${typeIconSvg(p.type, typeColor(p.type))}${typeSelect(p, slId, rowId, true)}</td>
+    <td class="dur">${durationLabel(p.start,p.end)}</td>
+    <td><input type="date" class="date-in" value="${p.start}" onchange="onFieldChange(${slId}, ${rowId}, true, 'start', this.value)" /></td>
+    <td><input type="date" class="date-in" value="${p.end}" onchange="onFieldChange(${slId}, ${rowId}, true, 'end', this.value)" /></td>
+    <td><input type="number" class="pct-in" min="0" max="100" value="${p.percent}" onchange="onFieldChange(${slId}, ${rowId}, true, 'percent', parseInt(this.value)||0)" /></td>
+    <td><input class="assign-in" value="${escapeAttr(p.assignedTo)}" onchange="onFieldChange(${slId}, ${rowId}, true, 'assignedTo', this.value)" /></td>
+    <td>${statusSelect(p, slId, rowId, true)}</td>
+    <td><button class="icon-btn del" onclick="deleteRow(${slId}, ${rowId}, true)" title="Delete swimlane">🗑</button></td>
+    ${menuCell(slId, rowId, true, p)}
+  </tr>`;
+}
+
+function childRow(sl, c){
+  const slId = sl.id, rowId = c.id;
+  return `<tr class="child-row ${c.visible? "":"hidden-row"}"
+      ondragover="onRowDragOver(event, ${slId}, ${rowId}, false)"
+      ondrop="onRowDrop(event, ${slId}, ${rowId}, false)">
+    ${dragCell(slId, rowId, false)}
+    <td><button class="eye-btn" onclick="toggleVisible(findRow(${slId}, ${rowId}, false))" title="Show/hide in timeline">${c.visible?"👁":"🚫"}</button></td>
+    <td class="title-cell"><input class="title-in" value="${escapeAttr(c.title)}" onchange="onFieldChange(${slId}, ${rowId}, false, 'title', this.value)" />${noteHtml(c)}</td>
+    <td class="type-pick">${typeIconSvg(c.type, typeColor(c.type))}${typeSelect(c, slId, rowId, false)}</td>
+    <td class="dur">${durationLabel(c.start,c.end)}</td>
+    <td><input type="date" class="date-in" value="${c.start}" onchange="onFieldChange(${slId}, ${rowId}, false, 'start', this.value)" /></td>
+    <td><input type="date" class="date-in" value="${c.end}" onchange="onFieldChange(${slId}, ${rowId}, false, 'end', this.value)" /></td>
+    <td><input type="number" class="pct-in" min="0" max="100" value="${c.percent}" onchange="onFieldChange(${slId}, ${rowId}, false, 'percent', parseInt(this.value)||0)" /></td>
+    <td><input class="assign-in" value="${escapeAttr(c.assignedTo)}" onchange="onFieldChange(${slId}, ${rowId}, false, 'assignedTo', this.value)" /></td>
+    <td>${statusSelect(c, slId, rowId, false)}</td>
+    <td><button class="icon-btn del" onclick="deleteRow(${slId}, ${rowId}, false)" title="Delete row">🗑</button></td>
+    ${menuCell(slId, rowId, false, c)}
+  </tr>`;
+}
+
+/* ---------------- rendering: TIMELINE TAB ---------------- */
+function renderTimelineOnly(){
+  if(activeTab==="timeline") renderTimeline();
+}
+function renderTimeline(){
+  const view = document.getElementById("view");
+  const rows = allRows().filter(r=>r.row.visible);
+
+  if(rows.length===0){
+    view.innerHTML = `<div class="tl-wrap"><div class="tl-card"><p class="empty-note">No visible items yet — toggle the eye icon on the Data tab to show items on the timeline.</p></div></div>`;
+    return;
+  }
+
+  let minDate=null, maxDate=null;
+  rows.forEach(r=>{
+    const s = parseD(r.row.start), e = parseD(r.row.end);
+    if(!minDate || s<minDate) minDate=s;
+    if(!maxDate || e>maxDate) maxDate=e;
+  });
+  const rangeStart = new Date(minDate.getFullYear(), minDate.getMonth(), 1);
+  const rangeEnd = new Date(maxDate.getFullYear(), maxDate.getMonth()+1, 0);
+  const totalMs = rangeEnd - rangeStart;
+
+  // month cells
+  const months = [];
+  let cur = new Date(rangeStart);
+  while(cur <= rangeEnd){
+    months.push(new Date(cur));
+    cur = new Date(cur.getFullYear(), cur.getMonth()+1, 1);
+  }
+  const monthNames=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+
+  function pctOf(date){
+    return Math.max(0, Math.min(100, ((date - rangeStart)/totalMs)*100));
+  }
+
+  // month header cells — positioned by the same date-percentage math as the
+  // bars/vlines below, so a given calendar date lines up vertically no matter
+  // how many days are in each month.
+  const monthCellsHtml = months.map(m=>{
+    const mEndRaw = new Date(m.getFullYear(), m.getMonth()+1, 0);
+    const mEndExclusive = new Date(mEndRaw.getFullYear(), mEndRaw.getMonth(), mEndRaw.getDate()+1);
+    const x0 = pctOf(m);
+    const x1 = pctOf(mEndExclusive);
+    const w = Math.max(0, x1-x0);
+    return `<div class="tl-month-cell" style="left:${x0}%; width:${w}%;">${monthNames[m.getMonth()]}</div>`;
+  }).join("");
+
+  // year header cells — one lighter band above the month bar, grouping the
+  // months that fall in each calendar year
+  const yearGroups = [];
+  months.forEach(m=>{
+    const y = m.getFullYear();
+    const lastGroup = yearGroups[yearGroups.length-1];
+    if(lastGroup && lastGroup.year===y){ lastGroup.months.push(m); }
+    else { yearGroups.push({ year:y, months:[m] }); }
+  });
+  const yearCellsHtml = yearGroups.map(g=>{
+    const firstM = g.months[0];
+    const lastM = g.months[g.months.length-1];
+    const lastMEndRaw = new Date(lastM.getFullYear(), lastM.getMonth()+1, 0);
+    const lastMEndExclusive = new Date(lastMEndRaw.getFullYear(), lastMEndRaw.getMonth(), lastMEndRaw.getDate()+1);
+    const x0 = pctOf(firstM);
+    const x1 = pctOf(lastMEndExclusive);
+    const w = Math.max(0, x1-x0);
+    return `<div class="tl-year-cell" style="left:${x0}%; width:${w}%;">${g.year}</div>`;
+  }).join("");
+
+  // dynamic label column — measured to the longest visible row title's actual
+  // rendered pixel width (not a character-count guess), so short titles don't
+  // leave a big dead gap before the connector line/bar start
+  const barRowsForWidth = rows.filter(r=> r.row.type==="phase" || r.row.type==="task");
+  const rowFontPx = compactMode ? 11.5 : 13;
+  const phaseFontPx = compactMode ? 13 : 15;
+  const FONT_STACK = `-apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif`;
+  function measureLabelWidth(text, bold, sizePx){
+    const canvas = measureLabelWidth._c || (measureLabelWidth._c = document.createElement("canvas"));
+    const ctx = canvas.getContext("2d");
+    ctx.font = `${bold?"700":"600"} ${sizePx}px ${FONT_STACK}`;
+    return ctx.measureText(String(text)).width;
+  }
+  const maxLabelTextPx = Math.max(60, ...barRowsForWidth.map(r=>{
+    const isPhaseRow = r.row.type==="phase";
+    return measureLabelWidth(r.row.title, isPhaseRow, isPhaseRow?phaseFontPx:rowFontPx);
+  }));
+  const labelColPx = Math.round(Math.max(110, maxLabelTextPx + 34));
+
+  // milestone markers (collect, then stagger overlapping ones using real pixel-width
+  // collision boxes — so labels never visually overlap regardless of how tightly
+  // two milestone dates fall together)
+  const milestoneRows = rows.filter(r=> r.row.type==="milestone" || r.row.type==="major");
+  const sortedM = milestoneRows.slice().sort((a,b)=>parseD(a.row.start)-parseD(b.row.start));
+  const approxTrackWidthPx = 900; // conservative estimate of the chart's plotted width
+  const levelRightEdgePct = [];
+  let maxLevel = 0;
+  const LEVEL_GAP = 42;
+  const markerHtml = sortedM.map(r=>{
+    const d = parseD(r.row.start);
+    const p = pctOf(d);
+    const dateStr = fmtShort(d);
+    const labelPxWidth = Math.max(String(r.row.title).length, dateStr.length) * 6.4 + 16;
+    const halfPct = (labelPxWidth/2) / approxTrackWidthPx * 100;
+    let level = 0;
+    while(levelRightEdgePct[level] !== undefined && (p - halfPct) < levelRightEdgePct[level] + 1){
+      level++;
+    }
+    levelRightEdgePct[level] = p + halfPct;
+    maxLevel = Math.max(maxLevel, level);
+    const topOffset = level*LEVEL_GAP;
+    const color = r.row.type==="major" ? "var(--major)" : "var(--milestone)";
+    const shape = r.row.type==="major"
+      ? `<svg width="16" height="16" viewBox="0 0 14 14"><polygon points="7,1 8.7,5.1 13,5.4 9.7,8.2 10.8,12.5 7,10.1 3.2,12.5 4.3,8.2 1,5.4 5.3,5.1" fill="${color}"/></svg>`
+      : `<svg width="14" height="14" viewBox="0 0 14 14"><rect x="3" y="3" width="8" height="8" fill="${color}" transform="rotate(45 7 7)"/></svg>`;
+    return `<div class="tl-milestone-mark" style="left:${p}%; top:${topOffset}px;">
+      ${shape}
+      <div class="dt">${fmtShort(d)}</div>
+      <div class="lbl">${escapeAttr(r.row.title)}</div>
+    </div>`;
+  }).join("");
+  const milestoneLaneHeight = 42 + maxLevel*LEVEL_GAP + 2;
+
+  // today marker — rendered in the same lane as milestones so it touches the bar too
+  const today = new Date();
+  let todayMarkerHtml = "", todayVlineHtml = "";
+  if(today>=rangeStart && today<=rangeEnd){
+    const p = pctOf(today);
+    todayMarkerHtml = `<div class="tl-today-label" style="left:${p}%;">
+      <div class="lbl">Today</div>
+      <div class="today-arrow">▼</div>
+    </div>`;
+    todayVlineHtml = `<div class="tl-vline today" style="left:${p}%;"></div>`;
+  }
+
+  // task/phase rows (non milestone)
+  const barRows = barRowsForWidth;
+  const rowsHtml = barRows.map(r=>{
+    const row=r.row;
+    const s=parseD(row.start), e=parseD(row.end);
+    const left = pctOf(s), right = pctOf(e);
+    const width = Math.max(right-left, 0.6);
+    const isPhase = row.type==="phase";
+    const meta = STATUS_META[row.status] || STATUS_META["not-started"];
+    const barColor = isPhase ? "var(--phase)" : meta.bar;
+    const trackColor = isPhase ? "var(--phase-track)" : meta.track;
+    const fillPct = Math.max(0, Math.min(100, row.percent||0));
+    return `<div class="tl-row">
+      <div class="tl-row-label ${isPhase?"phase-lbl":""}" style="width:${labelColPx}px; flex:0 0 ${labelColPx}px;">
+        <span class="lbl-text">${escapeAttr(row.title)}</span><span class="lbl-fill"></span>
+      </div>
+      <div class="tl-row-track">
+        <div class="tl-row-connector" style="width:${left}%;"></div>
+        <div class="tl-bar-wrap ${isPhase?"phase":""}" style="left:${left}%; width:${width}%;">
+          <div class="tl-bar-track" style="background:${trackColor};"></div>
+          <div class="tl-bar-fill" style="width:${fillPct}%; background:${barColor};"></div>
+          ${isPhase ? `<div class="tl-bar-label-inside" style="color:#fff;">${escapeAttr(row.title)}</div>` : ""}
+          <div class="tl-bar-caption left">${durationLabel(row.start,row.end)}</div>
+          <div class="tl-bar-caption right">${fmtShort(s)} – ${fmtShort(e)}</div>
+        </div>
+      </div>
+    </div>`;
+  }).join("");
+
+  view.innerHTML = `
+    <div class="tl-wrap">
+      <div class="tl-card ${compactMode?'compact':''}">
+        <h1 class="tl-title">${escapeAttr(projectTitle)}</h1>
+        <div class="tl-body-wrap">
+          <div class="tl-vlines" style="left:${labelColPx}px;">${todayVlineHtml}</div>
+          <div class="tl-scale-row">
+            <div style="flex:0 0 ${labelColPx}px; width:${labelColPx}px;"></div>
+            <div class="tl-scale">
+              ${todayMarkerHtml}
+              <div class="tl-years">
+                ${yearCellsHtml}
+              </div>
+              <div class="tl-months">
+                ${monthCellsHtml}
+              </div>
+              <div style="position:relative; height:${milestoneLaneHeight}px;">
+                <div class="tl-milestone-lane">${markerHtml}</div>
+              </div>
+            </div>
+          </div>
+          <div class="tl-rows">${rowsHtml}</div>
+        </div>
+        <div class="legend">
+          <div class="legend-item"><svg width="16" height="10"><rect width="16" height="10" rx="2" fill="var(--st-complete)"/></svg> Completed</div>
+          <div class="legend-item"><svg width="16" height="10"><rect width="16" height="10" rx="2" fill="var(--st-progress)"/></svg> In Progress</div>
+          <div class="legend-item"><svg width="16" height="10"><rect width="16" height="10" rx="2" fill="var(--st-notstarted-bar)"/></svg> Future</div>
+          <div class="legend-item"><svg width="16" height="10"><rect width="16" height="10" rx="2" fill="var(--st-behind)"/></svg> Behind Schedule</div>
+          <div class="legend-item"><svg width="16" height="10"><rect width="16" height="10" rx="2" fill="var(--st-risk)"/></svg> At Risk</div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+/* ---------------- PPTX export ---------------- */
+const PPTX_HEX = {
+  ink:"1C2128", inkSoft:"6B7280", inkFaint:"A8ACB4",
+  line:"E4E1D6", lineStrong:"D4D0C2", header:"1B2130",
+  accent:"C98B2C", accentSoft:"F1E0BE", surface:"FFFFFF", paper:"F6F4EF",
+  phase:"4C7A54", phaseTrack:"DCE7DD",
+  milestone:"B0432E", major:"C98B2C",
+  stNotstartedBar:"C7CBD2", stNotstartedTrack:"E3E5EA",
+  stProgress:"2F6FB0", stProgressTrack:"D7E6F3",
+  stComplete:"2B5D40", stCompleteTrack:"D6E5DB",
+  stRisk:"B0432E", stRiskTrack:"F1DAD3",
+  stBehind:"C98B2C", stBehindTrack:"F1E0BE"
+};
+function statusPptxColors(status){
+  if(status==="complete") return { bar:PPTX_HEX.stComplete, track:PPTX_HEX.stCompleteTrack };
+  if(status==="in-progress") return { bar:PPTX_HEX.stProgress, track:PPTX_HEX.stProgressTrack };
+  if(status==="behind-schedule") return { bar:PPTX_HEX.stBehind, track:PPTX_HEX.stBehindTrack };
+  if(status==="at-risk") return { bar:PPTX_HEX.stRisk, track:PPTX_HEX.stRiskTrack };
+  return { bar:PPTX_HEX.stNotstartedBar, track:PPTX_HEX.stNotstartedTrack };
+}
+function pptxFileSafeName(s){
+  return String(s).trim().replace(/[\\/:*?"<>|]+/g,"").replace(/\s+/g,"_") || "Timeline";
+}
+
+async function exportPptx(){
+  const btn = document.getElementById("pptxBtn");
+  if(typeof PptxGenJS === "undefined"){
+    alert("The PowerPoint export library is still loading — please try again in a moment.");
+    return;
+  }
+  const rows = allRows().filter(r=>r.row.visible);
+  if(rows.length===0){
+    alert("There's nothing visible on the timeline to export. Toggle the eye icon on the Data tab to show items first.");
+    return;
+  }
+  if(btn){ btn.disabled = true; btn.textContent = "Generating…"; }
+
+  try{
+    let minDate=null, maxDate=null;
+    rows.forEach(r=>{
+      const s = parseD(r.row.start), e = parseD(r.row.end);
+      if(!minDate || s<minDate) minDate=s;
+      if(!maxDate || e>maxDate) maxDate=e;
+    });
+    const rangeStart = new Date(minDate.getFullYear(), minDate.getMonth(), 1);
+    const rangeEnd = new Date(maxDate.getFullYear(), maxDate.getMonth()+1, 0);
+    const totalMs = rangeEnd - rangeStart;
+    const pct = (d)=> Math.max(0, Math.min(1, (d-rangeStart)/totalMs));
+
+    const months = [];
+    let cur = new Date(rangeStart);
+    while(cur <= rangeEnd){ months.push(new Date(cur)); cur = new Date(cur.getFullYear(), cur.getMonth()+1, 1); }
+    const monthNames=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+
+    const pres = new PptxGenJS();
+    pres.defineLayout({ name:"TL_WIDE", width:13.33, height:7.5 });
+    pres.layout = "TL_WIDE";
+
+    /* ---- single Gantt slide — every row scaled to fit on one slide ---- */
+    const chartX = 2.9, chartW = 9.9, chartTop = 1.05, headerH = 0.3;
+    const bottomMargin = 0.25;
+    const availH = 7.5 - chartTop - headerH - bottomMargin;
+    // PPTX export always uses the compact (halved) row spacing, regardless of the
+    // on-screen Compact toggle, so exported decks stay dense and fit cleanly on one slide.
+    const rowH = Math.max(0.045, Math.min(0.2, availH / rows.length));
+    const fontScale = Math.max(0.45, Math.min(1, rowH/0.2));
+
+    const slide = pres.addSlide();
+    slide.background = { color: PPTX_HEX.surface };
+    slide.addText(projectTitle, { x:0.5, y:0.22, w:11, h:0.45, fontSize:16, bold:true, color:PPTX_HEX.ink, fontFace:"Georgia" });
+
+    // month header bar
+    slide.addShape(pres.ShapeType.rect, { x:chartX, y:chartTop, w:chartW, h:headerH, fill:{color:PPTX_HEX.header}, line:{type:"none"} });
+    months.forEach((m, idx)=>{
+      const mStart = new Date(Math.max(m, rangeStart));
+      const mEndRaw = new Date(m.getFullYear(), m.getMonth()+1, 0);
+      const x0 = chartX + pct(mStart)*chartW;
+      const x1 = chartX + pct(new Date(mEndRaw.getFullYear(), mEndRaw.getMonth(), mEndRaw.getDate()+1))*chartW;
+      const w = Math.max(0.15, Math.min(x1,chartX+chartW) - x0);
+      slide.addText(monthNames[m.getMonth()] + " '" + String(m.getFullYear()).slice(2), {
+        x:x0, y:chartTop, w:w, h:headerH, fontSize:Math.max(6,7.5*fontScale), bold:true, color:"FFFFFF", align:"center", valign:"middle"
+      });
+      if(idx>0){
+        slide.addShape(pres.ShapeType.line, { x:x0, y:chartTop, w:0, h: headerH + rows.length*rowH, line:{color:PPTX_HEX.line, width:0.5} });
+      }
+    });
+
+    // rows
+    let y = chartTop + headerH + 0.03;
+    rows.forEach(r=>{
+      const row = r.row;
+      const isPhase = row.type==="phase";
+      const s = parseD(row.start), e = parseD(row.end);
+      const labelSize = Math.max(5, (isPhase ? 11 : 10)*fontScale);
+      slide.addText(escapeAttrText(row.title), {
+        x:0.35, y:y, w:chartX-0.5, h:rowH, fontSize:labelSize, bold:isPhase, color:PPTX_HEX.ink, valign:"middle", fontFace:"Segoe UI"
+      });
+
+      if(row.type==="phase" || row.type==="task"){
+        const left = chartX + pct(s)*chartW;
+        const right = chartX + pct(e)*chartW;
+        const w = Math.max(0.1, right-left);
+        const colors = isPhase ? { bar:PPTX_HEX.phase, track:PPTX_HEX.phaseTrack } : statusPptxColors(row.status);
+        const barH = Math.max(0.06, Math.min(0.2, rowH*0.55)), barY = y + (rowH-barH)/2;
+        slide.addShape(pres.ShapeType.roundRect, { x:left, y:barY, w:w, h:barH, rectRadius:0.03, fill:{color:colors.track}, line:{type:"none"} });
+        const fillPct = Math.max(0, Math.min(100, row.percent||0))/100;
+        if(fillPct>0){
+          slide.addShape(pres.ShapeType.roundRect, { x:left, y:barY, w:Math.max(0.04,w*fillPct), h:barH, rectRadius:0.03, fill:{color:colors.bar}, line:{type:"none"} });
+        }
+        if(rowH>=0.16){
+          slide.addText(fmtShort(s) + " – " + fmtShort(e), { x:Math.min(right+0.06, chartX+chartW-1.6), y:y, w:1.6, h:rowH, fontSize:Math.max(5,7*fontScale), color:PPTX_HEX.inkSoft, valign:"middle" });
+        }
+      } else {
+        const x = chartX + pct(s)*chartW;
+        const shapeType = row.type==="major" ? pres.ShapeType.star5 : pres.ShapeType.diamond;
+        const color = row.type==="major" ? PPTX_HEX.major : PPTX_HEX.milestone;
+        const size = Math.max(0.07, Math.min(0.14, rowH*0.5));
+        slide.addShape(shapeType, { x:x-size/2, y:y+(rowH-size)/2, w:size, h:size, fill:{color:color}, line:{type:"none"} });
+        if(rowH>=0.16){
+          slide.addText(fmtShort(s), { x:x+0.1, y:y, w:1.4, h:rowH, fontSize:Math.max(5,7*fontScale), color:PPTX_HEX.inkSoft, valign:"middle" });
+        }
+      }
+      y += rowH;
+    });
+
+    // today line
+    const today = new Date();
+    if(today>=rangeStart && today<=rangeEnd){
+      const tx = chartX + pct(today)*chartW;
+      slide.addShape(pres.ShapeType.line, { x:tx, y:chartTop+headerH, w:0, h:y-(chartTop+headerH), line:{color:PPTX_HEX.milestone, width:1, dashType:"solid"} });
+      slide.addText("Today", { x:tx-0.4, y:chartTop-0.02, w:0.8, h:0.2, fontSize:7, bold:true, color:PPTX_HEX.milestone, align:"center" });
+    }
+
+    pres.writeFile({ fileName: pptxFileSafeName(projectTitle) + ".pptx" });
+  } catch(err){
+    console.error(err);
+    alert("Something went wrong generating the PowerPoint file. Please try again.");
+  } finally {
+    if(btn){ btn.disabled = false; btn.textContent = "⬇ Export PPTX"; }
+  }
+}
+function escapeAttrText(s){ return String(s); }
+
+render();
+</script>
+</body>
+</html>

@@ -1,0 +1,56 @@
+{
+  "permissions": [
+    "bash",
+    "read",
+    "glob",
+    "grep",
+    "edit",
+    "write",
+    "powershell"
+  ],
+  "rules": [
+    {
+      "name": "Prevent Breaking HTML Structure",
+      "glob": ["*.html"],
+      "instruction": "The main application is a single standalone HTML file. Do not split it or add build steps unless explicitly creating a backend API. Keep all CSS and JavaScript embedded."
+    },
+    {
+      "name": "Keep localStorage Key Versioned",
+      "glob": ["*.js", "*.html"],
+      "instruction": "Always use versioned keys for localStorage (e.g., 'tlStudio.versions.v1'). When changing storage format, increment the version number to prevent conflicts with old data."
+    },
+    {
+      "name": "XSS Prevention",
+      "glob": ["*.js", "*.html"],
+      "instruction": "Use escapeHtml() for user-facing text and escapeAttr() for HTML attributes. Never use innerHTML with unsanitized user input. Existing code has these helpers; maintain them."
+    },
+    {
+      "name": "Mutation Pattern",
+      "glob": ["*.js", "*.html"],
+      "instruction": "Follow the established mutation pattern: pushHistory() → mutate state → saveFlash() → render(). Every user action that changes data must call these in order."
+    },
+    {
+      "name": "No Error Suppression",
+      "glob": ["*.js"],
+      "instruction": "Only add try/catch at storage boundaries (localStorage.getItem). Trust internal code and framework guarantees. Do not add error handling for scenarios that can't happen."
+    },
+    {
+      "name": "CSS Variables for Theming",
+      "glob": ["*.html"],
+      "instruction": "Use CSS variables defined in :root for all colors, fonts, and spacing. Do not hardcode colors in CSS classes. This enables future dark mode and custom theme support."
+    },
+    {
+      "name": "Version Export Schema",
+      "glob": ["*.js", "*.html"],
+      "instruction": "Version objects must always contain: { id, name, group, savedAt, data: { swimlanes, projectTitle } }. This schema is backward-compatible for future API migrations."
+    },
+    {
+      "name": "No Backend Required (Unless Planned)",
+      "glob": ["*.html", "*.js"],
+      "instruction": "Current version is standalone with no server dependency. Any backend features (auth, database, real-time sync) must be clearly marked as Phase 1+. Keep the HTML file functional without a backend."
+    }
+  ],
+  "env": {
+    "STORAGE_VERSION": "tlStudio.versions.v1"
+  }
+}
