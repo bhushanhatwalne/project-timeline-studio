@@ -1062,47 +1062,40 @@ function renderAccountSettings(){
 function checkForLocalStorageData(){
   const statusDiv = document.getElementById("importStatus");
   const versionKey = "tlStudio.versions.v1";
-  const dataKey = "tlStudio.data.v1";
 
-  // Try to find data in localStorage
-  let foundData = null;
+  // Try to find versions in localStorage
+  let versions = [];
 
   // Check localStorage at current origin
   try {
     const versionsStr = localStorage.getItem(versionKey);
-    const dataStr = localStorage.getItem(dataKey);
-    if(versionsStr || dataStr){
-      foundData = {
-        versions: versionsStr ? JSON.parse(versionsStr) : [],
-        data: dataStr ? JSON.parse(dataStr) : { swimlanes: [], projectTitle: "Imported Project" }
-      };
+    if(versionsStr){
+      versions = JSON.parse(versionsStr);
     }
   } catch(e){
     console.error("Error reading localStorage:", e);
   }
 
-  if(!foundData || (foundData.versions.length === 0 && (!foundData.data.swimlanes || foundData.data.swimlanes.length === 0))){
-    statusDiv.textContent = "No data found in browser localStorage. Make sure you opened the original HTML file from the same browser.";
+  if(!versions || versions.length === 0){
+    statusDiv.textContent = "No saved versions found in browser localStorage. Open the original HTML file, create and save some versions, then try again.";
     return;
   }
 
-  if(confirm(`Found data to import! This will create a new project called "${foundData.data.projectTitle || 'Imported Project'}" with your timeline data. Continue?`)){
-    importTimelineData(foundData);
+  if(confirm(`Found ${versions.length} saved version(s) to import! This will create a new project with all your saved versions. Continue?`)){
+    importTimelineData(versions);
   }
 }
 
-async function importTimelineData(foundData){
+async function importTimelineData(versions){
   const statusDiv = document.getElementById("importStatus");
   statusDiv.textContent = "Importing...";
   statusDiv.style.color = "var(--ink-soft)";
 
   try {
-    const projectTitle = foundData.data.projectTitle || "Imported Project";
-
     // Create new project
     const createRes = await apiFetch('/api/v1/projects', {
       method: 'POST',
-      body: JSON.stringify({ title: projectTitle })
+      body: JSON.stringify({ title: "Imported Timeline" })
     });
 
     if(!createRes || !createRes.ok){
@@ -1114,27 +1107,44 @@ async function importTimelineData(foundData){
     const newProject = await createRes.json();
     const projectId = newProject.id;
 
-    // Update project with swimlanes data
-    const swimlanes = foundData.data.swimlanes || [];
-    const updateRes = await apiFetch(`/api/v1/projects/${projectId}`, {
-      method: 'PUT',
-      body: JSON.stringify({ swimlanes, projectTitle })
-    });
+    // Import each version
+    let imported = 0;
+    for(const version of versions){
+      try {
+        const versionRes = await apiFetch(`/api/v1/projects/${projectId}/versions`, {
+          method: 'POST',
+          body: JSON.stringify({
+            name: version.name || "Version " + (imported + 1),
+            group: version.group || "Imported"
+          })
+        });
 
-    if(!updateRes || !updateRes.ok){
-      statusDiv.style.color = "var(--danger)";
-      statusDiv.textContent = "Project created but failed to import timeline data";
-      return;
+        if(versionRes && versionRes.ok){
+          const createdVersion = await versionRes.json();
+          // Now overwrite the version data with the imported data
+          await apiFetch(`/api/v1/projects/${projectId}/versions/${createdVersion.id}`, {
+            method: 'PUT',
+            body: JSON.stringify({
+              name: version.name || "Version " + (imported + 1),
+              group: version.group || "Imported",
+              data: version.data
+            })
+          }).catch(e => console.warn("Could not update version data:", e));
+          imported++;
+        }
+      } catch(err){
+        console.warn("Failed to import one version:", err);
+      }
     }
 
     statusDiv.style.color = "var(--st-complete)";
-    statusDiv.textContent = "✓ Data imported successfully! Reloading...";
+    statusDiv.textContent = `✓ Imported ${imported}/${versions.length} versions! Reloading...`;
 
     await new Promise(r => setTimeout(r, 1500));
     currentProjectId = projectId;
     await loadProjectList();
     await openProject(projectId);
-    activeTab = "data";
+    activeTab = "versions";
     render();
   } catch(err){
     console.error("Import error:", err);
