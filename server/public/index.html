@@ -848,13 +848,39 @@ function render(){
   else if(activeTab==="versions") renderVersions();
   else if(activeTab==="account") renderAccountSettings();
 
-  // Attach checkbox event listeners
+  // Attach event listeners for version cards
   setTimeout(() => {
+    // Checkbox listeners
     document.querySelectorAll(".version-checkbox").forEach(checkbox => {
       checkbox.addEventListener("click", (e) => {
         e.stopPropagation();
         const versionId = parseInt(checkbox.dataset.versionId);
         toggleVersionSelection(versionId);
+      });
+    });
+
+    // Menu button listeners
+    document.querySelectorAll(".version-menu-btn").forEach(btn => {
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const versionId = parseInt(btn.dataset.versionId);
+        toggleVersionMenu(versionId);
+      });
+    });
+
+    // Card body listeners
+    document.querySelectorAll(".version-card-body").forEach(card => {
+      card.addEventListener("click", (e) => {
+        const versionId = parseInt(card.dataset.versionId);
+        loadVersion(versionId);
+      });
+    });
+
+    // Project selector listeners
+    document.querySelectorAll(".project-selector").forEach(item => {
+      item.addEventListener("click", () => {
+        const projectId = parseInt(item.dataset.projectId);
+        setCurrentProjectAndTab(projectId, 'versions');
       });
     });
   }, 0);
@@ -915,7 +941,7 @@ function renderVersions(){
 
   // Build project list HTML
   let projectsHtml = myProjects.map(proj => `
-    <div class="ver-project-item ${proj.id === currentProjectId ? 'active' : ''}" onclick="setCurrentProjectAndTab(${proj.id}, 'versions')" style="cursor:pointer;">
+    <div class="ver-project-item project-selector ${proj.id === currentProjectId ? 'active' : ''}" data-project-id="${proj.id}" style="cursor:pointer;">
       <div style="flex:1;">
         <div style="font-weight:600; color:var(--ink);">${escapeHtml(proj.title)}</div>
         <div style="font-size:12px; color:var(--ink-soft);">Updated ${new Date(proj.updatedAt).toLocaleDateString()}</div>
@@ -1005,10 +1031,10 @@ function versionCardHtml(v){
         ${isSelected ? 'checked' : ''}
         class="version-checkbox" />
       <div class="ver-card-menu-cell">
-        <button class="menu-trigger ver-menu-trigger" onclick="event.stopPropagation(); toggleVersionMenu(${v.id})" title="More">⋯</button>
+        <button class="menu-trigger ver-menu-trigger version-menu-btn" data-version-id="${v.id}" title="More">⋯</button>
         ${versionMenuKey===v.id ? versionMenuHtml(v) : ""}
       </div>
-      <div class="ver-card-body" onclick="loadVersion(${v.id})" style="cursor:pointer;" title="Open this version">
+      <div class="ver-card-body version-card-body" data-version-id="${v.id}" style="cursor:pointer;" title="Open this version">
         <p class="ver-card-title">${escapeHtml(v.name)}</p>
         <div class="ver-card-meta">Saved ${fmtSavedAt(v.savedAt)}</div>
         <div class="ver-card-stats">
