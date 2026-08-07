@@ -232,29 +232,36 @@ let myProjects = []; // [{id, title, createdAt, updatedAt}] for picker
 let currentProjectId = null; // currently open project
 
 /* API wrapper with auth */
-async function apiFetch(path, opts={}){
+async function apiFetch(path, opts={}, attemptCount=0){
   const res = await fetch(path, { ...opts, credentials:'include',
     headers: { 'Content-Type':'application/json', ...(opts.headers||{}) } });
 
-  if(res.status === 401){
-    // Try to refresh token
-    const refreshRes = await fetch('/api/v1/auth/refresh', {
-      method: 'POST',
-      credentials:'include',
-      headers: { 'Content-Type':'application/json' }
-    });
+  if(res.status === 401 && attemptCount === 0 && path !== '/api/v1/auth/refresh'){
+    // Try to refresh token only once
+    try {
+      const refreshRes = await fetch('/api/v1/auth/refresh', {
+        method: 'POST',
+        credentials:'include',
+        headers: { 'Content-Type':'application/json' }
+      });
 
-    if(refreshRes && refreshRes.ok){
-      // Token refreshed, retry original request
-      return fetch(path, { ...opts, credentials:'include',
-        headers: { 'Content-Type':'application/json', ...(opts.headers||{}) } });
-    } else {
-      // Refresh failed, log out
-      authUser = null;
-      renderAuthScreen();
-      return null;
+      if(refreshRes && refreshRes.ok){
+        // Token refreshed, retry original request (but only once)
+        return fetch(path, { ...opts, credentials:'include',
+          headers: { 'Content-Type':'application/json', ...(opts.headers||{}) } });
+      }
+    } catch(e) {
+      console.error('Token refresh error:', e);
     }
   }
+
+  if(res.status === 401){
+    // Refresh failed or already attempted, log out
+    authUser = null;
+    renderAuthScreen();
+    return null;
+  }
+
   return res;
 }
 
