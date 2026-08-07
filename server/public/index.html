@@ -947,7 +947,7 @@ function renderVersions(){
     <div class="ver-project-item project-selector ${proj.id === currentProjectId ? 'active' : ''}" data-project-id="${proj.id}" style="cursor:pointer;">
       <div style="flex:1;">
         <div style="font-weight:600; color:var(--ink);">${escapeHtml(proj.title)}</div>
-        <div style="font-size:12px; color:var(--ink-soft);">Updated ${new Date(proj.updatedAt).toLocaleDateString()}</div>
+        <div style="font-size:12px; color:var(--ink-soft);">Updated ${fmtSavedAt(proj.updatedAt)}</div>
       </div>
       <div style="color:var(--ink-faint); font-size:12px;">→</div>
     </div>
