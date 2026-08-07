@@ -851,8 +851,11 @@ function render(){
   // Attach event listeners for version cards
   setTimeout(() => {
     // Checkbox listeners
-    document.querySelectorAll(".version-checkbox").forEach(checkbox => {
+    const checkboxes = document.querySelectorAll(".version-checkbox");
+    console.log(`[RENDER] Found ${checkboxes.length} checkboxes`);
+    checkboxes.forEach(checkbox => {
       checkbox.addEventListener("click", (e) => {
+        console.log(`[CHECKBOX] Clicked version ${checkbox.dataset.versionId}`);
         e.stopPropagation();
         const versionId = parseInt(checkbox.dataset.versionId);
         toggleVersionSelection(versionId);
@@ -1027,7 +1030,7 @@ function versionCardHtml(v){
   return `
     <div class="ver-card" style="position:relative;${isSelected ? 'background:var(--accent-soft);' : ''}">
       <div class="ver-card-strip" style="background:${color}"></div>
-      <input type="checkbox" data-version-id="${v.id}" style="position:absolute;bottom:8px;right:8px;width:20px;height:20px;cursor:pointer;z-index:20;accent-color:var(--accent);"
+      <input type="checkbox" data-version-id="${v.id}" style="position:absolute;bottom:8px;right:8px;width:18px;height:18px;cursor:pointer;z-index:20;accent-color:var(--accent);appearance:auto;margin:0;padding:0;"
         ${isSelected ? 'checked' : ''}
         class="version-checkbox" />
       <div class="ver-card-menu-cell">
@@ -1046,10 +1049,13 @@ function versionCardHtml(v){
     </div>`;
 }
 function toggleVersionSelection(versionId){
+  console.log(`[TOGGLE] versionId=${versionId}, currently selected=${selectedVersions.has(versionId)}`);
   if(selectedVersions.has(versionId)){
     selectedVersions.delete(versionId);
+    console.log(`[TOGGLE] Deselected, now have ${selectedVersions.size} selected`);
   } else {
     selectedVersions.add(versionId);
+    console.log(`[TOGGLE] Selected, now have ${selectedVersions.size} selected`);
   }
   render();
 }
