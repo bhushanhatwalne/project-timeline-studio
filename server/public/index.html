@@ -1078,17 +1078,19 @@ async function deleteBulkVersions(){
   let deleted = 0;
   for(const versionId of selectedVersions){
     try {
+      console.log(`[DELETE] Attempting to delete version ${versionId}`);
       const res = await apiFetch(`/api/v1/projects/${currentProjectId}/versions/${versionId}`, {
         method: 'DELETE'
       });
-      if(res && res.status === 204){
+      console.log(`[DELETE] Response:`, res, `Status:`, res?.status, `OK:`, res?.ok);
+      if(res && (res.status === 204 || res.ok)){
         deleted++;
-        console.log(`Deleted version ${versionId}`);
+        console.log(`[DELETE] ✓ Deleted version ${versionId}`);
       } else {
-        console.error(`Failed to delete version ${versionId}:`, res?.status);
+        console.error(`[DELETE] ✗ Failed to delete version ${versionId}. Status:`, res?.status);
       }
     } catch(err){
-      console.error("Failed to delete version:", err);
+      console.error("[DELETE] Exception:", err);
     }
   }
 
