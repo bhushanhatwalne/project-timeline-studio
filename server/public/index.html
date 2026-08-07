@@ -1116,7 +1116,14 @@ async function importTimelineData(versions){
     // Get the first version's data as the project title and swimlanes
     const firstVersion = versions[0];
     const projectTitle = firstVersion.data?.projectTitle || "Imported Timeline";
-    const initialSwimlanes = firstVersion.data?.swimlanes || [];
+    let initialSwimlanes = firstVersion.data?.swimlanes || [];
+
+    // Ensure all items are visible
+    initialSwimlanes = initialSwimlanes.map(swimlane => ({
+      ...swimlane,
+      visible: true,
+      children: (swimlane.children || []).map(child => ({ ...child, visible: true }))
+    }));
 
     // Create new project with initial data
     const createRes = await apiFetch('/api/v1/projects', {
@@ -1146,14 +1153,20 @@ async function importTimelineData(versions){
     let imported = 0;
     for(const version of versions){
       try {
-        // Need to create a version endpoint that accepts the full data
-        // For now, we'll use the versions API
+        // Ensure all items are visible in each version too
+        let versionSwimlanes = version.data?.swimlanes || [];
+        versionSwimlanes = versionSwimlanes.map(swimlane => ({
+          ...swimlane,
+          visible: true,
+          children: (swimlane.children || []).map(child => ({ ...child, visible: true }))
+        }));
+
         const versionRes = await apiFetch(`/api/v1/projects/${projectId}/versions`, {
           method: 'POST',
           body: JSON.stringify({
             name: version.name || "Version " + (imported + 1),
             group: version.group || "Imported",
-            data: version.data || { swimlanes: [], projectTitle: "Untitled" }
+            data: { swimlanes: versionSwimlanes, projectTitle: version.data?.projectTitle || "Untitled" }
           })
         });
 
@@ -1166,7 +1179,7 @@ async function importTimelineData(versions){
     }
 
     statusDiv.style.color = "var(--st-complete)";
-    statusDiv.textContent = `✓ Imported ${imported}/${versions.length} versions! Reloading...`;
+    statusDiv.textContent = `✓ Imported ${imported} version${imported === 1 ? '' : 's'}! Reloading...`;
 
     await new Promise(r => setTimeout(r, 1500));
     currentProjectId = projectId;
