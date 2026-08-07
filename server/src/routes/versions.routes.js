@@ -202,15 +202,19 @@ router.put('/:verId', authMiddleware, ownershipMiddleware, async (req, res) => {
 // DELETE /api/v1/projects/:projectId/versions/:verId
 router.delete('/:verId', authMiddleware, ownershipMiddleware, async (req, res) => {
   try {
-    await pool.query('DELETE FROM versions WHERE id = $1 AND project_id = $2', [req.params.verId, req.projectId]);
+    console.log(`[DELETE] Attempting to delete version ${req.params.verId} from project ${req.projectId}`);
+    const result = await pool.query('DELETE FROM versions WHERE id = $1 AND project_id = $2', [req.params.verId, req.projectId]);
+    console.log(`[DELETE] Success. Deleted ${result.rowCount} row(s)`);
     res.status(204).send();
   } catch (err) {
-    console.error('Error in DELETE /versions/:verId:', err);
+    console.error('[DELETE] Error in DELETE /versions/:verId:', err.message, err.code);
+    console.error('[DELETE] Stack:', err.stack);
     res.status(500).json({
       type: 'https://api.timeline.studio/errors#internal_error',
       title: 'Internal Server Error',
       status: 500,
       detail: 'An unexpected error occurred',
+      error: err.message,
     });
   }
 });
