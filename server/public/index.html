@@ -1342,17 +1342,40 @@ async function confirmModal(){
   const name = (modalName||"").trim() || "Untitled version";
   const group = (modalGroup||"").trim();
   if(modalMode==="save"){
-    const res = await apiFetch(`/api/v1/projects/${currentProjectId}/versions`, {
-      method: 'POST',
-      body: JSON.stringify({ name, group: group || null })
-    });
-    if(res && res.ok) await loadVersions();
+    try {
+      const res = await apiFetch(`/api/v1/projects/${currentProjectId}/versions`, {
+        method: 'POST',
+        body: JSON.stringify({ name, group: group || null })
+      });
+      if(res && res.ok) {
+        await loadVersions();
+        alert("Version saved successfully!");
+      } else {
+        const err = res ? await res.json() : {};
+        alert("Failed to save version: " + (err.detail || "Unknown error"));
+        console.error("Save version error:", err);
+      }
+    } catch(err) {
+      console.error("Save version error:", err);
+      alert("Error saving version: " + err.message);
+    }
   } else if(modalMode==="edit" && modalEditId!=null){
-    const res = await apiFetch(`/api/v1/projects/${currentProjectId}/versions/${modalEditId}`, {
-      method: 'PUT',
-      body: JSON.stringify({ name, group: group || null })
-    });
-    if(res && res.ok) await loadVersions();
+    try {
+      const res = await apiFetch(`/api/v1/projects/${currentProjectId}/versions/${modalEditId}`, {
+        method: 'PUT',
+        body: JSON.stringify({ name, group: group || null })
+      });
+      if(res && res.ok) {
+        await loadVersions();
+        alert("Version updated successfully!");
+      } else {
+        const err = res ? await res.json() : {};
+        alert("Failed to update version: " + (err.detail || "Unknown error"));
+      }
+    } catch(err) {
+      console.error("Update version error:", err);
+      alert("Error updating version: " + err.message);
+    }
   }
   modalMode = null; modalEditId = null;
   activeTab = "versions";
