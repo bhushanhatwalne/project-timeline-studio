@@ -857,7 +857,7 @@ function render(){
       checkbox.addEventListener("click", (e) => {
         console.log(`[CHECKBOX] Clicked version ${checkbox.dataset.versionId}`);
         e.stopPropagation();
-        const versionId = parseInt(checkbox.dataset.versionId);
+        const versionId = checkbox.dataset.versionId; // Keep as string (UUID)
         toggleVersionSelection(versionId);
       });
     });
@@ -866,7 +866,7 @@ function render(){
     document.querySelectorAll(".version-menu-btn").forEach(btn => {
       btn.addEventListener("click", (e) => {
         e.stopPropagation();
-        const versionId = parseInt(btn.dataset.versionId);
+        const versionId = btn.dataset.versionId; // Keep as string (UUID)
         toggleVersionMenu(versionId);
       });
     });
@@ -874,7 +874,7 @@ function render(){
     // Card body listeners
     document.querySelectorAll(".version-card-body").forEach(card => {
       card.addEventListener("click", (e) => {
-        const versionId = parseInt(card.dataset.versionId);
+        const versionId = card.dataset.versionId; // Keep as string (UUID)
         loadVersion(versionId);
       });
     });
