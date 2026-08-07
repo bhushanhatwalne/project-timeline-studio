@@ -172,6 +172,9 @@
 
   /* ===== VERSIONS TAB ===== */
   .ver-wrap{padding:8px 24px 48px;}
+  .ver-project-item{display:flex;align-items:center;padding:12px 10px;border-radius:6px;margin-bottom:8px;border:1px solid transparent;transition:all 150ms;}
+  .ver-project-item:hover{background:var(--accent-soft);border-color:var(--accent);}
+  .ver-project-item.active{background:var(--accent-soft);border-color:var(--accent);font-weight:600;}
   .ver-group{margin-top:26px;}
   .ver-group:first-child{margin-top:6px;}
   .ver-group-head{display:flex;align-items:center;gap:10px;cursor:pointer;user-select:none;padding:6px 2px;}
@@ -871,6 +874,19 @@ function toggleVersionMenu(id){
 }
 function renderVersions(){
   const view = document.getElementById("view");
+
+  // Build project list HTML
+  let projectsHtml = myProjects.map(proj => `
+    <div class="ver-project-item ${proj.id === currentProjectId ? 'active' : ''}" onclick="setCurrentProjectAndTab(${proj.id}, 'versions')" style="cursor:pointer;">
+      <div style="flex:1;">
+        <div style="font-weight:600; color:var(--ink);">${escapeHtml(proj.title)}</div>
+        <div style="font-size:12px; color:var(--ink-soft);">Updated ${new Date(proj.updatedAt).toLocaleDateString()}</div>
+      </div>
+      <div style="color:var(--ink-faint); font-size:12px;">→</div>
+    </div>
+  `).join("");
+
+  // Build versions HTML for current project
   const groups = {};
   versions.forEach(v=>{
     const g = v.group && v.group.trim() ? v.group.trim() : "Ungrouped";
@@ -897,17 +913,33 @@ function renderVersions(){
   });
 
   view.innerHTML = `
-    <div class="ver-wrap">
-      <div class="ver-current-banner">
-        <div>
-          <div class="lbl">Currently open</div>
-          <div class="name">${escapeHtml(projectTitle)}</div>
-        </div>
-        <button class="btn primary" onclick="openSaveModal()">💾 Save as version</button>
+    <div style="display:flex; gap:20px; padding:20px; height:calc(100vh - 200px);">
+      <!-- Projects sidebar -->
+      <div style="width:280px; border-right:1px solid var(--line); overflow-y:auto;">
+        <div style="font-weight:600; color:var(--header); margin-bottom:15px; padding:0 10px;">My Projects</div>
+        ${myProjects.length === 0 ? `<div style="color:var(--ink-soft); padding:10px;">No projects yet</div>` : projectsHtml}
       </div>
-      ${versions.length===0 ? `<div class="ver-empty">No saved versions yet. Save the current timeline to start building a library by business group.</div>` : groupsHtml}
+
+      <!-- Versions content -->
+      <div style="flex:1; overflow-y:auto;">
+        <div class="ver-current-banner" style="margin-bottom:20px;">
+          <div>
+            <div class="lbl">Currently open</div>
+            <div class="name">${escapeHtml(projectTitle)}</div>
+          </div>
+          <button class="btn primary" onclick="openSaveModal()">💾 Save as version</button>
+        </div>
+        ${versions.length===0 ? `<div class="ver-empty">No saved versions yet. Save the current timeline to start building a library by business group.</div>` : groupsHtml}
+      </div>
     </div>
   `;
+}
+
+async function setCurrentProjectAndTab(projectId, tab){
+  currentProjectId = projectId;
+  await openProject(projectId);
+  activeTab = tab;
+  render();
 }
 function versionCardHtml(v){
   const stats = versionStats(v.data);
@@ -1101,7 +1133,7 @@ async function handleManualImport(){
     return;
   }
 
-  if(confirm(`Import ${versions.length} version(s)? This will create a new project with your timeline data.`)){
+  if(confirm(`Import ${versions.length} version${versions.length === 1 ? '' : 's'}? This will create a new project with your timeline data.`)){
     await importTimelineData(versions);
     pasteArea.value = "";
   }
