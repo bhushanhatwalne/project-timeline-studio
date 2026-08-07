@@ -6,7 +6,7 @@
 2. Create a new project
 3. In the Neon console, copy the **Pooled Connection String** (should look like):
    ```
-   postgres://username:password@xxx.postgres.neon.tech:5432/database?sslmode=require
+   postgresql://neondb_owner:PASSWORD@ep-wild-dream-awuswj2x.c-12.us-east-1.aws.neon.tech/neondb?sslmode=require
    ```
 4. Save this URL — you'll need it in the next step
 

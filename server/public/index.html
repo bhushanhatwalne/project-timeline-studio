@@ -247,7 +247,7 @@ async function apiFetch(path, opts={}, attemptCount=0){
 
       if(refreshRes && refreshRes.ok){
         // Token refreshed, retry original request (but only once)
-        return fetch(path, { ...opts, credentials:'include',
+        return await fetch(path, { ...opts, credentials:'include',
           headers: { 'Content-Type':'application/json', ...(opts.headers||{}) } });
       }
     } catch(e) {
