@@ -235,7 +235,26 @@ let currentProjectId = null; // currently open project
 async function apiFetch(path, opts={}){
   const res = await fetch(path, { ...opts, credentials:'include',
     headers: { 'Content-Type':'application/json', ...(opts.headers||{}) } });
-  if(res.status === 401){ authUser = null; renderAuthScreen(); return null; }
+
+  if(res.status === 401){
+    // Try to refresh token
+    const refreshRes = await fetch('/api/v1/auth/refresh', {
+      method: 'POST',
+      credentials:'include',
+      headers: { 'Content-Type':'application/json' }
+    });
+
+    if(refreshRes && refreshRes.ok){
+      // Token refreshed, retry original request
+      return fetch(path, { ...opts, credentials:'include',
+        headers: { 'Content-Type':'application/json', ...(opts.headers||{}) } });
+    } else {
+      // Refresh failed, log out
+      authUser = null;
+      renderAuthScreen();
+      return null;
+    }
+  }
   return res;
 }
 
