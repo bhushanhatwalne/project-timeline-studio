@@ -24,7 +24,7 @@ const UpdateVersionSchema = z.object({
 router.get('/', authMiddleware, ownershipMiddleware, async (req, res) => {
   try {
     const result = await pool.query(
-      'SELECT id, name, business_group, saved_at FROM versions WHERE project_id = $1 ORDER BY saved_at DESC',
+      'SELECT id, name, business_group, project_title, swimlanes, saved_at FROM versions WHERE project_id = $1 ORDER BY saved_at DESC',
       [req.projectId]
     );
 
@@ -34,6 +34,10 @@ router.get('/', authMiddleware, ownershipMiddleware, async (req, res) => {
         name: row.name,
         group: row.business_group,
         savedAt: row.saved_at,
+        data: {
+          projectTitle: row.project_title,
+          swimlanes: typeof row.swimlanes === 'string' ? JSON.parse(row.swimlanes) : row.swimlanes,
+        },
       }))
     );
   } catch (err) {
