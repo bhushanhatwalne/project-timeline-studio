@@ -1094,7 +1094,6 @@ function versionMenuHtml(v){
     <button onclick="updateVersionWithCurrent(${v.id})">🔄 Overwrite with current</button>
     <button onclick="duplicateVersion(${v.id})">⧉ Duplicate</button>
     <button onclick="openEditModal(${v.id})">✎ Rename / move group</button>
-    <button onclick="openMoveVersionModal(${v.id})">➜ Move to project</button>
     <hr/>
     <button class="danger" onclick="deleteVersion(${v.id})">🗑 Delete</button>
   </div>`;
@@ -1545,34 +1544,6 @@ async function confirmModal(){
 function renderModal(){
   const dl = existingGroups().map(g=>`<option value="${escapeAttr(g)}"></option>`).join("");
   const isEdit = modalMode==="edit";
-  const isMove = modalMode==="move";
-
-  if(isMove){
-    let projectOptions = "";
-    if(myProjects && myProjects.length > 0){
-      projectOptions = myProjects.filter(p=> p.id !== currentProjectId).map(p=>`<option value="${p.id}">${escapeHtml(p.title)}</option>`).join("");
-    }
-    const disabled = !modalTargetProjectId ? "disabled" : "";
-    return `
-      <div class="modal-overlay" onclick="if(event.target===this) closeModal()">
-        <div class="modal-card">
-          <p class="modal-title">Move version to project</p>
-          <p class="modal-sub">Select a project to move this version to.</p>
-          <div class="modal-field">
-            <label>Target project</label>
-            <select id="modalTargetProjectInput" onchange="updateModalTargetProject(this.value)" style="width:100%;border:1px solid var(--line-strong);background:var(--paper);font-size:13.5px;border-radius:6px;padding:9px 11px;font-family:var(--font-body);color:var(--ink);">
-              <option value="">Select a project...</option>
-              ${projectOptions}
-            </select>
-          </div>
-          <div class="modal-actions">
-            <button class="btn" onclick="closeModal()">Cancel</button>
-            <button class="btn primary" onclick="confirmModal()" ${disabled}>Move version</button>
-          </div>
-        </div>
-      </div>`;
-  }
-
   return `
     <div class="modal-overlay" onclick="if(event.target===this) closeModal()">
       <div class="modal-card">
