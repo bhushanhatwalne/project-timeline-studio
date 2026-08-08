@@ -981,11 +981,8 @@ function renderVersions(){
   });
 
   view.innerHTML = `
-    <div style="padding:20px; overflow-y:auto; max-width:100%; overflow-x:hidden;">
-      <!-- Versions content -->
-      <div style="max-width:1400px;">
-
-        ${selectedVersions.size > 0 ? `
+    <div style="padding:20px; overflow-y:auto; max-width:100%; overflow-x:hidden; width:100%;">
+      ${selectedVersions.size > 0 ? `
           <div style="background:var(--accent-soft); border:1px solid var(--accent); border-radius:8px; padding:15px; margin-bottom:20px; display:flex; align-items:center; gap:10px;">
             <span style="flex:1; color:var(--ink);">
               <strong>${selectedVersions.size} version${selectedVersions.size === 1 ? '' : 's'} selected</strong>
@@ -999,8 +996,7 @@ function renderVersions(){
           </div>
         `}
 
-        ${versions.length===0 ? `<div class="ver-empty">No saved versions yet. Save the current timeline to start building a library by business group.</div>` : groupsHtml}
-      </div>
+      ${versions.length===0 ? `<div class="ver-empty">No saved versions yet. Save the current timeline to start building a library by business group.</div>` : groupsHtml}
     </div>
   `;
 }
