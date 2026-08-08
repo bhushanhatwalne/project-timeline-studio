@@ -1548,7 +1548,11 @@ function renderModal(){
   const isMove = modalMode==="move";
 
   if(isMove){
-    const projectOptions = myProjects.filter(p=> p.id !== currentProjectId).map(p=>`<option value="${p.id}">${escapeHtml(p.title)}</option>`).join("");
+    let projectOptions = "";
+    if(myProjects && myProjects.length > 0){
+      projectOptions = myProjects.filter(p=> p.id !== currentProjectId).map(p=>`<option value="${p.id}">${escapeHtml(p.title)}</option>`).join("");
+    }
+    const disabled = !modalTargetProjectId ? "disabled" : "";
     return `
       <div class="modal-overlay" onclick="if(event.target===this) closeModal()">
         <div class="modal-card">
@@ -1563,7 +1567,7 @@ function renderModal(){
           </div>
           <div class="modal-actions">
             <button class="btn" onclick="closeModal()">Cancel</button>
-            <button class="btn primary" onclick="confirmModal()" ${!modalTargetProjectId ? 'disabled' : ''}>Move version</button>
+            <button class="btn primary" onclick="confirmModal()" ${disabled}>Move version</button>
           </div>
         </div>
       </div>`;
