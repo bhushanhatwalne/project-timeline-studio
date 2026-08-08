@@ -185,7 +185,7 @@
   .ver-group-caret{color:var(--ink-faint);font-size:11px;transition:transform .12s;}
   .ver-group-caret.collapsed{transform:rotate(-90deg);}
   .ver-grid{display:grid;grid-template-columns:repeat(auto-fill, minmax(230px, 1fr));gap:16px;margin-top:14px;}
-  .ver-card{background:var(--surface);border:1px solid var(--line);border-radius:10px;overflow:visible;position:relative;transition:box-shadow .12s, border-color .12s;}
+  .ver-card{background:var(--surface);border:1px solid var(--line);border-radius:10px;overflow:hidden;position:relative;transition:box-shadow .12s, border-color .12s;}
   .ver-card:hover{border-color:var(--line-strong);box-shadow:0 6px 18px rgba(20,20,30,.08);}
   .ver-card-strip{height:8px;}
   .ver-card-body{padding:14px 14px 12px;}
@@ -271,9 +271,8 @@ let versions = [];
 let collapsedGroups = new Set();
 let versionMenuKey = null; // id of version whose card menu is open
 let selectedVersions = new Set(); // ids of selected versions for bulk operations
-let modalMode = null; // null | "save" | "edit" | "move"
-let modalEditId = null; // version id being edited, when modalMode === "edit" or "move"
-let modalTargetProjectId = null; // target project id when modalMode === "move"
+let modalMode = null; // null | "save" | "edit"
+let modalEditId = null; // version id being edited, when modalMode === "edit"
 let modalName = "";
 let modalGroup = "";
 
@@ -981,8 +980,24 @@ function renderVersions(){
   });
 
   view.innerHTML = `
-    <div style="padding:20px; overflow-y:auto; max-width:100%; overflow-x:hidden; width:100%;">
-      ${selectedVersions.size > 0 ? `
+    <div style="display:flex; gap:20px; padding:20px; height:calc(100vh - 200px);">
+      <!-- Projects sidebar -->
+      <div style="width:280px; border-right:1px solid var(--line); overflow-y:auto;">
+        <div style="font-weight:600; color:var(--header); margin-bottom:15px; padding:0 10px;">My Projects</div>
+        ${myProjects.length === 0 ? `<div style="color:var(--ink-soft); padding:10px;">No projects yet</div>` : projectsHtml}
+      </div>
+
+      <!-- Versions content -->
+      <div style="flex:1; overflow-y:auto;">
+        <div class="ver-current-banner" style="margin-bottom:20px;">
+          <div>
+            <div class="lbl">Currently open</div>
+            <div class="name">${escapeHtml(projectTitle)}</div>
+          </div>
+          <button class="btn primary" onclick="openSaveModal()">💾 Save as version</button>
+        </div>
+
+        ${selectedVersions.size > 0 ? `
           <div style="background:var(--accent-soft); border:1px solid var(--accent); border-radius:8px; padding:15px; margin-bottom:20px; display:flex; align-items:center; gap:10px;">
             <span style="flex:1; color:var(--ink);">
               <strong>${selectedVersions.size} version${selectedVersions.size === 1 ? '' : 's'} selected</strong>
@@ -996,7 +1011,8 @@ function renderVersions(){
           </div>
         `}
 
-      ${versions.length===0 ? `<div class="ver-empty">No saved versions yet. Save the current timeline to start building a library by business group.</div>` : groupsHtml}
+        ${versions.length===0 ? `<div class="ver-empty">No saved versions yet. Save the current timeline to start building a library by business group.</div>` : groupsHtml}
+      </div>
     </div>
   `;
 }
@@ -1016,7 +1032,7 @@ function versionCardHtml(v){
       <div class="ver-card-strip" style="background:${color}"></div>
       <div class="version-checkbox" data-version-id="${v.id}" style="position:absolute;bottom:8px;right:8px;width:22px;height:22px;border:2px solid ${isSelected ? 'var(--accent)' : 'var(--line-strong)'};background:${isSelected ? 'var(--accent)' : 'var(--surface)'};border-radius:4px;cursor:pointer;z-index:20;display:flex;align-items:center;justify-content:center;font-size:14px;line-height:1;color:#fff;font-weight:700;">${isSelected ? '✓' : ''}</div>
       <div class="ver-card-menu-cell">
-        <button class="menu-trigger ver-menu-trigger version-menu-btn" data-version-id="${v.id}" onclick="event.stopPropagation(); toggleVersionMenu(${v.id})" title="More">⋯</button>
+        <button class="menu-trigger ver-menu-trigger version-menu-btn" data-version-id="${v.id}" title="More">⋯</button>
         ${versionMenuKey===v.id ? versionMenuHtml(v) : ""}
       </div>
       <div class="ver-card-body version-card-body" data-version-id="${v.id}" style="cursor:pointer;" title="Open this version">
@@ -1468,19 +1484,9 @@ function openEditModal(id){
   render();
   setTimeout(()=>{ const el=document.getElementById("modalNameInput"); if(el){ el.focus(); el.select(); } }, 0);
 }
-function openMoveVersionModal(id){
-  const v = versions.find(x=>x.id===id);
-  if(!v) return;
-  modalMode = "move";
-  modalEditId = id;
-  modalTargetProjectId = null;
-  versionMenuKey = null;
-  render();
-}
-function closeModal(){ modalMode = null; modalEditId = null; modalTargetProjectId = null; render(); }
+function closeModal(){ modalMode = null; modalEditId = null; render(); }
 function updateModalName(val){ modalName = val; }
 function updateModalGroup(val){ modalGroup = val; }
-function updateModalTargetProject(val){ modalTargetProjectId = val; }
 async function confirmModal(){
   const name = (modalName||"").trim() || "Untitled version";
   const group = (modalGroup||"").trim();
@@ -1519,25 +1525,8 @@ async function confirmModal(){
       console.error("Update version error:", err);
       alert("Error updating version: " + err.message);
     }
-  } else if(modalMode==="move" && modalEditId!=null && modalTargetProjectId){
-    try {
-      const res = await apiFetch(`/api/v1/projects/${currentProjectId}/versions/${modalEditId}/move`, {
-        method: 'POST',
-        body: JSON.stringify({ targetProjectId: modalTargetProjectId })
-      });
-      if(res && res.ok) {
-        await loadVersions();
-        alert("Version moved successfully!");
-      } else {
-        const err = res ? await res.json() : {};
-        alert("Failed to move version: " + (err.detail || "Unknown error"));
-      }
-    } catch(err) {
-      console.error("Move version error:", err);
-      alert("Error moving version: " + err.message);
-    }
   }
-  modalMode = null; modalEditId = null; modalTargetProjectId = null;
+  modalMode = null; modalEditId = null;
   activeTab = "versions";
   render();
 }
