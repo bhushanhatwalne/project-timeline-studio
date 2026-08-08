@@ -1564,6 +1564,7 @@ function renderModal(){
     const currentVersion = versions.find(x=>x.id===modalMoveVersionId);
     const currentProjName = myProjects.find(p=>p.id===currentProjectId)?.title || "Current Project";
     const availableProjects = myProjects.filter(p=>p.id!==currentProjectId);
+    console.log("[Move Modal] myProjects:", myProjects, "currentProjectId:", currentProjectId, "availableProjects:", availableProjects);
 
     return `
       <div class="modal-overlay" onclick="if(event.target===this) closeModal()">
