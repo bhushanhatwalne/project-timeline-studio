@@ -1484,7 +1484,7 @@ function openMoveVersionModal(id){
 }
 function updateModalName(val){ modalName = val; }
 function updateModalGroup(val){ modalGroup = val; }
-function updateModalTargetProject(val){ modalTargetProject = val; }
+function updateModalTargetProject(val){ modalTargetProject = val; render(); }
 async function confirmModal(){
   const name = (modalName||"").trim() || "Untitled version";
   const group = (modalGroup||"").trim();
