@@ -618,13 +618,6 @@ function renderVersions(){
 
   view.innerHTML = `
     <div class="ver-wrap">
-      <div class="ver-current-banner">
-        <div>
-          <div class="lbl">Currently open</div>
-          <div class="name">${escapeHtml(projectTitle)}</div>
-        </div>
-        <button class="btn primary" onclick="openSaveModal()">💾 Save as version</button>
-      </div>
       ${versions.length===0 ? `<div class="ver-empty">No saved versions yet. Save the current timeline to start building a library by business group.</div>` : groupsHtml}
     </div>
   `;
