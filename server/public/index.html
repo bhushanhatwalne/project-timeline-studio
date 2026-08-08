@@ -199,6 +199,34 @@
   .ver-current-banner .lbl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--accent);}
   .ver-current-banner .name{font-size:14.5px;font-weight:700;color:var(--ink);margin-top:2px;}
 
+  /* ===== LANDING PAGE ===== */
+  .landing-layout{display:flex;height:100%;min-height:calc(100vh - 60px);}
+  .landing-sidebar{width:260px;background:var(--surface);border-right:1px solid var(--line);padding:24px 16px;overflow-y:auto;}
+  .landing-main{flex:1;padding:24px;overflow-y:auto;}
+  .new-project-btn{display:flex;align-items:center;gap:8px;width:100%;border:2px dashed var(--line-strong);background:transparent;color:var(--ink-soft);padding:14px 12px;border-radius:8px;cursor:pointer;font-size:14px;font-weight:600;font-family:var(--font-body);margin-bottom:20px;transition:all 150ms;}
+  .new-project-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-soft);}
+  .landing-section{margin-bottom:24px;}
+  .landing-section-title{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-soft);margin-bottom:12px;padding:0 6px;}
+  .landing-item{display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:6px;cursor:pointer;margin-bottom:6px;border:1px solid transparent;color:var(--ink-soft);font-size:13.5px;transition:all 150ms;}
+  .landing-item:hover{background:var(--accent-soft);color:var(--accent);border-color:var(--accent);}
+  .landing-item.active{background:var(--accent-soft);color:var(--accent);border-color:var(--accent);font-weight:600;}
+  .landing-item-count{margin-left:auto;font-size:12px;color:var(--ink-faint);font-weight:500;}
+  .landing-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;gap:16px;flex-wrap:wrap;}
+  .landing-search{flex:1;min-width:200px;padding:8px 14px;border:1px solid var(--line-strong);border-radius:6px;font-size:13px;font-family:var(--font-body);color:var(--ink);}
+  .landing-search::placeholder{color:var(--ink-faint);}
+  .landing-grid{display:grid;grid-template-columns:repeat(auto-fill, minmax(280px, 1fr));gap:16px;margin-top:16px;}
+  .project-card{background:var(--surface);border:1px solid var(--line);border-radius:10px;overflow:hidden;cursor:pointer;transition:all 150ms;display:flex;flex-direction:column;}
+  .project-card:hover{border-color:var(--line-strong);box-shadow:0 6px 18px rgba(20,20,30,.08);}
+  .project-card-preview{height:140px;background:linear-gradient(135deg, #E6E7E8 0%, #D3E9F7 100%);display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--ink-faint);position:relative;overflow:hidden;}
+  .project-card-preview svg{width:80%;height:80%;opacity:.4;}
+  .project-card-body{padding:14px;flex:1;display:flex;flex-direction:column;}
+  .project-card-title{font-size:14px;font-weight:700;color:var(--ink);margin:0 0 4px;line-height:1.3;}
+  .project-card-meta{font-size:11px;color:var(--ink-faint);margin-bottom:8px;}
+  .project-card-stats{display:flex;gap:10px;font-size:11px;color:var(--ink-soft);margin-top:auto;}
+  .project-card-stat{display:flex;align-items:center;gap:4px;}
+  .landing-empty{text-align:center;padding:60px 40px;color:var(--ink-faint);}
+  .landing-empty-title{font-size:18px;font-weight:700;color:var(--ink);margin-bottom:8px;}
+
   /* modal */
   .modal-overlay{position:fixed;inset:0;background:rgba(15,20,28,.42);display:flex;align-items:center;justify-content:center;z-index:200;}
   .modal-card{background:var(--surface);border-radius:12px;box-shadow:0 20px 50px rgba(15,20,28,.28);width:420px;max-width:92vw;padding:22px 24px 20px;}
@@ -725,19 +753,31 @@ function renderAuthScreen(){
 
 function renderProjectPicker(){
   const app = document.getElementById("app");
-  let projectsHtml = "";
+  let projectCardsHtml = "";
 
   myProjects.forEach(proj => {
     const updated = new Date(proj.updatedAt);
-    const updatedStr = updated.toLocaleDateString() + " " + updated.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
-    projectsHtml += `
-      <div class="ver-card" style="cursor:pointer;" onclick="openProject('${proj.id}')">
-        <div class="ver-card-body">
-          <p class="ver-card-title">${escapeHtml(proj.title)}</p>
-          <div class="ver-card-meta">Updated ${updatedStr}</div>
-          <div class="modal-actions" style="margin-top:12px;justify-content:space-between;">
-            <button class="btn" onclick="event.stopPropagation(); openProject('${proj.id}')">Open</button>
-            <button class="btn" onclick="event.stopPropagation(); deleteProject('${proj.id}')" style="color:var(--danger);">Delete</button>
+    const month = updated.toLocaleString('default', { month: 'short' });
+    const day = updated.getDate();
+    const year = updated.getFullYear();
+    const updatedStr = `${day} ${month}, ${year}`;
+
+    projectCardsHtml += `
+      <div class="project-card" onclick="openProject('${escapeAttr(proj.id)}')">
+        <div class="project-card-preview">
+          <svg viewBox="0 0 200 140" xmlns="http://www.w3.org/2000/svg" style="opacity:0.3;">
+            <rect x="20" y="20" width="160" height="15" fill="#0076BC" rx="2"/>
+            <rect x="20" y="50" width="160" height="12" fill="#0076BC" rx="2"/>
+            <rect x="20" y="70" width="140" height="12" fill="#0076BC" rx="2"/>
+            <rect x="20" y="90" width="130" height="12" fill="#0099D8" rx="2"/>
+            <rect x="20" y="110" width="110" height="12" fill="#0099D8" rx="2"/>
+          </svg>
+        </div>
+        <div class="project-card-body">
+          <p class="project-card-title">${escapeHtml(proj.title)}</p>
+          <div class="project-card-meta">Updated ${updatedStr}</div>
+          <div class="project-card-stats">
+            <span class="project-card-stat">📊 Timeline</span>
           </div>
         </div>
       </div>
@@ -751,16 +791,39 @@ function renderProjectPicker(){
           <div class="mark"></div>
           <div style="font-size:20px;font-weight:700;color:#fff;">Timeline Studio</div>
         </div>
-        <button class="btn" style="background:#fff;color:var(--header);" onclick="logout()">Log Out</button>
+        <div style="display:flex;gap:12px;align-items:center;">
+          <button class="btn" style="background:transparent;color:#fff;border-color:rgba(255,255,255,.2);" onclick="logout()">Log Out</button>
+        </div>
       </div>
-      <div class="view" style="padding:40px 24px;">
-        <div style="max-width:1200px;">
-          <h1 style="font-size:28px;font-weight:700;margin:0 0 8px;">My Projects</h1>
-          <p style="color:var(--ink-soft);margin:0 0 30px;">Select a project to open or create a new one</p>
 
-          <button class="btn primary" onclick="createNewProject()" style="margin-bottom:30px;">+ New Project</button>
+      <div class="landing-layout">
+        <div class="landing-sidebar">
+          <button class="new-project-btn" onclick="createNewProject()">
+            <span>+</span> New Project
+          </button>
 
-          ${projectsHtml ? `<div class="ver-grid">${projectsHtml}</div>` : `<div class="empty-note">No projects yet. Create one to get started!</div>`}
+          <div class="landing-section">
+            <div class="landing-section-title">My Projects</div>
+            <div class="landing-item active">
+              <span>📁 All Projects</span>
+              <span class="landing-item-count">${myProjects.length}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="landing-main">
+          <div class="landing-header">
+            <h1 style="margin:0;font-size:24px;font-weight:700;">All Projects</h1>
+            <input type="text" class="landing-search" placeholder="Search projects..." id="landingSearch" oninput="filterProjectCards(this.value)"/>
+          </div>
+
+          ${projectCardsHtml ? `<div class="landing-grid">${projectCardsHtml}</div>` : `
+            <div class="landing-empty">
+              <div class="landing-empty-title">No projects yet</div>
+              <p>Create your first project to get started building timelines</p>
+              <button class="btn primary" onclick="createNewProject()" style="margin-top:20px;">+ Create Project</button>
+            </div>
+          `}
         </div>
       </div>
     </div>
@@ -787,6 +850,15 @@ function renderProjectPicker(){
       renderProjectPicker();
     }
   };
+}
+
+function filterProjectCards(query){
+  const cards = document.querySelectorAll('.project-card');
+  const lowerQuery = query.toLowerCase();
+  cards.forEach(card => {
+    const title = card.querySelector('.project-card-title')?.textContent.toLowerCase() || '';
+    card.style.display = title.includes(lowerQuery) ? '' : 'none';
+  });
 }
 
 async function logout(){
