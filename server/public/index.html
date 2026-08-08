@@ -1573,9 +1573,9 @@ function renderModal(){
           <p class="modal-sub">Move "${currentVersion?.name || 'Untitled'}" from ${currentProjName} to a different project.</p>
           <div class="modal-field">
             <label>Target project</label>
-            <select id="modalTargetProject" value="${escapeAttr(modalTargetProject)}" onchange="updateModalTargetProject(this.value)">
+            <select onchange="updateModalTargetProject(this.value)">
               <option value="">Select a project...</option>
-              ${availableProjects.map(p=>`<option value="${escapeAttr(p.id)}">${escapeHtml(p.title)}</option>`).join("")}
+              ${availableProjects.map(p=>`<option value="${escapeAttr(p.id)}" ${modalTargetProject === p.id ? 'selected' : ''}>${escapeHtml(p.title)}</option>`).join("")}
             </select>
             <div class="modal-hint">Choose which project you'd like to move this version to.</div>
           </div>
