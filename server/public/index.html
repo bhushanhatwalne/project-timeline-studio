@@ -1106,12 +1106,12 @@ async function deleteBulkVersions(){
 
 function versionMenuHtml(v){
   return `<div class="row-menu" onclick="event.stopPropagation()">
-    <button onclick="loadVersion(${v.id})">📂 Open in editor</button>
-    <button onclick="updateVersionWithCurrent(${v.id})">🔄 Overwrite with current</button>
-    <button onclick="duplicateVersion(${v.id})">⧉ Duplicate</button>
-    <button onclick="openEditModal(${v.id})">✎ Rename / move group</button>
+    <button onclick="loadVersion('${v.id}')">📂 Open in editor</button>
+    <button onclick="updateVersionWithCurrent('${v.id}')">🔄 Overwrite with current</button>
+    <button onclick="duplicateVersion('${v.id}')">⧉ Duplicate</button>
+    <button onclick="openEditModal('${v.id}')">✎ Rename / move group</button>
     <hr/>
-    <button class="danger" onclick="deleteVersion(${v.id})">🗑 Delete</button>
+    <button class="danger" onclick="deleteVersion('${v.id}')">🗑 Delete</button>
   </div>`;
 }
 
