@@ -185,7 +185,7 @@
   .ver-group-caret{color:var(--ink-faint);font-size:11px;transition:transform .12s;}
   .ver-group-caret.collapsed{transform:rotate(-90deg);}
   .ver-grid{display:grid;grid-template-columns:repeat(auto-fill, minmax(230px, 1fr));gap:16px;margin-top:14px;}
-  .ver-card{background:var(--surface);border:1px solid var(--line);border-radius:10px;overflow:hidden;position:relative;transition:box-shadow .12s, border-color .12s;}
+  .ver-card{background:var(--surface);border:1px solid var(--line);border-radius:10px;overflow:visible;position:relative;transition:box-shadow .12s, border-color .12s;}
   .ver-card:hover{border-color:var(--line-strong);box-shadow:0 6px 18px rgba(20,20,30,.08);}
   .ver-card-strip{height:8px;}
   .ver-card-body{padding:14px 14px 12px;}
@@ -271,8 +271,9 @@ let versions = [];
 let collapsedGroups = new Set();
 let versionMenuKey = null; // id of version whose card menu is open
 let selectedVersions = new Set(); // ids of selected versions for bulk operations
-let modalMode = null; // null | "save" | "edit"
-let modalEditId = null; // version id being edited, when modalMode === "edit"
+let modalMode = null; // null | "save" | "edit" | "move"
+let modalEditId = null; // version id being edited, when modalMode === "edit" or "move"
+let modalTargetProjectId = null; // target project id when modalMode === "move"
 let modalName = "";
 let modalGroup = "";
 
@@ -1097,6 +1098,7 @@ function versionMenuHtml(v){
     <button onclick="updateVersionWithCurrent(${v.id})">🔄 Overwrite with current</button>
     <button onclick="duplicateVersion(${v.id})">⧉ Duplicate</button>
     <button onclick="openEditModal(${v.id})">✎ Rename / move group</button>
+    <button onclick="openMoveVersionModal(${v.id})">➜ Move to project</button>
     <hr/>
     <button class="danger" onclick="deleteVersion(${v.id})">🗑 Delete</button>
   </div>`;
@@ -1471,9 +1473,19 @@ function openEditModal(id){
   render();
   setTimeout(()=>{ const el=document.getElementById("modalNameInput"); if(el){ el.focus(); el.select(); } }, 0);
 }
-function closeModal(){ modalMode = null; modalEditId = null; render(); }
+function openMoveVersionModal(id){
+  const v = versions.find(x=>x.id===id);
+  if(!v) return;
+  modalMode = "move";
+  modalEditId = id;
+  modalTargetProjectId = null;
+  versionMenuKey = null;
+  render();
+}
+function closeModal(){ modalMode = null; modalEditId = null; modalTargetProjectId = null; render(); }
 function updateModalName(val){ modalName = val; }
 function updateModalGroup(val){ modalGroup = val; }
+function updateModalTargetProject(val){ modalTargetProjectId = val; }
 async function confirmModal(){
   const name = (modalName||"").trim() || "Untitled version";
   const group = (modalGroup||"").trim();
@@ -1512,14 +1524,55 @@ async function confirmModal(){
       console.error("Update version error:", err);
       alert("Error updating version: " + err.message);
     }
+  } else if(modalMode==="move" && modalEditId!=null && modalTargetProjectId){
+    try {
+      const res = await apiFetch(`/api/v1/projects/${currentProjectId}/versions/${modalEditId}/move`, {
+        method: 'POST',
+        body: JSON.stringify({ targetProjectId: modalTargetProjectId })
+      });
+      if(res && res.ok) {
+        await loadVersions();
+        alert("Version moved successfully!");
+      } else {
+        const err = res ? await res.json() : {};
+        alert("Failed to move version: " + (err.detail || "Unknown error"));
+      }
+    } catch(err) {
+      console.error("Move version error:", err);
+      alert("Error moving version: " + err.message);
+    }
   }
-  modalMode = null; modalEditId = null;
+  modalMode = null; modalEditId = null; modalTargetProjectId = null;
   activeTab = "versions";
   render();
 }
 function renderModal(){
   const dl = existingGroups().map(g=>`<option value="${escapeAttr(g)}"></option>`).join("");
   const isEdit = modalMode==="edit";
+  const isMove = modalMode==="move";
+
+  if(isMove){
+    const projectOptions = myProjects.filter(p=> p.id !== currentProjectId).map(p=>`<option value="${p.id}">${escapeHtml(p.title)}</option>`).join("");
+    return `
+      <div class="modal-overlay" onclick="if(event.target===this) closeModal()">
+        <div class="modal-card">
+          <p class="modal-title">Move version to project</p>
+          <p class="modal-sub">Select a project to move this version to.</p>
+          <div class="modal-field">
+            <label>Target project</label>
+            <select id="modalTargetProjectInput" onchange="updateModalTargetProject(this.value)" style="width:100%;border:1px solid var(--line-strong);background:var(--paper);font-size:13.5px;border-radius:6px;padding:9px 11px;font-family:var(--font-body);color:var(--ink);">
+              <option value="">Select a project...</option>
+              ${projectOptions}
+            </select>
+          </div>
+          <div class="modal-actions">
+            <button class="btn" onclick="closeModal()">Cancel</button>
+            <button class="btn primary" onclick="confirmModal()" ${!modalTargetProjectId ? 'disabled' : ''}>Move version</button>
+          </div>
+        </div>
+      </div>`;
+  }
+
   return `
     <div class="modal-overlay" onclick="if(event.target===this) closeModal()">
       <div class="modal-card">
