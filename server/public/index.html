@@ -185,7 +185,7 @@
   .ver-group-caret{color:var(--ink-faint);font-size:11px;transition:transform .12s;}
   .ver-group-caret.collapsed{transform:rotate(-90deg);}
   .ver-grid{display:grid;grid-template-columns:repeat(auto-fill, minmax(230px, 1fr));gap:16px;margin-top:14px;}
-  .ver-card{background:var(--surface);border:1px solid var(--line);border-radius:10px;overflow:hidden;position:relative;transition:box-shadow .12s, border-color .12s;}
+  .ver-card{background:var(--surface);border:1px solid var(--line);border-radius:10px;overflow:visible;position:relative;transition:box-shadow .12s, border-color .12s;}
   .ver-card:hover{border-color:var(--line-strong);box-shadow:0 6px 18px rgba(20,20,30,.08);}
   .ver-card-strip{height:8px;}
   .ver-card-body{padding:14px 14px 12px;}
@@ -206,8 +206,8 @@
   .modal-sub{font-size:12.5px;color:var(--ink-soft);margin:0 0 18px;}
   .modal-field{margin-bottom:14px;}
   .modal-field label{display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-soft);margin-bottom:6px;}
-  .modal-field input{width:100%;border:1px solid var(--line-strong);background:var(--paper);font-size:13.5px;border-radius:6px;padding:9px 11px;font-family:var(--font-body);color:var(--ink);}
-  .modal-field input:focus{outline:none;border-color:var(--accent);background:var(--surface);}
+  .modal-field input, .modal-field select{width:100%;border:1px solid var(--line-strong);background:var(--paper);font-size:13.5px;border-radius:6px;padding:9px 11px;font-family:var(--font-body);color:var(--ink);}
+  .modal-field input:focus, .modal-field select:focus{outline:none;border-color:var(--accent);background:var(--surface);}
   .modal-hint{font-size:11px;color:var(--ink-faint);margin-top:5px;}
   .modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:20px;}
 </style>
@@ -271,10 +271,12 @@ let versions = [];
 let collapsedGroups = new Set();
 let versionMenuKey = null; // id of version whose card menu is open
 let selectedVersions = new Set(); // ids of selected versions for bulk operations
-let modalMode = null; // null | "save" | "edit"
+let modalMode = null; // null | "save" | "edit" | "move-version"
 let modalEditId = null; // version id being edited, when modalMode === "edit"
+let modalMoveVersionId = null; // version id being moved, when modalMode === "move-version"
 let modalName = "";
 let modalGroup = "";
+let modalTargetProject = "";
 
 async function loadVersions(){
   try{
@@ -1095,6 +1097,7 @@ function versionMenuHtml(v){
     <button onclick="updateVersionWithCurrent('${v.id}')">🔄 Overwrite with current</button>
     <button onclick="duplicateVersion('${v.id}')">⧉ Duplicate</button>
     <button onclick="openEditModal('${v.id}')">✎ Rename / move group</button>
+    <button onclick="openMoveVersionModal('${v.id}')">➔ Move to project</button>
     <hr/>
     <button class="danger" onclick="deleteVersion('${v.id}')">🗑 Delete</button>
   </div>`;
@@ -1469,9 +1472,19 @@ function openEditModal(id){
   render();
   setTimeout(()=>{ const el=document.getElementById("modalNameInput"); if(el){ el.focus(); el.select(); } }, 0);
 }
-function closeModal(){ modalMode = null; modalEditId = null; render(); }
+function closeModal(){ modalMode = null; modalEditId = null; modalMoveVersionId = null; render(); }
+function openMoveVersionModal(id){
+  const v = versions.find(x=>x.id===id);
+  if(!v) return;
+  modalMode = "move-version";
+  modalMoveVersionId = id;
+  modalTargetProject = "";
+  versionMenuKey = null;
+  render();
+}
 function updateModalName(val){ modalName = val; }
 function updateModalGroup(val){ modalGroup = val; }
+function updateModalTargetProject(val){ modalTargetProject = val; }
 async function confirmModal(){
   const name = (modalName||"").trim() || "Untitled version";
   const group = (modalGroup||"").trim();
@@ -1515,9 +1528,65 @@ async function confirmModal(){
   activeTab = "versions";
   render();
 }
+
+async function confirmMoveVersion(){
+  if(!modalTargetProject || !modalMoveVersionId) return;
+  try {
+    const version = versions.find(x=>x.id===modalMoveVersionId);
+    const res = await apiFetch(`/api/v1/projects/${currentProjectId}/versions/${modalMoveVersionId}/move`, {
+      method: 'POST',
+      body: JSON.stringify({ targetProjectId: modalTargetProject })
+    });
+    if(res && res.ok) {
+      await loadVersions();
+      const targetProj = window.projects?.find(p=>p.id===modalTargetProject)?.title || "the target project";
+      alert(`Moved "${version?.name || 'Untitled'}" to ${targetProj}`);
+    } else {
+      const err = res ? await res.json() : {};
+      alert("Failed to move version: " + (err.detail || "Unknown error"));
+      console.error("Move version error:", err);
+    }
+  } catch(err) {
+    console.error("Move version error:", err);
+    alert("Error moving version: " + err.message);
+  }
+  modalMode = null; modalMoveVersionId = null; modalTargetProject = "";
+  activeTab = "versions";
+  render();
+}
+
 function renderModal(){
   const dl = existingGroups().map(g=>`<option value="${escapeAttr(g)}"></option>`).join("");
   const isEdit = modalMode==="edit";
+  const isMove = modalMode==="move-version";
+
+  if(isMove){
+    const projects = window.projects || [];
+    const currentVersion = versions.find(x=>x.id===modalMoveVersionId);
+    const currentProjName = projects.find(p=>p.id===currentProjectId)?.title || "Current Project";
+    const availableProjects = projects.filter(p=>p.id!==currentProjectId);
+
+    return `
+      <div class="modal-overlay" onclick="if(event.target===this) closeModal()">
+        <div class="modal-card">
+          <p class="modal-title">Move version to another project</p>
+          <p class="modal-sub">Move "${currentVersion?.name || 'Untitled'}" from ${currentProjName} to a different project.</p>
+          <div class="modal-field">
+            <label>Target project</label>
+            <select id="modalTargetProject" value="${escapeAttr(modalTargetProject)}" onchange="updateModalTargetProject(this.value)">
+              <option value="">Select a project...</option>
+              ${availableProjects.map(p=>`<option value="${escapeAttr(p.id)}">${escapeHtml(p.title)}</option>`).join("")}
+            </select>
+            <div class="modal-hint">Choose which project you'd like to move this version to.</div>
+          </div>
+          <div class="modal-actions">
+            <button class="btn" onclick="closeModal()">Cancel</button>
+            <button class="btn primary" onclick="confirmMoveVersion()" ${!modalTargetProject ? 'disabled' : ''}>Move version</button>
+          </div>
+        </div>
+      </div>`;
+  }
+
   return `
     <div class="modal-overlay" onclick="if(event.target===this) closeModal()">
       <div class="modal-card">
