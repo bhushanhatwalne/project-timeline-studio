@@ -980,22 +980,8 @@ function renderVersions(){
   });
 
   view.innerHTML = `
-    <div style="display:flex; gap:20px; padding:20px; height:calc(100vh - 200px);">
-      <!-- Projects sidebar -->
-      <div style="width:280px; border-right:1px solid var(--line); overflow-y:auto;">
-        <div style="font-weight:600; color:var(--header); margin-bottom:15px; padding:0 10px;">My Projects</div>
-        ${myProjects.length === 0 ? `<div style="color:var(--ink-soft); padding:10px;">No projects yet</div>` : projectsHtml}
-      </div>
-
+    <div style="padding:20px; overflow-y:auto;">
       <!-- Versions content -->
-      <div style="flex:1; overflow-y:auto;">
-        <div class="ver-current-banner" style="margin-bottom:20px;">
-          <div>
-            <div class="lbl">Currently open</div>
-            <div class="name">${escapeHtml(projectTitle)}</div>
-          </div>
-          <button class="btn primary" onclick="openSaveModal()">💾 Save as version</button>
-        </div>
 
         ${selectedVersions.size > 0 ? `
           <div style="background:var(--accent-soft); border:1px solid var(--accent); border-radius:8px; padding:15px; margin-bottom:20px; display:flex; align-items:center; gap:10px;">
@@ -1011,8 +997,7 @@ function renderVersions(){
           </div>
         `}
 
-        ${versions.length===0 ? `<div class="ver-empty">No saved versions yet. Save the current timeline to start building a library by business group.</div>` : groupsHtml}
-      </div>
+      ${versions.length===0 ? `<div class="ver-empty">No saved versions yet. Save the current timeline to start building a library by business group.</div>` : groupsHtml}
     </div>
   `;
 }
