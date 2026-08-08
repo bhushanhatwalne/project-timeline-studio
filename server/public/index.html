@@ -1539,7 +1539,7 @@ async function confirmMoveVersion(){
     });
     if(res && res.ok) {
       await loadVersions();
-      const targetProj = window.projects?.find(p=>p.id===modalTargetProject)?.title || "the target project";
+      const targetProj = myProjects.find(p=>p.id===modalTargetProject)?.title || "the target project";
       alert(`Moved "${version?.name || 'Untitled'}" to ${targetProj}`);
     } else {
       const err = res ? await res.json() : {};
@@ -1561,10 +1561,9 @@ function renderModal(){
   const isMove = modalMode==="move-version";
 
   if(isMove){
-    const projects = window.projects || [];
     const currentVersion = versions.find(x=>x.id===modalMoveVersionId);
-    const currentProjName = projects.find(p=>p.id===currentProjectId)?.title || "Current Project";
-    const availableProjects = projects.filter(p=>p.id!==currentProjectId);
+    const currentProjName = myProjects.find(p=>p.id===currentProjectId)?.title || "Current Project";
+    const availableProjects = myProjects.filter(p=>p.id!==currentProjectId);
 
     return `
       <div class="modal-overlay" onclick="if(event.target===this) closeModal()">
