@@ -1485,7 +1485,8 @@ window.addEventListener('click', function(){
   dropdowns.forEach(dropdown => dropdown.classList.remove('active'));
 });
 
-function openEditProjectModal(projectId, projectName){
+function openEditProjectModal(event, projectId, projectName){
+  event.stopPropagation();
   const modal = document.getElementById('editProjectModal');
   if(modal){
     document.getElementById('editProjectName').value = projectName;
@@ -1707,10 +1708,10 @@ function renderDashboard(){
                   <div class="dashboard-project-menu">
                     <div class="dashboard-actions" onclick="toggleProjectMenu(event, '${escapeAttr(proj.id)}')">⋮</div>
                     <div class="dashboard-project-dropdown" id="menu-${proj.id}">
-                      <div class="dashboard-project-dropdown-item" onclick="openEditProjectModal('${escapeAttr(proj.id)}', '${escapeAttr(proj.title)}')">✏️ Edit Details</div>
-                      <div class="dashboard-project-dropdown-item" onclick="alert('Duplicate - Coming soon')">📋 Duplicate</div>
-                      <div class="dashboard-project-dropdown-item" onclick="alert('Settings - Coming soon')">⚙️ Project Settings</div>
-                      <div class="dashboard-project-dropdown-item" onclick="alert('Delete - Coming soon')" style="color:#d32f2f;">🗑️ Delete</div>
+                      <div class="dashboard-project-dropdown-item" onclick="openEditProjectModal(event, '${escapeAttr(proj.id)}', '${escapeAttr(proj.title)}')">✏️ Edit Details</div>
+                      <div class="dashboard-project-dropdown-item" onclick="event.stopPropagation(); alert('Duplicate - Coming soon')">📋 Duplicate</div>
+                      <div class="dashboard-project-dropdown-item" onclick="event.stopPropagation(); alert('Settings - Coming soon')">⚙️ Project Settings</div>
+                      <div class="dashboard-project-dropdown-item" onclick="event.stopPropagation(); alert('Delete - Coming soon')" style="color:#d32f2f;">🗑️ Delete</div>
                     </div>
                   </div>
                 </div>
