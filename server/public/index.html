@@ -848,6 +848,30 @@ function goToDashboard(){
   renderDashboard();
 }
 
+async function deleteProject(projectId, projectTitle){
+  if(!confirm(`Are you sure you want to delete "${projectTitle}"? This cannot be undone.`)){
+    return;
+  }
+
+  try{
+    console.log('[DELETE_PROJECT] Deleting project:', projectId, projectTitle);
+    const res = await apiFetch(`/api/v1/projects/${projectId}`, { method: 'DELETE' });
+
+    if(res && res.ok){
+      console.log('[DELETE_PROJECT] Project deleted successfully');
+      alert(`Project "${projectTitle}" has been deleted.`);
+      await loadProjectList();
+      await renderDashboard();
+    } else {
+      console.error('[DELETE_PROJECT] Failed to delete project:', res?.status);
+      alert('Failed to delete project. Please try again.');
+    }
+  } catch(err){
+    console.error('[DELETE_PROJECT] Error deleting project:', err);
+    alert('Error deleting project: ' + err.message);
+  }
+}
+
 async function openProject(projectId){
   console.log('[OPEN_PROJECT] Opening project:', projectId);
   currentProjectId = projectId;
@@ -1771,7 +1795,7 @@ async function renderDashboard(){
                       <div class="dashboard-project-dropdown-item" onclick="openEditProjectModal(event, '${escapeAttr(proj.id)}', '${escapeAttr(proj.title)}')">✏️ Rename</div>
                       <div class="dashboard-project-dropdown-item" onclick="event.stopPropagation(); alert('Duplicate - Coming soon')">📋 Duplicate</div>
                       <div class="dashboard-project-dropdown-item" onclick="event.stopPropagation(); alert('Download - Coming soon')">⬇️ Download</div>
-                      <div class="dashboard-project-dropdown-item" onclick="event.stopPropagation(); alert('Delete - Coming soon')" style="color:#d32f2f;">🗑️ Delete</div>
+                      <div class="dashboard-project-dropdown-item" onclick="event.stopPropagation(); deleteProject('${escapeAttr(proj.id)}', '${escapeAttr(proj.title)}')" style="color:#d32f2f;">🗑️ Delete</div>
                     </div>
                   </div>
                 </div>
