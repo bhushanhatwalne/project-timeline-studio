@@ -1515,6 +1515,12 @@ async function saveProjectChanges(){
     return;
   }
 
+  const saveBtn = document.querySelector('.dashboard-modal-btn.primary');
+  if(saveBtn){
+    saveBtn.disabled = true;
+    saveBtn.textContent = 'Saving...';
+  }
+
   try{
     const res = await apiFetch(`/api/v1/projects/${projectId}`, {
       method: 'PUT',
@@ -1525,16 +1531,35 @@ async function saveProjectChanges(){
     });
 
     if(res && res.ok){
-      alert('Project updated successfully!');
-      closeEditProjectModal();
+      console.log('[SAVE] Project saved successfully');
+
+      // Reload project list and refresh dashboard
+      console.log('[SAVE] Loading project list...');
       await loadProjectList();
+      console.log('[SAVE] Projects loaded:', myProjects);
+
+      console.log('[SAVE] Rendering dashboard...');
       renderDashboard();
+      console.log('[SAVE] Dashboard rendered');
+
+      closeEditProjectModal();
+
+      // Show success message
+      alert('✓ Project updated successfully!');
     } else {
       alert('Failed to update project');
+      if(saveBtn){
+        saveBtn.disabled = false;
+        saveBtn.textContent = 'Save Changes';
+      }
     }
   } catch(err){
     console.error('Save error:', err);
     alert('Error: ' + err.message);
+    if(saveBtn){
+      saveBtn.disabled = false;
+      saveBtn.textContent = 'Save Changes';
+    }
   }
 }
 
