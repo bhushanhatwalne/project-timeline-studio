@@ -1510,6 +1510,8 @@ async function saveProjectChanges(){
   const projectId = document.getElementById('editProjectId').value;
   const projectName = document.getElementById('editProjectName').value;
 
+  console.log('[SAVE] Starting save for project:', projectId, 'Name:', projectName);
+
   if(!projectName.trim()){
     alert('Project name is required');
     return;
@@ -1522,13 +1524,19 @@ async function saveProjectChanges(){
   }
 
   try{
+    const payload = {
+      projectTitle: projectName,
+      swimlanes: []
+    };
+    console.log('[SAVE] Sending payload:', payload);
+
     const res = await apiFetch(`/api/v1/projects/${projectId}`, {
       method: 'PUT',
-      body: JSON.stringify({
-        projectTitle: projectName,
-        swimlanes: []
-      })
+      body: JSON.stringify(payload)
     });
+
+    console.log('[SAVE] Response status:', res?.status);
+    console.log('[SAVE] Response ok:', res?.ok);
 
     if(res && res.ok){
       console.log('[SAVE] Project saved successfully');
@@ -1547,14 +1555,16 @@ async function saveProjectChanges(){
       // Show success message
       alert('✓ Project updated successfully!');
     } else {
-      alert('Failed to update project');
+      const errorData = res ? await res.json() : {};
+      console.error('[SAVE] API Error:', errorData);
+      alert('Failed to update project: ' + (errorData.detail || 'Unknown error'));
       if(saveBtn){
         saveBtn.disabled = false;
         saveBtn.textContent = 'Save Changes';
       }
     }
   } catch(err){
-    console.error('Save error:', err);
+    console.error('[SAVE] Exception:', err);
     alert('Error: ' + err.message);
     if(saveBtn){
       saveBtn.disabled = false;
