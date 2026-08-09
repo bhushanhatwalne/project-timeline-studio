@@ -241,46 +241,72 @@
 
   /* landing page */
   .landing-page{display:flex;flex-direction:column;min-height:100vh;background:#fff;}
-  .landing-header{background:#fff;padding:20px 40px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line);box-shadow:0 2px 4px rgba(0,0,0,.02);}
-  .landing-logo{display:flex;align-items:center;gap:10px;font-size:18px;font-weight:700;color:var(--ink);}
-  .landing-logo-mark{width:24px;height:24px;border:2px solid var(--accent);display:flex;align-items:center;justify-content:center;position:relative;}
-  .landing-logo-mark::before,.landing-logo-mark::after{content:'';position:absolute;background:var(--accent);}
-  .landing-logo-mark::before{width:12px;height:2px;}
-  .landing-logo-mark::after{width:2px;height:12px;}
+  .landing-header{background:#fff;padding:16px 40px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:100;}
+  .landing-logo{display:flex;align-items:center;gap:10px;font-size:16px;font-weight:700;color:var(--ink);}
+  .landing-logo-icon{width:20px;height:20px;border:1.5px solid var(--ink);display:flex;align-items:center;justify-content:center;}
   .landing-badge{font-size:11px;color:var(--ink-soft);display:flex;gap:6px;align-items:center;}
-  .landing-badge::before{content:'🔒';font-size:12px;}
-  .landing-container{display:flex;flex:1;overflow:hidden;}
-  .landing-left{flex:1;padding:60px 40px;display:flex;flex-direction:column;justify-content:center;background:#f8f9fa;}
-  .landing-hero-title{font-size:42px;font-weight:700;line-height:1.2;color:var(--ink);margin:0 0 20px;}
-  .landing-hero-desc{font-size:16px;line-height:1.6;color:var(--ink-soft);margin:0 0 40px;max-width:480px;}
-  .landing-features{display:flex;flex-direction:column;gap:24px;max-width:480px;}
+  .landing-hero{display:grid;grid-template-columns:1fr 1fr;min-height:calc(100vh - 60px);background:#fff;}
+  .landing-hero-left{padding:60px 40px;display:flex;flex-direction:column;justify-content:center;background:#f8f9fa;}
+  .landing-hero-title{font-size:48px;font-weight:700;line-height:1.15;color:var(--ink);margin:0 0 24px;max-width:520px;}
+  .landing-hero-desc{font-size:15px;line-height:1.6;color:var(--ink-soft);margin:0 0 48px;max-width:480px;}
+  .landing-features{display:flex;flex-direction:column;gap:32px;max-width:480px;}
   .landing-feature{display:flex;gap:16px;align-items:flex-start;}
-  .landing-feature-icon{width:48px;height:48px;background:var(--paper);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;}
-  .landing-feature-text h4{font-size:15px;font-weight:700;color:var(--ink);margin:0 0 6px;}
-  .landing-feature-text p{font-size:13px;color:var(--ink-soft);margin:0;line-height:1.5;}
-  .landing-right{width:400px;padding:60px 40px;display:flex;flex-direction:column;justify-content:center;background:#fff;border-left:1px solid var(--line);overflow-y:auto;}
+  .landing-feature-icon{width:44px;height:44px;background:var(--paper);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;}
+  .landing-feature-title{font-size:15px;font-weight:700;color:var(--ink);margin:0 0 4px;}
+  .landing-feature-desc{font-size:13px;color:var(--ink-soft);margin:0;line-height:1.5;}
+  .landing-hero-right{padding:60px 40px;display:flex;flex-direction:column;justify-content:center;align-items:center;background:#fff;border-left:1px solid var(--line);}
+  .landing-form-card{width:100%;max-width:340px;}
   .landing-form-header{text-align:center;margin-bottom:32px;}
   .landing-form-title{font-size:24px;font-weight:700;color:var(--ink);margin:0 0 6px;}
-  .landing-form-subtitle{font-size:14px;color:var(--ink-soft);margin:0;}
-  .landing-form-group{margin-bottom:18px;}
+  .landing-form-subtitle{font-size:13px;color:var(--ink-soft);margin:0;}
+  .landing-form-group{margin-bottom:16px;}
   .landing-form-label{display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-soft);margin-bottom:6px;}
-  .landing-form-input{width:100%;border:1px solid var(--line-strong);background:var(--paper);font-size:14px;border-radius:6px;padding:10px 12px;font-family:var(--font-body);color:var(--ink);transition:all 150ms;}
-  .landing-form-input:focus{outline:none;border-color:var(--accent);background:var(--surface);}
+  .landing-form-input{width:100%;border:1px solid var(--line-strong);background:var(--surface);font-size:13px;border-radius:4px;padding:10px 12px;font-family:var(--font-body);color:var(--ink);transition:all 150ms;}
+  .landing-form-input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(0,118,188,.1);}
   .landing-form-input::placeholder{color:var(--ink-faint);}
-  .landing-form-row{display:flex;justify-content:space-between;align-items:center;font-size:12px;margin-bottom:20px;}
-  .landing-form-checkbox{display:flex;align-items:center;gap:6px;}
-  .landing-form-checkbox input{width:14px;height:14px;cursor:pointer;}
-  .landing-form-link{color:var(--accent);text-decoration:none;cursor:pointer;}
+  .landing-form-row{display:flex;justify-content:space-between;align-items:center;font-size:12px;margin-top:12px;margin-bottom:24px;}
+  .landing-form-checkbox{display:flex;align-items:center;gap:6px;cursor:pointer;}
+  .landing-form-checkbox input{width:14px;height:14px;cursor:pointer;accent-color:var(--accent);}
+  .landing-form-link{color:var(--accent);text-decoration:none;cursor:pointer;font-weight:500;}
   .landing-form-link:hover{text-decoration:underline;}
-  .landing-form-actions{display:flex;gap:12px;margin-top:28px;}
-  .landing-form-actions button{flex:1;padding:10px 16px;border-radius:6px;border:none;font-size:14px;font-weight:600;cursor:pointer;font-family:var(--font-body);transition:all 150ms;}
+  .landing-form-actions{display:flex;gap:12px;margin-top:24px;}
+  .landing-form-actions button{flex:1;padding:10px 16px;border-radius:4px;border:none;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font-body);transition:all 150ms;}
   .landing-form-actions .btn-secondary{background:var(--paper);color:var(--ink);border:1px solid var(--line-strong);}
   .landing-form-actions .btn-secondary:hover{border-color:var(--accent);color:var(--accent);}
-  .landing-form-actions .btn-primary{background:var(--header);color:#fff;}
+  .landing-form-actions .btn-primary{background:var(--header);color:#fff;border:none;}
   .landing-form-actions .btn-primary:hover{background:var(--header-soft);}
   .landing-spinner{display:none;text-align:center;padding:40px 20px;}
   .landing-spinner-ring{display:inline-block;width:40px;height:40px;border:4px solid var(--line);border-top-color:var(--accent);border-radius:50%;animation:spin 1s linear infinite;}
   .landing-spinner-text{margin-top:16px;color:var(--ink-soft);font-size:14px;}
+  .landing-section{padding:60px 40px;text-align:center;}
+  .landing-section-title{font-size:16px;color:var(--ink-soft);margin:0 0 40px;}
+  .landing-logos{display:flex;justify-content:center;gap:40px;align-items:center;flex-wrap:wrap;}
+  .landing-logo-placeholder{width:80px;height:50px;border:2px solid var(--line);border-radius:6px;display:flex;align-items:center;justify-content:center;color:var(--ink-faint);font-size:28px;}
+  .landing-section-main{padding:80px 40px;}
+  .landing-section-main h2{font-size:32px;font-weight:700;color:var(--ink);margin:0 0 12px;position:relative;display:inline-block;}
+  .landing-section-main h2::after{content:'';display:block;width:60px;height:3px;background:var(--accent);margin:12px auto 0;}
+  .landing-howworks-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:24px;margin-top:60px;}
+  .landing-step{text-align:center;}
+  .landing-step-icon{width:60px;height:60px;background:var(--paper);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:28px;margin:0 auto 16px;}
+  .landing-step-num{display:flex;align-items:center;justify-content:center;width:32px;height:32px;background:var(--ink);color:#fff;border-radius:50%;font-size:14px;font-weight:700;margin:0 auto 8px;}
+  .landing-step-title{font-size:15px;font-weight:700;color:var(--ink);margin:0 0 8px;}
+  .landing-step-desc{font-size:13px;color:var(--ink-soft);line-height:1.5;margin:0;}
+  .landing-benefits{display:grid;grid-template-columns:repeat(3,1fr);gap:40px;margin-top:60px;}
+  .landing-benefit{text-align:center;}
+  .landing-benefit-icon{width:80px;height:80px;background:var(--paper);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:32px;margin:0 auto 20px;}
+  .landing-benefit-title{font-size:16px;font-weight:700;color:var(--ink);margin:0 0 8px;}
+  .landing-benefit-desc{font-size:13px;color:var(--ink-soft);line-height:1.5;margin:0;}
+  .landing-footer{background:var(--paper);padding:60px 40px;border-top:1px solid var(--line);}
+  .landing-footer-content{display:grid;grid-template-columns:repeat(4,1fr);gap:40px;margin-bottom:40px;}
+  .landing-footer-col h3{font-size:14px;font-weight:700;color:var(--ink);margin:0 0 16px;}
+  .landing-footer-col ul{list-style:none;padding:0;margin:0;}
+  .landing-footer-col li{margin-bottom:10px;}
+  .landing-footer-col a{font-size:13px;color:var(--ink-soft);text-decoration:none;transition:color 150ms;}
+  .landing-footer-col a:hover{color:var(--accent);}
+  .landing-footer-bottom{border-top:1px solid var(--line);padding-top:20px;display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--ink-soft);}
+  .landing-footer-social{display:flex;gap:16px;}
+  .landing-footer-social a{color:var(--ink-soft);text-decoration:none;font-size:16px;}
+  .landing-footer-social a:hover{color:var(--accent);}
 
   /* modal */
   .modal-overlay{position:fixed;inset:0;background:rgba(15,20,28,.42);display:flex;align-items:center;justify-content:center;z-index:200;}
@@ -675,90 +701,194 @@ function renderAuthScreen(){
     <div class="landing-page">
       <div class="landing-header">
         <div class="landing-logo">
-          <div class="landing-logo-mark"></div>
+          <div class="landing-logo-icon">✉</div>
           Timeline Studio
         </div>
         <div class="landing-badge">Secure • Private • Enterprise Ready</div>
       </div>
 
-      <div class="landing-container">
-        <div class="landing-left">
-          <div>
-            <h1 class="landing-hero-title">Plan Smarter. See Further. Deliver With Confidence.</h1>
-            <p class="landing-hero-desc">Timeline Studio helps project teams plan, visualize, and track with clarity and precision.</p>
+      <div class="landing-hero">
+        <div class="landing-hero-left">
+          <h1 class="landing-hero-title">Plan Smarter. See Further. Deliver With Confidence.</h1>
+          <p class="landing-hero-desc">Timeline Studio helps project teams plan, visualize, and track with clarity and precision.</p>
 
-            <div class="landing-features">
-              <div class="landing-feature">
-                <div class="landing-feature-icon">📅</div>
-                <div class="landing-feature-text">
-                  <h4>Smart Planning</h4>
-                  <p>Build timelines that adapt as your project evolves.</p>
-                </div>
+          <div class="landing-features">
+            <div class="landing-feature">
+              <div class="landing-feature-icon">📅</div>
+              <div>
+                <div class="landing-feature-title">Smart Planning</div>
+                <div class="landing-feature-desc">Build timelines that adapt as your project evolves.</div>
               </div>
-              <div class="landing-feature">
-                <div class="landing-feature-icon">📊</div>
-                <div class="landing-feature-text">
-                  <h4>Clear Visibility</h4>
-                  <p>Visualize milestones, dependencies, and progress in one place.</p>
-                </div>
+            </div>
+            <div class="landing-feature">
+              <div class="landing-feature-icon">📊</div>
+              <div>
+                <div class="landing-feature-title">Clear Visibility</div>
+                <div class="landing-feature-desc">Visualize milestones, dependencies, and progress in one place.</div>
               </div>
-              <div class="landing-feature">
-                <div class="landing-feature-icon">👥</div>
-                <div class="landing-feature-text">
-                  <h4>Team Alignment</h4>
-                  <p>Keep stakeholders informed and aligned at every step.</p>
-                </div>
+            </div>
+            <div class="landing-feature">
+              <div class="landing-feature-icon">👥</div>
+              <div>
+                <div class="landing-feature-title">Team Alignment</div>
+                <div class="landing-feature-desc">Keep stakeholders informed and aligned at every step.</div>
               </div>
             </div>
           </div>
         </div>
 
-        <div class="landing-right">
-          <div class="landing-form-header">
-            <h2 class="landing-form-title">Timeline Studio</h2>
-            <p class="landing-form-subtitle">Project Planning & Gantt Charts</p>
-          </div>
-
-          <div id="authForm" style="display:block;">
-            <div id="authFormTitle" style="font-size:16px;font-weight:700;color:var(--ink);margin-bottom:24px;text-align:center;">Login</div>
-
-            <div id="authLoadingSpinner" class="landing-spinner">
-              <div class="landing-spinner-ring"></div>
-              <div class="landing-spinner-text">Authenticating...</div>
+        <div class="landing-hero-right">
+          <div class="landing-form-card">
+            <div class="landing-form-header">
+              <h2 class="landing-form-title">Timeline Studio</h2>
+              <p class="landing-form-subtitle">Project Planning & Gantt Charts</p>
             </div>
 
-            <div id="authFormContent">
-              <div class="landing-form-group">
-                <label class="landing-form-label">Email</label>
-                <input id="authEmail" type="email" class="landing-form-input" placeholder="name@yourcompany.com" />
+            <div id="authForm" style="display:block;">
+              <div id="authFormTitle" style="font-size:14px;font-weight:700;color:var(--ink);margin-bottom:20px;text-align:center;">Login</div>
+
+              <div id="authLoadingSpinner" class="landing-spinner">
+                <div class="landing-spinner-ring"></div>
+                <div class="landing-spinner-text">Authenticating...</div>
               </div>
 
-              <div class="landing-form-group">
-                <label class="landing-form-label">Password</label>
-                <input id="authPassword" type="password" class="landing-form-input" placeholder="Enter your password" />
-              </div>
+              <div id="authFormContent">
+                <div class="landing-form-group">
+                  <label class="landing-form-label">Email</label>
+                  <input id="authEmail" type="email" class="landing-form-input" placeholder="name@yourcompany.com" />
+                </div>
 
-              <div class="landing-form-group" id="authNameField" style="display:none;">
-                <label class="landing-form-label">Display Name (optional)</label>
-                <input id="authName" type="text" class="landing-form-input" placeholder="John Doe" />
-              </div>
+                <div class="landing-form-group">
+                  <label class="landing-form-label">Password</label>
+                  <input id="authPassword" type="password" class="landing-form-input" placeholder="Enter your password" />
+                </div>
 
-              <div class="landing-form-row">
-                <label class="landing-form-checkbox">
-                  <input type="checkbox" />
-                  Remember me
-                </label>
-                <a class="landing-form-link">Forgot password?</a>
-              </div>
+                <div class="landing-form-group" id="authNameField" style="display:none;">
+                  <label class="landing-form-label">Display Name (optional)</label>
+                  <input id="authName" type="text" class="landing-form-input" placeholder="John Doe" />
+                </div>
 
-              <div class="landing-form-actions">
-                <button class="btn-secondary" onclick="switchToRegister()" style="display:none;" id="switchToRegisterBtn">New User Registration</button>
-                <button class="btn-primary" onclick="handleLogin()" id="loginBtn">Login</button>
-                <button class="btn-secondary" onclick="switchToLogin()" style="display:none;" id="switchToLoginBtn">Back to Login</button>
-                <button class="btn-primary" onclick="handleRegister()" style="display:none;" id="registerBtn">Create Account</button>
+                <div class="landing-form-row">
+                  <label class="landing-form-checkbox">
+                    <input type="checkbox" />
+                    Remember me
+                  </label>
+                  <a class="landing-form-link">Forgot password?</a>
+                </div>
+
+                <div class="landing-form-actions">
+                  <button class="btn-secondary" onclick="switchToRegister()" style="display:none;" id="switchToRegisterBtn">New User Registration</button>
+                  <button class="btn-primary" onclick="handleLogin()" id="loginBtn">Login</button>
+                  <button class="btn-secondary" onclick="switchToLogin()" style="display:none;" id="switchToLoginBtn">Back to Login</button>
+                  <button class="btn-primary" onclick="handleRegister()" style="display:none;" id="registerBtn">Create Account</button>
+                </div>
               </div>
             </div>
           </div>
+        </div>
+      </div>
+
+      <div class="landing-section">
+        <div class="landing-section-title">Trusted by project teams to deliver results</div>
+        <div class="landing-logos">
+          <div class="landing-logo-placeholder">📧</div>
+          <div class="landing-logo-placeholder">📧</div>
+          <div class="landing-logo-placeholder">📧</div>
+          <div class="landing-logo-placeholder">📧</div>
+          <div class="landing-logo-placeholder">📧</div>
+        </div>
+      </div>
+
+      <div class="landing-section-main" style="text-align:center;">
+        <h2>How Timeline Studio Works</h2>
+
+        <div class="landing-howworks-grid">
+          <div class="landing-step">
+            <div class="landing-step-num">1</div>
+            <div class="landing-step-icon">📅</div>
+            <div class="landing-step-title">Create Your Plan</div>
+            <div class="landing-step-desc">Define tasks, milestones, and dependencies.</div>
+          </div>
+          <div class="landing-step">
+            <div class="landing-step-num">2</div>
+            <div class="landing-step-icon">📊</div>
+            <div class="landing-step-title">Visualize Timeline</div>
+            <div class="landing-step-desc">See your project come to life on an interactive timeline.</div>
+          </div>
+          <div class="landing-step">
+            <div class="landing-step-num">3</div>
+            <div class="landing-step-icon">📈</div>
+            <div class="landing-step-title">Track Progress</div>
+            <div class="landing-step-desc">Monitor real-time updates and stay on track.</div>
+          </div>
+          <div class="landing-step">
+            <div class="landing-step-num">4</div>
+            <div class="landing-step-icon">🏆</div>
+            <div class="landing-step-title">Deliver Success</div>
+            <div class="landing-step-desc">Keep your team aligned and deliver with confidence.</div>
+          </div>
+        </div>
+
+        <div class="landing-benefits">
+          <div class="landing-benefit">
+            <div class="landing-benefit-icon">🔒</div>
+            <div class="landing-benefit-title">Enterprise Security</div>
+            <div class="landing-benefit-desc">Your data is encrypted, secure, and never shared.</div>
+          </div>
+          <div class="landing-benefit">
+            <div class="landing-benefit-icon">☁️</div>
+            <div class="landing-benefit-title">Accessible Anywhere</div>
+            <div class="landing-benefit-desc">Access your projects from any device, anytime.</div>
+          </div>
+          <div class="landing-benefit">
+            <div class="landing-benefit-icon">👥</div>
+            <div class="landing-benefit-title">Built for Teams</div>
+            <div class="landing-benefit-desc">Collaborate seamlessly across teams and roles.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="landing-footer">
+        <div class="landing-footer-content">
+          <div class="landing-footer-col">
+            <h3>Timeline Studio</h3>
+            <p style="font-size:13px;color:var(--ink-soft);margin:0 0 16px;">Smarter planning. Clearer timelines. Stronger results.</p>
+            <div class="landing-footer-social">
+              <a href="#" title="LinkedIn">in</a>
+              <a href="#" title="Twitter">𝕏</a>
+              <a href="#" title="Email">✉</a>
+            </div>
+          </div>
+          <div class="landing-footer-col">
+            <h3>Product</h3>
+            <ul>
+              <li><a href="#">Features</a></li>
+              <li><a href="#">Pricing</a></li>
+              <li><a href="#">Security</a></li>
+              <li><a href="#">Integrations</a></li>
+            </ul>
+          </div>
+          <div class="landing-footer-col">
+            <h3>Resources</h3>
+            <ul>
+              <li><a href="#">Help Center</a></li>
+              <li><a href="#">Documentation</a></li>
+              <li><a href="#">Blog</a></li>
+              <li><a href="#">Release Notes</a></li>
+            </ul>
+          </div>
+          <div class="landing-footer-col">
+            <h3>Company</h3>
+            <ul>
+              <li><a href="#">About Us</a></li>
+              <li><a href="#">Careers</a></li>
+              <li><a href="#">Contact</a></li>
+              <li><a href="#">Privacy Policy</a></li>
+            </ul>
+          </div>
+        </div>
+        <div class="landing-footer-bottom">
+          <span>© 2025 Timeline Studio. All rights reserved.</span>
         </div>
       </div>
     </div>
