@@ -46,6 +46,7 @@ async function sendPasswordResetEmail(userEmail, resetToken) {
 
   try {
     console.log('[EMAIL] Attempting to send reset email to:', userEmail);
+    console.log('[EMAIL] Email from:', process.env.EMAIL_USER);
 
     const mailOptions = {
       from: process.env.EMAIL_USER,
@@ -64,13 +65,28 @@ async function sendPasswordResetEmail(userEmail, resetToken) {
       text: `Password Reset Code: ${resetToken}\n\nThis code will expire in 15 minutes.\n\nIf you didn't request this, please ignore this email.`,
     };
 
-    const info = await emailTransporter.sendMail(mailOptions);
-    console.log('[EMAIL] ✓ Password reset email sent successfully to', userEmail, 'MessageID:', info.messageId);
+    console.log('[EMAIL] Calling sendMail()...');
+    const startTime = Date.now();
+
+    const info = await Promise.race([
+      emailTransporter.sendMail(mailOptions),
+      new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Email send timeout after 10 seconds')), 10000)
+      )
+    ]);
+
+    const duration = Date.now() - startTime;
+    console.log(`[EMAIL] ✓ Email sent successfully in ${duration}ms`);
+    console.log('[EMAIL] MessageID:', info.messageId);
     return true;
   } catch (err) {
     console.error('[EMAIL] ✗ Failed to send password reset email to', userEmail);
-    console.error('[EMAIL] Error details:', err.message);
+    console.error('[EMAIL] Error type:', err.name);
+    console.error('[EMAIL] Error message:', err.message);
     console.error('[EMAIL] Error code:', err.code);
+    if (err.response) {
+      console.error('[EMAIL] SMTP response:', err.response);
+    }
     return false;
   }
 }
