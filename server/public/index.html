@@ -414,8 +414,8 @@
   .dashboard-controls{display:flex;gap:12px;align-items:center;}
   .dashboard-filter{padding:8px 12px;background:#fff;border:1px solid #e0e6f2;border-radius:6px;font-size:12px;color:#333;cursor:pointer;}
   .dashboard-table{background:#fff;border-radius:10px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.05);}
-  .dashboard-table-head{display:grid;grid-template-columns:2fr 1fr 1fr 1.5fr 1.5fr 0.5fr;gap:16px;padding:16px 20px;background:#f5f7fa;border-bottom:1px solid #e8eef7;font-weight:600;font-size:12px;color:#5a6472;text-transform:uppercase;letter-spacing:.5px;}
-  .dashboard-table-row{display:grid;grid-template-columns:2fr 1fr 1fr 1.5fr 1.5fr 0.5fr;gap:16px;padding:16px 20px;border-bottom:1px solid #f0f3f9;align-items:center;transition:background 200ms;}
+  .dashboard-table-head{display:grid;grid-template-columns:2fr 1fr 1fr 1.5fr;gap:16px;padding:16px 20px;background:#f5f7fa;border-bottom:1px solid #e8eef7;font-weight:600;font-size:12px;color:#5a6472;text-transform:uppercase;letter-spacing:.5px;}
+  .dashboard-table-row{display:grid;grid-template-columns:2fr 1fr 1fr 1.5fr;gap:16px;padding:16px 20px;border-bottom:1px solid #f0f3f9;align-items:center;transition:background 200ms;}
   .dashboard-table-row:hover{background:#fafbfc;}
   .dashboard-table-row:last-child{border-bottom:none;}
   .dashboard-project-name{font-weight:600;color:#0a2540;font-size:13px;}
@@ -428,10 +428,6 @@
   .dashboard-progress-bar{flex:1;height:6px;background:#e8eef7;border-radius:3px;overflow:hidden;}
   .dashboard-progress-fill{height:100%;background:#0076BC;border-radius:3px;}
   .dashboard-progress-text{font-size:11px;color:#5a6472;min-width:30px;}
-  .dashboard-owner{display:flex;align-items:center;gap:8px;}
-  .dashboard-owner-avatar{width:28px;height:28px;border-radius:50%;background:#0099d8;color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;}
-  .dashboard-owner-name{font-size:12px;color:#0a2540;}
-  .dashboard-owner-role{font-size:10px;color:#8a94a0;}
   .dashboard-actions{text-align:center;cursor:pointer;color:#8a94a0;font-size:16px;}
   .dashboard-pagination{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-top:1px solid #f0f3f9;background:#f5f7fa;}
   .dashboard-pagination-text{font-size:12px;color:#5a6472;}
@@ -1689,8 +1685,6 @@ function renderDashboard(){
               <div>Status</div>
               <div>Progress</div>
               <div>Updated</div>
-              <div>Owner</div>
-              <div></div>
             </div>
             ${myProjects.length === 0 ? `
               <div style="padding:40px;text-align:center;color:#8a94a0;">
@@ -1708,15 +1702,11 @@ function renderDashboard(){
               const status = statuses[idx % statuses.length];
               const statusClass = status === 'On Track' ? 'on-track' : 'at-risk';
               const progress = [68, 42, 18][idx % 3] || 50;
-              const owners = ['Jessica Smith', 'Amit Desai', 'Rahul Kapoor'];
-              const owner = owners[idx % owners.length];
-              const ownerInitials = owner.split(' ').map(n => n[0]).join('').toUpperCase();
 
               return `
                 <div class="dashboard-table-row" onclick="openProject('${escapeAttr(proj.id)}')">
                   <div>
                     <div class="dashboard-project-name">${escapeHtml(proj.title)}</div>
-                    <div class="dashboard-project-desc">Project details here</div>
                   </div>
                   <div><span class="dashboard-status ${statusClass}">${status}</span></div>
                   <div>
@@ -1728,15 +1718,6 @@ function renderDashboard(){
                     </div>
                   </div>
                   <div style="font-size:12px;color:#5a6472;">${updatedStr}</div>
-                  <div>
-                    <div class="dashboard-owner">
-                      <div class="dashboard-owner-avatar">${ownerInitials}</div>
-                      <div>
-                        <div class="dashboard-owner-name">${owner}</div>
-                        <div class="dashboard-owner-role">Project Manager</div>
-                      </div>
-                    </div>
-                  </div>
                   <div class="dashboard-project-menu">
                     <div class="dashboard-actions" onclick="toggleProjectMenu(event, '${escapeAttr(proj.id)}')">⋮</div>
                     <div class="dashboard-project-dropdown" id="menu-${proj.id}">
