@@ -1733,9 +1733,9 @@ function renderDashboard(){
                   <div class="dashboard-project-menu">
                     <div class="dashboard-actions" onclick="event.stopPropagation(); toggleProjectMenu(event, '${escapeAttr(proj.id)}')">⋮</div>
                     <div class="dashboard-project-dropdown" id="menu-${proj.id}">
-                      <div class="dashboard-project-dropdown-item" onclick="openEditProjectModal(event, '${escapeAttr(proj.id)}', '${escapeAttr(proj.title)}')">✏️ Edit Details</div>
+                      <div class="dashboard-project-dropdown-item" onclick="openEditProjectModal(event, '${escapeAttr(proj.id)}', '${escapeAttr(proj.title)}')">✏️ Rename</div>
                       <div class="dashboard-project-dropdown-item" onclick="event.stopPropagation(); alert('Duplicate - Coming soon')">📋 Duplicate</div>
-                      <div class="dashboard-project-dropdown-item" onclick="event.stopPropagation(); alert('Settings - Coming soon')">⚙️ Project Settings</div>
+                      <div class="dashboard-project-dropdown-item" onclick="event.stopPropagation(); alert('Download - Coming soon')">⬇️ Download</div>
                       <div class="dashboard-project-dropdown-item" onclick="event.stopPropagation(); alert('Delete - Coming soon')" style="color:#d32f2f;">🗑️ Delete</div>
                     </div>
                   </div>
