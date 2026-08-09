@@ -36,6 +36,7 @@
     --st-risk-track:#F7DAD5;
     --st-behind:#D98324;
     --st-behind-track:#F6E3CC;
+    --icon-teal:#1b6577;
     --font-display: Georgia, 'Iowan Old Style', 'Times New Roman', serif;
     --font-body: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
     --font-mono: ui-monospace, 'SFMono-Regular', 'IBM Plex Mono', Menlo, Consolas, monospace;
@@ -239,89 +240,67 @@
   .view-toggle-btn:hover{border-color:var(--accent);color:var(--accent);}
   .view-toggle-btn.active{background:var(--accent);color:#fff;border-color:var(--accent);}
 
-  /* landing page - exact replica */
-  .landing-page{display:flex;flex-direction:column;min-height:100vh;background:#f0f2f5;position:relative;overflow-x:hidden;}
-  .landing-page::before{content:'';position:absolute;top:-50px;right:-200px;width:800px;height:800px;opacity:0.3;pointer-events:none;z-index:0;background-image:url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400"><path d="M100,100 Q200,150 300,100" stroke="%23ccc" fill="none" stroke-width="1.5"/><path d="M120,180 Q220,220 320,160" stroke="%23ddd" fill="none" stroke-width="1.5"/><path d="M150,250 Q240,300 350,240" stroke="%23e5e5e5" fill="none" stroke-width="1.5"/><circle cx="200" cy="150" r="60" fill="none" stroke="%23ddd" stroke-width="1"/><circle cx="280" cy="200" r="40" fill="none" stroke="%23e0e0e0" stroke-width="1"/><path d="M100,300 L300,320" stroke="%23e8e8e8" fill="none" stroke-width="1"/></svg>');}
-  .landing-header{background:transparent;padding:32px 60px;display:flex;align-items:flex-start;position:relative;z-index:1;}
-  .landing-logo-section{display:flex;flex-direction:column;gap:12px;}
-  .landing-logo{display:flex;align-items:center;gap:16px;}
-  .landing-logo-img{height:90px;width:auto;}
-  .landing-logo-text{font-size:32px;font-weight:700;color:#1a1a1a;letter-spacing:-0.5px;}
-  .landing-logo-text .highlight{color:#0076BC;}
-  .landing-logo-subtitle{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:#666;}
-  .landing-hero{display:grid;grid-template-columns:1fr 1.1fr;gap:60px;padding:40px 60px;position:relative;z-index:1;align-items:center;max-width:1400px;margin:0 auto;}
-  .landing-hero-left{display:flex;flex-direction:column;}
-  .landing-hero-title{font-size:46px;font-weight:700;line-height:1.25;color:#1a1a1a;margin:0 0 24px;max-width:520px;letter-spacing:-0.8px;}
-  .landing-hero-desc{font-size:15px;line-height:1.65;color:#555;margin:0 0 40px;max-width:500px;font-weight:400;}
-  .landing-features{display:flex;flex-direction:column;gap:24px;}
-  .landing-feature{display:flex;gap:18px;align-items:flex-start;}
-  .landing-feature-icon{width:48px;height:48px;background:#f0f3f7;border:1.5px solid #ddd;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;}
-  .landing-feature-title{font-size:15px;font-weight:700;color:#1a1a1a;margin:0 0 4px;line-height:1.3;}
-  .landing-feature-desc{font-size:13px;color:#666;margin:0;line-height:1.5;}
-  .landing-hero-right{display:flex;justify-content:center;}
-  .landing-form-card{background:#fff;border-radius:14px;box-shadow:0 10px 40px rgba(0,0,0,.1);padding:40px;width:100%;max-width:360px;}
-  .landing-form-header{text-align:center;margin-bottom:32px;}
-  .landing-form-title{font-size:24px;font-weight:700;color:#1a1a1a;margin:0 0 8px;letter-spacing:-0.5px;}
-  .landing-form-subtitle{font-size:13px;color:#888;margin:0;}
-  .landing-form-title-login{font-size:16px;font-weight:700;color:#1a1a1a;margin:24px 0 20px;text-align:center;display:block;}
-  .landing-form-group{margin-bottom:18px;}
-  .landing-form-label{display:block;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#888;margin-bottom:7px;}
-  .landing-form-input{width:100%;border:1.5px solid #ddd;background:#fff;font-size:13px;border-radius:7px;padding:11px 13px;font-family:var(--font-body);color:#1a1a1a;transition:all 200ms;}
-  .landing-form-input:focus{outline:none;border-color:#0076BC;box-shadow:0 0 0 3px rgba(0,118,188,.08);}
-  .landing-form-input::placeholder{color:#aaa;}
-  .landing-form-row{display:flex;justify-content:space-between;align-items:center;font-size:12px;margin-top:14px;margin-bottom:22px;}
-  .landing-form-checkbox{display:flex;align-items:center;gap:7px;cursor:pointer;}
-  .landing-form-checkbox input{width:16px;height:16px;cursor:pointer;accent-color:#003057;}
-  .landing-form-link{color:#666;text-decoration:none;cursor:pointer;font-weight:500;}
-  .landing-form-link:hover{color:#0076BC;}
-  .landing-form-actions{display:flex;gap:14px;margin-top:24px;}
-  .landing-form-actions button{flex:1;padding:11px 18px;border-radius:7px;border:1.5px solid #ddd;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font-body);transition:all 200ms;}
-  .landing-form-actions .btn-secondary{background:#fff;color:#1a1a1a;}
-  .landing-form-actions .btn-secondary:hover{border-color:#999;}
-  .landing-form-actions .btn-primary{background:#003057;color:#fff;border-color:#003057;}
-  .landing-form-actions .btn-primary:hover{background:#005a8d;}
-  .landing-spinner{display:none;text-align:center;padding:40px 20px;}
-  .landing-spinner-ring{display:inline-block;width:40px;height:40px;border:4px solid #ddd;border-top-color:#0076BC;border-radius:50%;animation:spin 1s linear infinite;}
-  .landing-spinner-text{margin-top:16px;color:#888;font-size:14px;}
-  .landing-section-works{padding:80px 60px;text-align:center;background:#fff;border-top:1px solid #eee;position:relative;z-index:1;}
-  .landing-section-works h2{font-size:32px;font-weight:700;color:#1a1a1a;margin:0 0 20px;letter-spacing:-0.5px;}
-  .landing-section-works h2::after{content:'';display:block;width:60px;height:3px;background:#003057;margin:16px auto 0;}
-  .landing-howworks-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:24px;margin-top:50px;max-width:1200px;margin-left:auto;margin-right:auto;}
-  .landing-step{background:#fff;border:1.5px solid #ddd;border-radius:12px;padding:30px;text-align:center;transition:all 200ms;}
-  .landing-step:hover{border-color:#999;box-shadow:0 4px 16px rgba(0,0,0,.06);}
-  .landing-step-icon{width:70px;height:70px;background:#f5f7fa;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:32px;margin:0 auto 20px;}
-  .landing-step-num{display:flex;align-items:center;justify-content:center;width:36px;height:36px;background:#1a1a1a;color:#fff;border-radius:50%;font-size:14px;font-weight:700;margin:0 auto 14px;}
-  .landing-step-title{font-size:15px;font-weight:700;color:#1a1a1a;margin:0 0 10px;letter-spacing:-0.3px;}
-  .landing-step-desc{font-size:12px;color:#666;line-height:1.6;margin:0;min-height:45px;}
-  .landing-section{padding:60px 40px;text-align:center;}
-  .landing-section-title{font-size:16px;color:var(--ink-soft);margin:0 0 40px;}
-  .landing-logos{display:flex;justify-content:center;gap:40px;align-items:center;flex-wrap:wrap;}
-  .landing-logo-placeholder{width:80px;height:50px;border:2px solid var(--line);border-radius:6px;display:flex;align-items:center;justify-content:center;color:var(--ink-faint);font-size:28px;}
-  .landing-section-main{padding:80px 40px;}
-  .landing-section-main h2{font-size:32px;font-weight:700;color:var(--ink);margin:0 0 12px;position:relative;display:inline-block;}
-  .landing-section-main h2::after{content:'';display:block;width:60px;height:3px;background:var(--accent);margin:12px auto 0;}
-  .landing-howworks-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:24px;margin-top:60px;}
-  .landing-step{text-align:center;}
-  .landing-step-icon{width:60px;height:60px;background:var(--paper);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:28px;margin:0 auto 16px;}
-  .landing-step-num{display:flex;align-items:center;justify-content:center;width:32px;height:32px;background:var(--ink);color:#fff;border-radius:50%;font-size:14px;font-weight:700;margin:0 auto 8px;}
-  .landing-step-title{font-size:15px;font-weight:700;color:var(--ink);margin:0 0 8px;}
-  .landing-step-desc{font-size:13px;color:var(--ink-soft);line-height:1.5;margin:0;}
-  .landing-benefits{display:grid;grid-template-columns:repeat(3,1fr);gap:40px;margin-top:60px;}
-  .landing-benefit{text-align:center;}
-  .landing-benefit-icon{width:80px;height:80px;background:var(--paper);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:32px;margin:0 auto 20px;}
-  .landing-benefit-title{font-size:16px;font-weight:700;color:var(--ink);margin:0 0 8px;}
-  .landing-benefit-desc{font-size:13px;color:var(--ink-soft);line-height:1.5;margin:0;}
-  .landing-footer{background:var(--paper);padding:60px 40px;border-top:1px solid var(--line);}
-  .landing-footer-content{display:grid;grid-template-columns:repeat(4,1fr);gap:40px;margin-bottom:40px;}
-  .landing-footer-col h3{font-size:14px;font-weight:700;color:var(--ink);margin:0 0 16px;}
-  .landing-footer-col ul{list-style:none;padding:0;margin:0;}
-  .landing-footer-col li{margin-bottom:10px;}
-  .landing-footer-col a{font-size:13px;color:var(--ink-soft);text-decoration:none;transition:color 150ms;}
-  .landing-footer-col a:hover{color:var(--accent);}
-  .landing-footer-bottom{border-top:1px solid var(--line);padding-top:20px;display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--ink-soft);}
-  .landing-footer-social{display:flex;gap:16px;}
-  .landing-footer-social a{color:var(--ink-soft);text-decoration:none;font-size:16px;}
-  .landing-footer-social a:hover{color:var(--accent);}
+  /* auth landing page - exact replica (prefixed "auth-" to avoid clashing with .landing-* project-picker classes) */
+  .auth-page{display:flex;flex-direction:column;min-height:100vh;background:#eef1f5;position:relative;overflow-x:hidden;}
+  .auth-page::before{content:'';position:absolute;top:0;right:0;width:55%;height:680px;opacity:0.5;pointer-events:none;z-index:0;background-image:url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600"><path d="M120,80 Q260,140 400,70 T600,60" stroke="%23d7dde3" fill="none" stroke-width="1.5"/><path d="M100,180 Q260,240 420,170 T620,190" stroke="%23dde2e7" fill="none" stroke-width="1.5"/><path d="M140,300 Q280,360 440,280" stroke="%23e3e7eb" fill="none" stroke-width="1.5"/><circle cx="330" cy="150" r="70" fill="none" stroke="%23d7dde3" stroke-width="1"/><circle cx="470" cy="230" r="45" fill="none" stroke="%23dde2e7" stroke-width="1"/><circle cx="380" cy="380" r="4" fill="%23c7ced6"/></svg>');background-repeat:no-repeat;}
+  .auth-header{background:transparent;padding:36px 64px 8px;display:flex;position:relative;z-index:1;}
+  .auth-logo-section{display:flex;flex-direction:column;align-items:flex-start;}
+  .auth-logo-img{height:76px;width:auto;margin-bottom:4px;margin-left:-8px;}
+  .auth-logo-text{font-size:30px;font-weight:800;color:#152238;letter-spacing:-0.5px;line-height:1;}
+  .auth-logo-text .highlight{color:#0076BC;}
+  .auth-logo-divider{display:flex;align-items:center;gap:6px;margin:10px 0 4px;width:100%;justify-content:center;}
+  .auth-logo-divider .line{height:1px;background:#c9d2da;flex:1;max-width:60px;}
+  .auth-logo-divider .dot{width:5px;height:5px;border-radius:50%;}
+  .auth-logo-subtitle{font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.15em;color:#8a94a0;width:100%;text-align:center;}
+  .auth-hero{display:grid;grid-template-columns:1fr 1fr;gap:50px;padding:24px 64px 56px;position:relative;z-index:1;align-items:center;max-width:1400px;margin:0 auto;}
+  .auth-hero-left{display:flex;flex-direction:column;}
+  .auth-hero-title{font-size:38px;font-weight:700;line-height:1.28;color:#1a1a2e;margin:0 0 18px;max-width:480px;letter-spacing:-0.5px;}
+  .auth-hero-desc{font-size:14.5px;line-height:1.6;color:#5a6472;margin:0 0 32px;max-width:460px;font-weight:400;}
+  .auth-features{display:flex;flex-direction:column;gap:20px;}
+  .auth-feature{display:flex;gap:16px;align-items:flex-start;}
+  .auth-feature-icon{width:44px;height:44px;background:#fff;border:1.5px solid #d5dbe2;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--icon-teal);}
+  .auth-feature-icon svg{width:22px;height:22px;}
+  .auth-feature-title{font-size:14.5px;font-weight:700;color:#1a1a2e;margin:0 0 3px;line-height:1.3;}
+  .auth-feature-desc{font-size:12.5px;color:#5a6472;margin:0;line-height:1.5;}
+  .auth-hero-right{display:flex;justify-content:center;}
+  .auth-form-card{background:#fff;border-radius:14px;box-shadow:0 12px 36px rgba(20,30,45,.1);padding:36px 40px;width:100%;max-width:360px;}
+  .auth-form-header{text-align:center;margin-bottom:8px;}
+  .auth-form-title{font-size:24px;font-weight:700;color:#152238;margin:0 0 6px;letter-spacing:-0.4px;}
+  .auth-form-subtitle{font-size:12.5px;color:#8a94a0;margin:0;}
+  .auth-form-title-login{font-size:15px;font-weight:700;color:#1a1a2e;margin:22px 0 18px;text-align:center;display:block;}
+  .auth-form-group{margin-bottom:16px;}
+  .auth-form-label{display:block;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#8a94a0;margin-bottom:7px;}
+  .auth-form-input{width:100%;border:1.5px solid #dde2e7;background:#fbfcfd;font-size:13px;border-radius:7px;padding:10px 13px;font-family:var(--font-body);color:#1a1a2e;transition:all 200ms;}
+  .auth-form-input:focus{outline:none;border-color:#0076BC;background:#fff;box-shadow:0 0 0 3px rgba(0,118,188,.08);}
+  .auth-form-input::placeholder{color:#aab2bc;}
+  .auth-form-row{display:flex;justify-content:space-between;align-items:center;font-size:12.5px;margin-top:14px;margin-bottom:22px;}
+  .auth-form-checkbox{display:flex;align-items:center;gap:7px;cursor:pointer;color:#3a4452;}
+  .auth-form-checkbox input{width:15px;height:15px;cursor:pointer;accent-color:#003057;}
+  .auth-form-link{color:#0076BC;text-decoration:underline;cursor:pointer;font-weight:500;}
+  .auth-form-link:hover{color:#005a8d;}
+  .auth-form-actions{display:flex;gap:12px;margin-top:6px;}
+  .auth-form-actions button{flex:1;padding:11px 16px;border-radius:7px;border:1.5px solid #dde2e7;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font-body);transition:all 200ms;}
+  .auth-form-actions .btn-secondary{background:#fff;color:#1a1a2e;}
+  .auth-form-actions .btn-secondary:hover{border-color:#9aa4b0;}
+  .auth-form-actions .btn-primary{background:#0a2540;color:#fff;border-color:#0a2540;}
+  .auth-form-actions .btn-primary:hover{background:#123a63;}
+  .auth-spinner{display:none;text-align:center;padding:40px 20px;}
+  .auth-spinner-ring{display:inline-block;width:40px;height:40px;border:4px solid #dde2e7;border-top-color:#0076BC;border-radius:50%;animation:spin 1s linear infinite;}
+  .auth-spinner-text{margin-top:16px;color:#8a94a0;font-size:14px;}
+  .auth-section-works{padding:8px 64px 56px;text-align:center;position:relative;z-index:1;}
+  .auth-section-works h2{font-size:24px;font-weight:700;color:#1a1a2e;margin:0;letter-spacing:-0.3px;}
+  .auth-section-works .auth-works-rule{width:44px;height:2.5px;background:#0a2540;margin:14px auto 32px;}
+  .auth-howworks-grid{display:flex;align-items:flex-start;justify-content:center;gap:0;max-width:1200px;margin:0 auto;}
+  .auth-step{background:#fff;border:1px solid #dde2e7;border-radius:12px;padding:26px 22px;text-align:left;transition:all 200ms;flex:1;max-width:250px;}
+  .auth-step:hover{border-color:#b8c1cc;box-shadow:0 4px 16px rgba(20,30,45,.06);}
+  .auth-step-chevron{display:flex;align-items:center;justify-content:center;color:#c3cad2;padding:0 10px;align-self:stretch;flex-shrink:0;}
+  .auth-step-chevron svg{width:20px;height:20px;}
+  .auth-step-icon{color:var(--icon-teal);margin-bottom:14px;}
+  .auth-step-icon svg{width:30px;height:30px;}
+  .auth-step-head{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
+  .auth-step-num{display:flex;align-items:center;justify-content:center;width:24px;height:24px;background:#1a1a2e;color:#fff;border-radius:50%;font-size:12px;font-weight:700;flex-shrink:0;}
+  .auth-step-title{font-size:14px;font-weight:700;color:#1a1a2e;margin:0;letter-spacing:-0.2px;}
+  .auth-step-desc{font-size:12px;color:#5a6472;line-height:1.55;margin:0;}
 
   /* modal */
   .modal-overlay{position:fixed;inset:0;background:rgba(15,20,28,.42);display:flex;align-items:center;justify-content:center;z-index:200;}
@@ -710,90 +689,97 @@ async function openProject(projectId){
   }
 }
 
+const ICON_CALENDAR = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="16" rx="2"/><line x1="16" y1="2.5" x2="16" y2="6.5"/><line x1="8" y1="2.5" x2="8" y2="6.5"/><line x1="3" y1="10" x2="21" y2="10"/></svg>';
+const ICON_BARCHART = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="20" x2="5" y2="14"/><line x1="12" y1="20" x2="12" y2="8"/><line x1="19" y1="20" x2="19" y2="4"/></svg>';
+const ICON_TEAM = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>';
+const ICON_FLAG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>';
+const ICON_TRENDUP = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>';
+const ICON_AWARD = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="6.5"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></svg>';
+const ICON_CHEVRON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>';
+
 function renderAuthScreen(){
   const app = document.getElementById("app");
   app.innerHTML = `
-    <div class="landing-page">
-      <div class="landing-header">
-        <div class="landing-logo-section">
-          <div class="landing-logo">
-            <img src="/logo.png" alt="Timeline Studio" class="landing-logo-img" />
-            <div class="landing-logo-text">Timeline <span class="highlight">Studio</span></div>
-          </div>
-          <div class="landing-logo-subtitle">Project Planning & Gantt Charts</div>
+    <div class="auth-page">
+      <div class="auth-header">
+        <div class="auth-logo-section">
+          <img src="/logo-icon.png" alt="Timeline Studio" class="auth-logo-img" />
+          <div class="auth-logo-text">Timeline <span class="highlight">Studio</span></div>
+          <div class="auth-logo-divider"><span class="line"></span><span class="dot" style="background:#0076BC"></span><span class="dot" style="background:#1b9e77"></span><span class="dot" style="background:#e08a1e"></span><span class="dot" style="background:#7b4fc9"></span><span class="line"></span></div>
+          <div class="auth-logo-subtitle">Project Planning & Gantt Charts</div>
         </div>
       </div>
 
-      <div class="landing-hero">
-        <div class="landing-hero-left">
-          <h1 class="landing-hero-title">Plan Smarter. See Further. Deliver With Confidence.</h1>
-          <p class="landing-hero-desc">Timeline Studio helps project teams plan, visualize, and track with clarity and precision.</p>
+      <div class="auth-hero">
+        <div class="auth-hero-left">
+          <h1 class="auth-hero-title">Plan Smarter. See Further. Deliver With Confidence.</h1>
+          <p class="auth-hero-desc">Timeline Studio helps project teams plan, visualize, and track with clarity and precision.</p>
 
-          <div class="landing-features">
-            <div class="landing-feature">
-              <div class="landing-feature-icon">📅</div>
+          <div class="auth-features">
+            <div class="auth-feature">
+              <div class="auth-feature-icon">${ICON_CALENDAR}</div>
               <div>
-                <div class="landing-feature-title">Smart Planning</div>
-                <div class="landing-feature-desc">Build timelines that adapt as your project evolves.</div>
+                <div class="auth-feature-title">Smart Planning</div>
+                <div class="auth-feature-desc">Build timelines that adapt as your project evolves.</div>
               </div>
             </div>
-            <div class="landing-feature">
-              <div class="landing-feature-icon">📊</div>
+            <div class="auth-feature">
+              <div class="auth-feature-icon">${ICON_BARCHART}</div>
               <div>
-                <div class="landing-feature-title">Clear Visibility</div>
-                <div class="landing-feature-desc">Visualize milestones, dependencies, and progress in one place.</div>
+                <div class="auth-feature-title">Clear Visibility</div>
+                <div class="auth-feature-desc">Visualize milestones, dependencies, and progress in one place.</div>
               </div>
             </div>
-            <div class="landing-feature">
-              <div class="landing-feature-icon">👥</div>
+            <div class="auth-feature">
+              <div class="auth-feature-icon">${ICON_TEAM}</div>
               <div>
-                <div class="landing-feature-title">Team Alignment</div>
-                <div class="landing-feature-desc">Keep stakeholders informed and aligned at every step.</div>
+                <div class="auth-feature-title">Team Alignment</div>
+                <div class="auth-feature-desc">Keep stakeholders informed and aligned at every step.</div>
               </div>
             </div>
           </div>
         </div>
 
-        <div class="landing-hero-right">
-          <div class="landing-form-card">
-            <div class="landing-form-header">
-              <h2 class="landing-form-title">Timeline Studio</h2>
-              <p class="landing-form-subtitle">Project Planning & Gantt Charts</p>
+        <div class="auth-hero-right">
+          <div class="auth-form-card">
+            <div class="auth-form-header">
+              <h2 class="auth-form-title">Timeline Studio</h2>
+              <p class="auth-form-subtitle">Project Planning & Gantt Charts</p>
             </div>
 
             <div id="authForm" style="display:block;">
-              <div id="authFormTitle" class="landing-form-title-login">Login</div>
+              <div id="authFormTitle" class="auth-form-title-login">Login</div>
 
-              <div id="authLoadingSpinner" class="landing-spinner">
-                <div class="landing-spinner-ring"></div>
-                <div class="landing-spinner-text">Authenticating...</div>
+              <div id="authLoadingSpinner" class="auth-spinner">
+                <div class="auth-spinner-ring"></div>
+                <div class="auth-spinner-text">Authenticating...</div>
               </div>
 
               <div id="authFormContent">
-                <div class="landing-form-group">
-                  <label class="landing-form-label">Email</label>
-                  <input id="authEmail" type="email" class="landing-form-input" placeholder="name@yourcompany.com" />
+                <div class="auth-form-group">
+                  <label class="auth-form-label">Email</label>
+                  <input id="authEmail" type="email" class="auth-form-input" placeholder="name@yourcompany.com" />
                 </div>
 
-                <div class="landing-form-group">
-                  <label class="landing-form-label">Password</label>
-                  <input id="authPassword" type="password" class="landing-form-input" placeholder="Enter your password" />
+                <div class="auth-form-group">
+                  <label class="auth-form-label">Password</label>
+                  <input id="authPassword" type="password" class="auth-form-input" placeholder="Enter your password" />
                 </div>
 
-                <div class="landing-form-group" id="authNameField" style="display:none;">
-                  <label class="landing-form-label">Display Name (optional)</label>
-                  <input id="authName" type="text" class="landing-form-input" placeholder="John Doe" />
+                <div class="auth-form-group" id="authNameField" style="display:none;">
+                  <label class="auth-form-label">Display Name (optional)</label>
+                  <input id="authName" type="text" class="auth-form-input" placeholder="John Doe" />
                 </div>
 
-                <div class="landing-form-row">
-                  <label class="landing-form-checkbox">
+                <div class="auth-form-row">
+                  <label class="auth-form-checkbox">
                     <input type="checkbox" />
                     Remember me
                   </label>
-                  <a class="landing-form-link">Forgot password?</a>
+                  <a class="auth-form-link">Forgot password?</a>
                 </div>
 
-                <div class="landing-form-actions">
+                <div class="auth-form-actions">
                   <button class="btn-secondary" onclick="switchToRegister()" style="display:none;" id="switchToRegisterBtn">New User Registration</button>
                   <button class="btn-primary" onclick="handleLogin()" id="loginBtn">Login</button>
                   <button class="btn-secondary" onclick="switchToLogin()" style="display:none;" id="switchToLoginBtn">Back to Login</button>
@@ -805,33 +791,33 @@ function renderAuthScreen(){
         </div>
       </div>
 
-      <div class="landing-section-works">
+      <div class="auth-section-works">
         <h2>How Timeline Studio Works</h2>
+        <div class="auth-works-rule"></div>
 
-        <div class="landing-howworks-grid">
-          <div class="landing-step">
-            <div class="landing-step-icon">📅</div>
-            <div class="landing-step-num">1</div>
-            <div class="landing-step-title">Create Your Plan</div>
-            <div class="landing-step-desc">Define tasks, milestones, and dependencies.</div>
+        <div class="auth-howworks-grid">
+          <div class="auth-step">
+            <div class="auth-step-icon">${ICON_CALENDAR}</div>
+            <div class="auth-step-head"><div class="auth-step-num">1</div><div class="auth-step-title">Create Your Plan</div></div>
+            <div class="auth-step-desc">Define tasks, milestones, and dependencies.</div>
           </div>
-          <div class="landing-step">
-            <div class="landing-step-icon">🚩</div>
-            <div class="landing-step-num">2</div>
-            <div class="landing-step-title">Visualize Timeline</div>
-            <div class="landing-step-desc">See your project come to life on an interactive timeline.</div>
+          <div class="auth-step-chevron">${ICON_CHEVRON}</div>
+          <div class="auth-step">
+            <div class="auth-step-icon">${ICON_FLAG}</div>
+            <div class="auth-step-head"><div class="auth-step-num">2</div><div class="auth-step-title">Visualize Timeline</div></div>
+            <div class="auth-step-desc">See your project come to life on an interactive timeline.</div>
           </div>
-          <div class="landing-step">
-            <div class="landing-step-icon">📈</div>
-            <div class="landing-step-num">3</div>
-            <div class="landing-step-title">Track Progress</div>
-            <div class="landing-step-desc">Monitor real-time updates and stay on track.</div>
+          <div class="auth-step-chevron">${ICON_CHEVRON}</div>
+          <div class="auth-step">
+            <div class="auth-step-icon">${ICON_TRENDUP}</div>
+            <div class="auth-step-head"><div class="auth-step-num">3</div><div class="auth-step-title">Track Progress</div></div>
+            <div class="auth-step-desc">Monitor real-time updates and stay on track.</div>
           </div>
-          <div class="landing-step">
-            <div class="landing-step-icon">🏆</div>
-            <div class="landing-step-num">4</div>
-            <div class="landing-step-title">Deliver Success</div>
-            <div class="landing-step-desc">Keep your team aligned and deliver with confidence.</div>
+          <div class="auth-step-chevron">${ICON_CHEVRON}</div>
+          <div class="auth-step">
+            <div class="auth-step-icon">${ICON_AWARD}</div>
+            <div class="auth-step-head"><div class="auth-step-num">4</div><div class="auth-step-title">Deliver Success</div></div>
+            <div class="auth-step-desc">Keep your team aligned and deliver with confidence.</div>
           </div>
         </div>
       </div>
