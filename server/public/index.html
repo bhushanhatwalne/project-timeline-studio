@@ -42,7 +42,7 @@
   }
   *{box-sizing:border-box;}
   html,body{margin:0;padding:0;background:var(--paper);color:var(--ink);font-family:var(--font-body);}
-  .app{max-width:1500px;margin:0 auto;min-height:100vh;background:var(--paper);display:flex;flex-direction:column;}
+  .app{width:100%;min-height:100vh;background:var(--paper);display:flex;flex-direction:column;}
 
   /* header bar */
   .topbar{background:var(--header);color:#fff;padding:16px 24px;display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap;}
@@ -792,7 +792,6 @@ function renderProjectPicker(){
           <p class="project-list-item-title">${escapeHtml(proj.title)}</p>
           <div class="project-list-item-meta">
             <span>Updated ${updatedStr}</span>
-            <span>📊 Timeline</span>
           </div>
         </div>
       </div>
