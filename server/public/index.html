@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Timeline Studio</title>
 <style>
   :root{
@@ -313,6 +314,71 @@
   .modal-field input:focus, .modal-field select:focus{outline:none;border-color:var(--accent);background:var(--surface);}
   .modal-hint{font-size:11px;color:var(--ink-faint);margin-top:5px;}
   .modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:20px;}
+
+  /* Mobile responsive */
+  @media (max-width:768px){
+    .auth-page::before{width:100%;height:400px;opacity:0.25;}
+    .auth-header{padding:16px 24px 0;}
+    .auth-logo-img{height:52px;}
+    .auth-logo-text{font-size:22px;}
+    .auth-logo-divider{margin:4px 0 2px;}
+    .auth-logo-divider .line{max-width:40px;}
+    .auth-logo-divider .dot{width:3px;height:3px;}
+    .auth-logo-subtitle{font-size:7px;}
+    .auth-hero{grid-template-columns:1fr;gap:20px;padding:12px 24px 16px;}
+    .auth-hero-title{font-size:28px;margin:0 0 10px;}
+    .auth-hero-desc{font-size:12px;margin:0 0 12px;}
+    .auth-features{gap:10px;}
+    .auth-feature{gap:10px;}
+    .auth-feature-icon{width:36px;height:36px;}
+    .auth-feature-icon svg{width:18px;height:18px;}
+    .auth-feature-title{font-size:12px;margin:0 0 2px;}
+    .auth-feature-desc{font-size:10px;}
+    .auth-form-card{max-width:100%;padding:24px 20px;}
+    .auth-form-title{font-size:18px;margin:0 0 4px;}
+    .auth-form-subtitle{font-size:10px;}
+    .auth-form-title-login{font-size:12px;margin:14px 0 12px;}
+    .auth-form-input{font-size:11px;padding:7px 10px;}
+    .auth-form-row{font-size:10px;margin-top:9px;margin-bottom:12px;}
+    .auth-form-checkbox{font-size:10px;gap:5px;}
+    .auth-form-checkbox input{width:13px;height:13px;}
+    .auth-form-link{font-size:10px;}
+    .auth-form-actions{gap:6px;margin-top:3px;}
+    .auth-form-actions button{padding:6px 16px;font-size:11px;}
+    .auth-section-works{padding:4px 24px 12px;}
+    .auth-section-works h2{font-size:16px;}
+    .auth-section-works .auth-works-rule{margin:8px auto 12px;}
+    .auth-howworks-grid{flex-wrap:wrap;gap:8px;max-width:100%;}
+    .auth-step{max-width:100%;flex:0 1 calc(50% - 4px);}
+    .auth-step{padding:14px 12px;border-radius:8px;}
+    .auth-step-chevron{display:none;}
+    .auth-step-icon{margin-bottom:8px;}
+    .auth-step-icon svg{width:20px;height:20px;}
+    .auth-step-num{width:20px;height:20px;font-size:10px;}
+    .auth-step-title{font-size:11px;}
+    .auth-step-desc{font-size:9px;}
+  }
+
+  @media (max-width:480px){
+    .auth-header{padding:12px 16px 0;}
+    .auth-logo-img{height:48px;}
+    .auth-logo-text{font-size:20px;}
+    .auth-hero{padding:10px 16px 12px;gap:16px;}
+    .auth-hero-title{font-size:26px;margin:0 0 8px;}
+    .auth-hero-desc{font-size:11px;margin:0 0 10px;}
+    .auth-features{gap:8px;}
+    .auth-feature{gap:8px;}
+    .auth-feature-icon{width:32px;height:32px;}
+    .auth-form-card{max-width:100%;padding:20px 16px;}
+    .auth-form-title{font-size:16px;}
+    .auth-form-subtitle{font-size:9px;}
+    .auth-form-input{font-size:10px;padding:6px 9px;}
+    .auth-form-actions button{padding:6px 14px;font-size:10px;}
+    .auth-howworks-grid{flex-direction:column;}
+    .auth-step{flex:1;max-width:100%;}
+    .auth-section-works{padding:3px 16px 10px;}
+    .auth-section-works h2{font-size:14px;}
+  }
 </style>
 </head>
 <body>
