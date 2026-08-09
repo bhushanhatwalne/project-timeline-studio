@@ -1471,6 +1471,14 @@ async function handleLogout(){
 function toggleProjectMenu(event, projectId){
   event.stopPropagation();
   const menu = document.getElementById(`menu-${projectId}`);
+  const allMenus = document.querySelectorAll('.dashboard-project-dropdown.active');
+
+  allMenus.forEach(m => {
+    if(m.id !== `menu-${projectId}`){
+      m.classList.remove('active');
+    }
+  });
+
   if(menu){
     menu.classList.toggle('active');
     if(menu.classList.contains('active')){
