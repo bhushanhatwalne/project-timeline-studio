@@ -853,7 +853,20 @@ async function openProject(projectId){
     history = [];
     future = [];
     await loadVersions();
-    activeTab = "data";
+
+    // Load latest version if available
+    if(versions.length > 0){
+      const latestVersion = versions[0];
+      const verRes = await apiFetch(`/api/v1/projects/${projectId}/versions/${latestVersion.id}`);
+      if(verRes && verRes.ok){
+        const verData = await verRes.json();
+        swimlanes = verData.swimlanes || swimlanes;
+        projectTitle = verData.projectTitle || projectTitle;
+      }
+      activeTab = "timeline";
+    } else {
+      activeTab = "data";
+    }
     render();
   }
 }
