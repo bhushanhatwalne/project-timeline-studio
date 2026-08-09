@@ -848,6 +848,46 @@ function goToDashboard(){
   renderDashboard();
 }
 
+async function duplicateProject(projectId, projectTitle){
+  try{
+    console.log('[DUPLICATE_PROJECT] Duplicating project:', projectId, projectTitle);
+
+    // Fetch the source project
+    const srcRes = await apiFetch(`/api/v1/projects/${projectId}`);
+    if(!srcRes || !srcRes.ok){
+      alert('Failed to load project data. Please try again.');
+      return;
+    }
+
+    const srcProject = await srcRes.json();
+    const newTitle = `${projectTitle} (Copy)`;
+
+    console.log('[DUPLICATE_PROJECT] Creating new project:', newTitle);
+
+    // Create a new project with copied data
+    const createRes = await apiFetch('/api/v1/projects', {
+      method: 'POST',
+      body: JSON.stringify({
+        title: newTitle,
+        swimlanes: srcProject.swimlanes
+      })
+    });
+
+    if(createRes && createRes.ok){
+      console.log('[DUPLICATE_PROJECT] Project duplicated successfully');
+      alert(`Project "${newTitle}" has been created.`);
+      await loadProjectList();
+      await renderDashboard();
+    } else {
+      console.error('[DUPLICATE_PROJECT] Failed to create duplicate:', createRes?.status);
+      alert('Failed to duplicate project. Please try again.');
+    }
+  } catch(err){
+    console.error('[DUPLICATE_PROJECT] Error duplicating project:', err);
+    alert('Error duplicating project: ' + err.message);
+  }
+}
+
 async function deleteProject(projectId, projectTitle){
   if(!confirm(`Are you sure you want to delete "${projectTitle}"? This cannot be undone.`)){
     return;
@@ -1793,7 +1833,7 @@ async function renderDashboard(){
                     <div class="dashboard-actions" onclick="event.stopPropagation(); toggleProjectMenu(event, '${escapeAttr(proj.id)}')">⋮</div>
                     <div class="dashboard-project-dropdown" id="menu-${proj.id}">
                       <div class="dashboard-project-dropdown-item" onclick="openEditProjectModal(event, '${escapeAttr(proj.id)}', '${escapeAttr(proj.title)}')">✏️ Rename</div>
-                      <div class="dashboard-project-dropdown-item" onclick="event.stopPropagation(); alert('Duplicate - Coming soon')">📋 Duplicate</div>
+                      <div class="dashboard-project-dropdown-item" onclick="event.stopPropagation(); duplicateProject('${escapeAttr(proj.id)}', '${escapeAttr(proj.title)}')">📋 Duplicate</div>
                       <div class="dashboard-project-dropdown-item" onclick="event.stopPropagation(); alert('Download - Coming soon')">⬇️ Download</div>
                       <div class="dashboard-project-dropdown-item" onclick="event.stopPropagation(); deleteProject('${escapeAttr(proj.id)}', '${escapeAttr(proj.title)}')" style="color:#d32f2f;">🗑️ Delete</div>
                     </div>
