@@ -637,40 +637,57 @@ function renderAuthScreen(){
         </div>
 
         <div id="authForm" style="display:block;">
-          <div class="modal-field">
-            <label>Email</label>
-            <input id="authEmail" type="email" placeholder="you@example.com" />
+          <div id="authFormTitle" style="font-size:18px;font-weight:700;color:var(--ink);margin-bottom:20px;text-align:center;">Login</div>
+
+          <div id="authLoadingSpinner" style="display:none;text-align:center;padding:40px 20px;">
+            <div style="display:inline-block;width:40px;height:40px;border:4px solid var(--line);border-top-color:var(--accent);border-radius:50%;animation:spin 1s linear infinite;"></div>
+            <div style="margin-top:16px;color:var(--ink-soft);font-size:14px;">Authenticating...</div>
           </div>
-          <div class="modal-field">
-            <label>Password</label>
-            <input id="authPassword" type="password" placeholder="••••••••" />
-          </div>
-          <div class="modal-field">
-            <label>Display Name (optional)</label>
-            <input id="authName" type="text" placeholder="John Doe" />
-          </div>
-          <div class="modal-actions" style="justify-content:center;gap:12px;margin-top:24px;">
-            <button class="btn" onclick="switchToLogin()" style="display:none;" id="switchToLoginBtn">Have an account? Login</button>
-            <button class="btn primary" onclick="handleRegister()" id="registerBtn">Create Account</button>
-            <button class="btn" onclick="switchToRegister()" style="display:none;" id="switchToRegisterBtn">Need an account? Register</button>
-            <button class="btn primary" onclick="handleLogin()" style="display:none;" id="loginBtn">Login</button>
+
+          <div id="authFormContent">
+            <div class="modal-field">
+              <label>Email</label>
+              <input id="authEmail" type="email" placeholder="you@example.com" />
+            </div>
+            <div class="modal-field">
+              <label>Password</label>
+              <input id="authPassword" type="password" placeholder="••••••••" />
+            </div>
+            <div class="modal-field" id="authNameField" style="display:none;">
+              <label>Display Name (optional)</label>
+              <input id="authName" type="text" placeholder="John Doe" />
+            </div>
+            <div class="modal-actions" style="justify-content:center;gap:12px;margin-top:24px;">
+              <button class="btn" onclick="switchToRegister()" style="display:none;" id="switchToRegisterBtn">New User Registration</button>
+              <button class="btn primary" onclick="handleLogin()" id="loginBtn">Login</button>
+              <button class="btn" onclick="switchToLogin()" style="display:none;" id="switchToLoginBtn">Back to Login</button>
+              <button class="btn primary" onclick="handleRegister()" style="display:none;" id="registerBtn">Create Account</button>
+            </div>
           </div>
         </div>
       </div>
     </div>
   `;
 
+  // Add spinner animation CSS
+  if (!document.getElementById('spinnerStyle')) {
+    const style = document.createElement('style');
+    style.id = 'spinnerStyle';
+    style.textContent = '@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}';
+    document.head.appendChild(style);
+  }
+
   const regBtn = document.getElementById("registerBtn");
   const logBtn = document.getElementById("loginBtn");
   const swReg = document.getElementById("switchToRegisterBtn");
   const swLog = document.getElementById("switchToLoginBtn");
 
-  swLog.style.display = "inline-flex";
-  regBtn.style.display = "inline-flex";
+  swReg.style.display = "inline-flex";
+  logBtn.style.display = "inline-flex";
 
   window.switchToLogin = ()=>{
-    document.getElementById("authName").style.display = "none";
-    document.getElementById("authForm").querySelector(".modal-field:first-child").style.display = "block";
+    document.getElementById("authFormTitle").textContent = "Login";
+    document.getElementById("authNameField").style.display = "none";
     regBtn.style.display = "none";
     swReg.style.display = "inline-flex";
     logBtn.style.display = "inline-flex";
@@ -678,7 +695,8 @@ function renderAuthScreen(){
   };
 
   window.switchToRegister = ()=>{
-    document.getElementById("authName").style.display = "block";
+    document.getElementById("authFormTitle").textContent = "New User Registration";
+    document.getElementById("authNameField").style.display = "block";
     regBtn.style.display = "inline-flex";
     swReg.style.display = "none";
     logBtn.style.display = "none";
@@ -689,6 +707,8 @@ function renderAuthScreen(){
     const email = document.getElementById("authEmail").value;
     const password = document.getElementById("authPassword").value;
     const displayName = document.getElementById("authName").value;
+
+    showAuthSpinner();
 
     try {
       const res = await apiFetch('/api/v1/auth/register', {
@@ -712,6 +732,7 @@ function renderAuthScreen(){
             await loadProjectList();
           } else {
             console.error('Failed to create first project:', createRes?.status);
+            hideAuthSpinner();
             alert('Account created but could not create first project. Please try again.');
             return;
           }
@@ -719,12 +740,15 @@ function renderAuthScreen(){
         await loadProjectList();
         renderProjectPicker();
       } else if(res?.status === 409){
+        hideAuthSpinner();
         alert('Email already registered.');
       } else {
+        hideAuthSpinner();
         const errData = res ? await res.json() : {};
         alert('Registration failed: ' + (errData.detail || 'Unknown error'));
       }
     } catch(err){
+      hideAuthSpinner();
       console.error('Registration error:', err);
       alert('Registration error: ' + err.message);
     }
@@ -734,18 +758,27 @@ function renderAuthScreen(){
     const email = document.getElementById("authEmail").value;
     const password = document.getElementById("authPassword").value;
 
-    const res = await apiFetch('/api/v1/auth/login', {
-      method: 'POST',
-      body: JSON.stringify({ email, password })
-    });
+    showAuthSpinner();
 
-    if(res && res.ok){
-      const data = await res.json();
-      authUser = data.user;
-      await loadProjectList();
-      renderProjectPicker();
-    } else {
-      alert('Login failed. Please check your email/password.');
+    try {
+      const res = await apiFetch('/api/v1/auth/login', {
+        method: 'POST',
+        body: JSON.stringify({ email, password })
+      });
+
+      if(res && res.ok){
+        const data = await res.json();
+        authUser = data.user;
+        await loadProjectList();
+        renderProjectPicker();
+      } else {
+        hideAuthSpinner();
+        alert('Login failed. Please check your email/password.');
+      }
+    } catch(err){
+      hideAuthSpinner();
+      console.error('Login error:', err);
+      alert('Login error: ' + err.message);
     }
   };
 }
@@ -878,6 +911,24 @@ function filterProjectCards(query){
 function setProjectViewMode(mode){
   projectViewMode = mode;
   renderProjectPicker();
+}
+
+function showAuthSpinner(){
+  const spinner = document.getElementById("authLoadingSpinner");
+  const content = document.getElementById("authFormContent");
+  if(spinner && content){
+    spinner.style.display = "block";
+    content.style.display = "none";
+  }
+}
+
+function hideAuthSpinner(){
+  const spinner = document.getElementById("authLoadingSpinner");
+  const content = document.getElementById("authFormContent");
+  if(spinner && content){
+    spinner.style.display = "none";
+    content.style.display = "block";
+  }
 }
 
 async function logout(){
