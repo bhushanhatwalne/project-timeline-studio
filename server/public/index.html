@@ -406,8 +406,28 @@ let currentProjectId = null; // currently open project
 
 /* API wrapper with auth */
 async function apiFetch(path, opts={}, attemptCount=0){
-  const res = await fetch(path, { ...opts, credentials:'include',
-    headers: { 'Content-Type':'application/json', ...(opts.headers||{}) } });
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
+
+  try {
+    const res = await fetch(path, {
+      ...opts,
+      credentials:'include',
+      signal: controller.signal,
+      headers: { 'Content-Type':'application/json', ...(opts.headers||{}) }
+    });
+    clearTimeout(timeoutId);
+    return handleAuthResponse(res, path, opts, attemptCount);
+  } catch (err) {
+    clearTimeout(timeoutId);
+    if (err.name === 'AbortError') {
+      throw new Error('Request timeout - server not responding');
+    }
+    throw err;
+  }
+}
+
+async function handleAuthResponse(res, path, opts, attemptCount){
 
   if(res.status === 401 && attemptCount === 0 && path !== '/api/v1/auth/refresh'){
     // Try to refresh token only once

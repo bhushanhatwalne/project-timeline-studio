@@ -136,9 +136,9 @@ try {
   console.log(`[STARTUP] index.html path: ${indexPath}`);
   console.log(`[STARTUP] index.html exists: ${fs.existsSync(indexPath)}`);
 
-  // Initialize database schema
+  // Initialize database schema (non-blocking)
   console.log('[STARTUP] Checking/creating database schema...');
-  (async () => {
+  setImmediate(async () => {
     try {
       const migrationSql = `
         CREATE TABLE IF NOT EXISTS password_reset_tokens (
@@ -157,7 +157,8 @@ try {
       await pool.query(migrationSql);
       console.log('[STARTUP] ✓ Database schema ready');
     } catch (err) {
-      console.warn('[STARTUP] ⚠️ Schema check failed (may already exist):', err.message);
+      console.warn('[STARTUP] ⚠️ Schema check failed:', err.message);
+      console.warn('[STARTUP] ⚠️ Password reset table may need manual creation');
     }
   })();
 
