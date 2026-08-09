@@ -849,30 +849,46 @@ function goToDashboard(){
 }
 
 async function openProject(projectId){
+  console.log('[OPEN_PROJECT] Opening project:', projectId);
   currentProjectId = projectId;
   const res = await apiFetch(`/api/v1/projects/${projectId}`);
   if(res && res.ok){
     const proj = await res.json();
+    console.log('[OPEN_PROJECT] Loaded project:', proj.title);
     swimlanes = proj.swimlanes || [];
     projectTitle = proj.title;
     history = [];
     future = [];
-    await loadVersions();
+
+    // Load versions for this specific project
+    try{
+      const versRes = await apiFetch(`/api/v1/projects/${projectId}/versions`);
+      versions = versRes && versRes.ok ? (await versRes.json()) : [];
+      console.log('[OPEN_PROJECT] Loaded versions:', versions.length);
+    } catch(e){
+      console.error('Error loading versions:', e);
+      versions = [];
+    }
 
     // Load latest version if available
     if(versions.length > 0){
       const latestVersion = versions[0];
+      console.log('[OPEN_PROJECT] Loading latest version:', latestVersion.id, latestVersion.name);
       const verRes = await apiFetch(`/api/v1/projects/${projectId}/versions/${latestVersion.id}`);
       if(verRes && verRes.ok){
         const verData = await verRes.json();
         swimlanes = verData.swimlanes || swimlanes;
         projectTitle = verData.projectTitle || projectTitle;
+        console.log('[OPEN_PROJECT] Version loaded successfully');
       }
       activeTab = "timeline";
     } else {
+      console.log('[OPEN_PROJECT] No versions found, showing data tab');
       activeTab = "data";
     }
     render();
+  } else {
+    console.error('[OPEN_PROJECT] Failed to load project:', res?.status);
   }
 }
 
