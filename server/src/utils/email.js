@@ -71,7 +71,7 @@ async function sendPasswordResetEmail(userEmail, resetToken) {
     const info = await Promise.race([
       emailTransporter.sendMail(mailOptions),
       new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('Email send timeout after 10 seconds')), 10000)
+        setTimeout(() => reject(new Error('Email send timeout after 5 seconds')), 5000)
       )
     ]);
 

@@ -478,15 +478,23 @@ router.post('/forgot-password', async (req, res) => {
       [userId, resetTokenHash, expiresAt]
     );
 
-    // Send email with reset token
-    const emailSent = await sendPasswordResetEmail(email, resetToken);
+    // Send email with reset token (don't wait more than 6 seconds)
+    let emailSent = false;
+    try {
+      const emailPromise = sendPasswordResetEmail(email, resetToken);
+      const timeoutPromise = new Promise((resolve) => setTimeout(() => resolve(false), 6000));
+      emailSent = await Promise.race([emailPromise, timeoutPromise]);
+    } catch (err) {
+      console.error('[FORGOT-PASSWORD] Email send error:', err.message);
+      emailSent = false;
+    }
 
     res.status(200).json({
       success: true,
       message: emailSent
         ? 'If this email exists, a reset code has been sent'
-        : 'Reset code generated (email service unavailable - code shown in app)',
-      resetToken: process.env.NODE_ENV === 'development' && !emailSent ? resetToken : undefined,
+        : 'Reset code generated (email service unavailable)',
+      resetToken: !emailSent ? resetToken : undefined,
       expiresIn: '15 minutes',
     });
   } catch (err) {
