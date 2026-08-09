@@ -243,43 +243,43 @@
   /* auth landing page - exact replica (prefixed "auth-" to avoid clashing with .landing-* project-picker classes) */
   .auth-page{display:flex;flex-direction:column;min-height:100vh;background:#eef1f5;position:relative;overflow-x:hidden;}
   .auth-page::before{content:'';position:absolute;top:0;right:0;width:55%;height:680px;opacity:0.5;pointer-events:none;z-index:0;background-image:url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600"><path d="M120,80 Q260,140 400,70 T600,60" stroke="%23d7dde3" fill="none" stroke-width="1.5"/><path d="M100,180 Q260,240 420,170 T620,190" stroke="%23dde2e7" fill="none" stroke-width="1.5"/><path d="M140,300 Q280,360 440,280" stroke="%23e3e7eb" fill="none" stroke-width="1.5"/><circle cx="330" cy="150" r="70" fill="none" stroke="%23d7dde3" stroke-width="1"/><circle cx="470" cy="230" r="45" fill="none" stroke="%23dde2e7" stroke-width="1"/><circle cx="380" cy="380" r="4" fill="%23c7ced6"/></svg>');background-repeat:no-repeat;}
-  .auth-header{background:transparent;padding:36px 64px 8px;display:flex;position:relative;z-index:1;}
+  .auth-header{background:transparent;padding:20px 48px 0;display:flex;position:relative;z-index:1;}
   .auth-logo-section{display:flex;flex-direction:column;align-items:flex-start;}
-  .auth-logo-img{height:76px;width:auto;margin-bottom:4px;margin-left:-8px;}
-  .auth-logo-text{font-size:30px;font-weight:800;color:#152238;letter-spacing:-0.5px;line-height:1;}
+  .auth-logo-img{height:60px;width:auto;margin-bottom:2px;margin-left:-4px;}
+  .auth-logo-text{font-size:24px;font-weight:800;color:#152238;letter-spacing:-0.5px;line-height:1;}
   .auth-logo-text .highlight{color:#0076BC;}
-  .auth-logo-divider{display:flex;align-items:center;gap:6px;margin:10px 0 4px;width:100%;justify-content:center;}
-  .auth-logo-divider .line{height:1px;background:#c9d2da;flex:1;max-width:60px;}
-  .auth-logo-divider .dot{width:5px;height:5px;border-radius:50%;}
-  .auth-logo-subtitle{font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.15em;color:#8a94a0;width:100%;text-align:center;}
-  .auth-hero{display:grid;grid-template-columns:1fr 1fr;gap:50px;padding:24px 64px 56px;position:relative;z-index:1;align-items:center;max-width:1400px;margin:0 auto;}
+  .auth-logo-divider{display:flex;align-items:center;gap:4px;margin:6px 0 2px;width:100%;justify-content:center;}
+  .auth-logo-divider .line{height:1px;background:#c9d2da;flex:1;max-width:50px;}
+  .auth-logo-divider .dot{width:4px;height:4px;border-radius:50%;}
+  .auth-logo-subtitle{font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.15em;color:#8a94a0;width:100%;text-align:center;}
+  .auth-hero{display:grid;grid-template-columns:1fr 1fr;gap:32px;padding:16px 48px 20px;position:relative;z-index:1;align-items:center;max-width:1400px;margin:0 auto;}
   .auth-hero-left{display:flex;flex-direction:column;}
-  .auth-hero-title{font-size:38px;font-weight:700;line-height:1.28;color:#1a1a2e;margin:0 0 18px;max-width:480px;letter-spacing:-0.5px;}
-  .auth-hero-desc{font-size:14.5px;line-height:1.6;color:#5a6472;margin:0 0 32px;max-width:460px;font-weight:400;}
-  .auth-features{display:flex;flex-direction:column;gap:20px;}
-  .auth-feature{display:flex;gap:16px;align-items:flex-start;}
-  .auth-feature-icon{width:44px;height:44px;background:#fff;border:1.5px solid #d5dbe2;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--icon-teal);}
-  .auth-feature-icon svg{width:22px;height:22px;}
-  .auth-feature-title{font-size:14.5px;font-weight:700;color:#1a1a2e;margin:0 0 3px;line-height:1.3;}
-  .auth-feature-desc{font-size:12.5px;color:#5a6472;margin:0;line-height:1.5;}
+  .auth-hero-title{font-size:32px;font-weight:700;line-height:1.25;color:#1a1a2e;margin:0 0 12px;max-width:420px;letter-spacing:-0.5px;}
+  .auth-hero-desc{font-size:13px;line-height:1.5;color:#5a6472;margin:0 0 16px;max-width:420px;font-weight:400;}
+  .auth-features{display:flex;flex-direction:column;gap:12px;}
+  .auth-feature{display:flex;gap:12px;align-items:flex-start;}
+  .auth-feature-icon{width:40px;height:40px;background:#fff;border:1.5px solid #d5dbe2;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--icon-teal);}
+  .auth-feature-icon svg{width:20px;height:20px;}
+  .auth-feature-title{font-size:13px;font-weight:700;color:#1a1a2e;margin:0 0 2px;line-height:1.2;}
+  .auth-feature-desc{font-size:11px;color:#5a6472;margin:0;line-height:1.4;}
   .auth-hero-right{display:flex;justify-content:center;}
-  .auth-form-card{background:#fff;border-radius:14px;box-shadow:0 12px 36px rgba(20,30,45,.1);padding:36px 40px;width:100%;max-width:360px;}
-  .auth-form-header{text-align:center;margin-bottom:8px;}
-  .auth-form-title{font-size:24px;font-weight:700;color:#152238;margin:0 0 6px;letter-spacing:-0.4px;}
-  .auth-form-subtitle{font-size:12.5px;color:#8a94a0;margin:0;}
-  .auth-form-title-login{font-size:15px;font-weight:700;color:#1a1a2e;margin:22px 0 18px;text-align:center;display:block;}
-  .auth-form-group{margin-bottom:16px;}
-  .auth-form-label{display:block;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#8a94a0;margin-bottom:7px;}
-  .auth-form-input{width:100%;border:1.5px solid #dde2e7;background:#fbfcfd;font-size:13px;border-radius:7px;padding:10px 13px;font-family:var(--font-body);color:#1a1a2e;transition:all 200ms;}
+  .auth-form-card{background:#fff;border-radius:12px;box-shadow:0 10px 32px rgba(20,30,45,.08);padding:28px 32px;width:100%;max-width:320px;}
+  .auth-form-header{text-align:center;margin-bottom:6px;}
+  .auth-form-title{font-size:20px;font-weight:700;color:#152238;margin:0 0 4px;letter-spacing:-0.3px;}
+  .auth-form-subtitle{font-size:11px;color:#8a94a0;margin:0;}
+  .auth-form-title-login{font-size:13px;font-weight:700;color:#1a1a2e;margin:16px 0 14px;text-align:center;display:block;}
+  .auth-form-group{margin-bottom:12px;}
+  .auth-form-label{display:block;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#8a94a0;margin-bottom:5px;}
+  .auth-form-input{width:100%;border:1.5px solid #dde2e7;background:#fbfcfd;font-size:12px;border-radius:6px;padding:8px 11px;font-family:var(--font-body);color:#1a1a2e;transition:all 200ms;}
   .auth-form-input:focus{outline:none;border-color:#0076BC;background:#fff;box-shadow:0 0 0 3px rgba(0,118,188,.08);}
   .auth-form-input::placeholder{color:#aab2bc;}
-  .auth-form-row{display:flex;justify-content:space-between;align-items:center;font-size:12.5px;margin-top:14px;margin-bottom:22px;}
-  .auth-form-checkbox{display:flex;align-items:center;gap:7px;cursor:pointer;color:#3a4452;}
-  .auth-form-checkbox input{width:15px;height:15px;cursor:pointer;accent-color:#003057;}
-  .auth-form-link{color:#0076BC;text-decoration:underline;cursor:pointer;font-weight:500;}
+  .auth-form-row{display:flex;justify-content:space-between;align-items:center;font-size:11px;margin-top:10px;margin-bottom:14px;}
+  .auth-form-checkbox{display:flex;align-items:center;gap:6px;cursor:pointer;color:#3a4452;font-size:11px;}
+  .auth-form-checkbox input{width:14px;height:14px;cursor:pointer;accent-color:#003057;}
+  .auth-form-link{color:#0076BC;text-decoration:underline;cursor:pointer;font-weight:500;font-size:11px;}
   .auth-form-link:hover{color:#005a8d;}
-  .auth-form-actions{display:flex;gap:12px;margin-top:6px;}
-  .auth-form-actions button{flex:1;padding:11px 16px;border-radius:7px;border:1.5px solid #dde2e7;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font-body);transition:all 200ms;}
+  .auth-form-actions{display:flex;gap:8px;margin-top:4px;}
+  .auth-form-actions button{flex:1;padding:8px 12px;border-radius:6px;border:1.5px solid #dde2e7;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--font-body);transition:all 200ms;}
   .auth-form-actions .btn-secondary{background:#fff;color:#1a1a2e;}
   .auth-form-actions .btn-secondary:hover{border-color:#9aa4b0;}
   .auth-form-actions .btn-primary{background:#0a2540;color:#fff;border-color:#0a2540;}
@@ -287,20 +287,20 @@
   .auth-spinner{display:none;text-align:center;padding:40px 20px;}
   .auth-spinner-ring{display:inline-block;width:40px;height:40px;border:4px solid #dde2e7;border-top-color:#0076BC;border-radius:50%;animation:spin 1s linear infinite;}
   .auth-spinner-text{margin-top:16px;color:#8a94a0;font-size:14px;}
-  .auth-section-works{padding:8px 64px 56px;text-align:center;position:relative;z-index:1;}
-  .auth-section-works h2{font-size:24px;font-weight:700;color:#1a1a2e;margin:0;letter-spacing:-0.3px;}
-  .auth-section-works .auth-works-rule{width:44px;height:2.5px;background:#0a2540;margin:14px auto 32px;}
-  .auth-howworks-grid{display:flex;align-items:flex-start;justify-content:center;gap:0;max-width:1200px;margin:0 auto;}
-  .auth-step{background:#fff;border:1px solid #dde2e7;border-radius:12px;padding:26px 22px;text-align:left;transition:all 200ms;flex:1;max-width:250px;}
-  .auth-step:hover{border-color:#b8c1cc;box-shadow:0 4px 16px rgba(20,30,45,.06);}
-  .auth-step-chevron{display:flex;align-items:center;justify-content:center;color:#c3cad2;padding:0 10px;align-self:stretch;flex-shrink:0;}
-  .auth-step-chevron svg{width:20px;height:20px;}
-  .auth-step-icon{color:var(--icon-teal);margin-bottom:14px;}
-  .auth-step-icon svg{width:30px;height:30px;}
-  .auth-step-head{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
-  .auth-step-num{display:flex;align-items:center;justify-content:center;width:24px;height:24px;background:#1a1a2e;color:#fff;border-radius:50%;font-size:12px;font-weight:700;flex-shrink:0;}
-  .auth-step-title{font-size:14px;font-weight:700;color:#1a1a2e;margin:0;letter-spacing:-0.2px;}
-  .auth-step-desc{font-size:12px;color:#5a6472;line-height:1.55;margin:0;}
+  .auth-section-works{padding:4px 48px 16px;text-align:center;position:relative;z-index:1;}
+  .auth-section-works h2{font-size:18px;font-weight:700;color:#1a1a2e;margin:0;letter-spacing:-0.3px;}
+  .auth-section-works .auth-works-rule{width:40px;height:2px;background:#0a2540;margin:10px auto 16px;}
+  .auth-howworks-grid{display:flex;align-items:flex-start;justify-content:center;gap:0;max-width:1100px;margin:0 auto;}
+  .auth-step{background:#fff;border:1px solid #dde2e7;border-radius:10px;padding:18px 16px;text-align:left;transition:all 200ms;flex:1;max-width:220px;}
+  .auth-step:hover{border-color:#b8c1cc;box-shadow:0 3px 12px rgba(20,30,45,.05);}
+  .auth-step-chevron{display:flex;align-items:center;justify-content:center;color:#c3cad2;padding:0 6px;align-self:stretch;flex-shrink:0;}
+  .auth-step-chevron svg{width:18px;height:18px;}
+  .auth-step-icon{color:var(--icon-teal);margin-bottom:10px;}
+  .auth-step-icon svg{width:24px;height:24px;}
+  .auth-step-head{display:flex;align-items:center;gap:8px;margin-bottom:6px;}
+  .auth-step-num{display:flex;align-items:center;justify-content:center;width:22px;height:22px;background:#1a1a2e;color:#fff;border-radius:50%;font-size:11px;font-weight:700;flex-shrink:0;}
+  .auth-step-title{font-size:12px;font-weight:700;color:#1a1a2e;margin:0;letter-spacing:-0.2px;}
+  .auth-step-desc{font-size:10px;color:#5a6472;line-height:1.5;margin:0;}
 
   /* modal */
   .modal-overlay{position:fixed;inset:0;background:rgba(15,20,28,.42);display:flex;align-items:center;justify-content:center;z-index:200;}
@@ -712,7 +712,7 @@ function renderAuthScreen(){
 
       <div class="auth-hero">
         <div class="auth-hero-left">
-          <h1 class="auth-hero-title">Plan Smarter. See Further. Deliver With Confidence.</h1>
+          <h1 class="auth-hero-title">Plan Smarter. See Further. <span style="color:#0076BC;font-weight:900;">Deliver With Confidence.</span></h1>
           <p class="auth-hero-desc">Timeline Studio helps project teams plan, visualize, and track with clarity and precision.</p>
 
           <div class="auth-features">
