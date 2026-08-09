@@ -274,6 +274,10 @@
   .auth-form-input{width:100%;border:1.5px solid #dde2e7;background:#fbfcfd;font-size:12px;border-radius:6px;padding:8px 11px;font-family:var(--font-body);color:#1a1a2e;transition:all 200ms;}
   .auth-form-input:focus{outline:none;border-color:#0076BC;background:#fff;box-shadow:0 0 0 3px rgba(0,118,188,.08);}
   .auth-form-input::placeholder{color:#aab2bc;}
+  .auth-password-wrapper{position:relative;display:flex;align-items:center;}
+  .auth-password-toggle{position:absolute;right:8px;background:none;border:none;cursor:pointer;color:#8a94a0;padding:6px;display:flex;align-items:center;justify-content:center;transition:color 200ms;}
+  .auth-password-toggle:hover{color:#5a6472;}
+  .auth-password-toggle svg{width:18px;height:18px;}
   .auth-form-row{display:flex;justify-content:space-between;align-items:center;font-size:11px;margin-top:10px;margin-bottom:14px;}
   .auth-form-checkbox{display:flex;align-items:center;gap:6px;cursor:pointer;color:#3a4452;font-size:11px;}
   .auth-form-checkbox input{width:14px;height:14px;cursor:pointer;accent-color:#003057;}
@@ -829,7 +833,15 @@ function renderAuthScreen(){
 
                 <div class="auth-form-group">
                   <label class="auth-form-label">Password</label>
-                  <input id="authPassword" type="password" class="auth-form-input" placeholder="Enter your password" />
+                  <div class="auth-password-wrapper">
+                    <input id="authPassword" type="password" class="auth-form-input" placeholder="Enter your password" />
+                    <button type="button" class="auth-password-toggle" onclick="togglePasswordVisibility()" tabindex="-1">
+                      <svg id="authPasswordIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                        <circle cx="12" cy="12" r="3"></circle>
+                      </svg>
+                    </button>
+                  </div>
                 </div>
 
                 <div class="auth-form-group" id="authNameField" style="display:none;">
@@ -905,6 +917,18 @@ function renderAuthScreen(){
 
   swReg.style.display = "inline-flex";
   logBtn.style.display = "inline-flex";
+
+  window.togglePasswordVisibility = ()=>{
+    const passwordInput = document.getElementById("authPassword");
+    const icon = document.getElementById("authPasswordIcon");
+    if(passwordInput.type === "password"){
+      passwordInput.type = "text";
+      icon.innerHTML = '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line>';
+    } else {
+      passwordInput.type = "password";
+      icon.innerHTML = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle>';
+    }
+  };
 
   window.switchToLogin = ()=>{
     document.getElementById("authFormTitle").textContent = "Login";
