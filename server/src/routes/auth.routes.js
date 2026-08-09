@@ -435,4 +435,137 @@ router.put('/change-email', authMiddleware, async (req, res) => {
   }
 });
 
+// POST /api/v1/auth/forgot-password
+router.post('/forgot-password', async (req, res) => {
+  try {
+    const schema = z.object({
+      email: z.string().email(),
+    });
+
+    const parsed = schema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({
+        type: 'https://api.timeline.studio/errors#validation_error',
+        title: 'Validation Error',
+        status: 400,
+        detail: 'Invalid email',
+      });
+    }
+
+    const { email } = parsed.data;
+
+    // Check if user exists
+    const userResult = await pool.query('SELECT id FROM users WHERE email = $1', [email]);
+    if (userResult.rows.length === 0) {
+      // For security, don't reveal if email exists
+      return res.status(200).json({
+        success: true,
+        message: 'If this email exists, a reset link will be sent',
+      });
+    }
+
+    const userId = userResult.rows[0].id;
+
+    // Generate reset token (6-digit code for now)
+    const resetToken = Math.floor(100000 + Math.random() * 900000).toString();
+    const resetTokenHash = require('crypto').createHash('sha256').update(resetToken).digest('hex');
+    const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
+
+    // Store reset token
+    await pool.query(
+      'INSERT INTO password_reset_tokens (user_id, token_hash, expires_at) VALUES ($1, $2, $3)',
+      [userId, resetTokenHash, expiresAt]
+    );
+
+    // For development: return token in response (in production, send via email)
+    res.status(200).json({
+      success: true,
+      message: 'Reset token generated',
+      resetToken: process.env.NODE_ENV === 'development' ? resetToken : undefined,
+      expiresIn: '15 minutes',
+    });
+  } catch (err) {
+    console.error('Error in forgot-password:', err);
+    res.status(500).json({
+      type: 'https://api.timeline.studio/errors#internal_error',
+      title: 'Internal Server Error',
+      status: 500,
+      detail: 'An unexpected error occurred',
+    });
+  }
+});
+
+// POST /api/v1/auth/reset-password
+router.post('/reset-password', async (req, res) => {
+  try {
+    const schema = z.object({
+      email: z.string().email(),
+      resetToken: z.string().length(6),
+      newPassword: z.string().min(8).regex(/[A-Z]/).regex(/[0-9]/).regex(/[!@#$%^&*]/),
+    });
+
+    const parsed = schema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({
+        type: 'https://api.timeline.studio/errors#validation_error',
+        title: 'Validation Error',
+        status: 400,
+        detail: parsed.error.errors[0]?.message || 'Invalid input',
+        errors: parsed.error.errors,
+      });
+    }
+
+    const { email, resetToken, newPassword } = parsed.data;
+
+    // Get user by email
+    const userResult = await pool.query('SELECT id FROM users WHERE email = $1', [email]);
+    if (userResult.rows.length === 0) {
+      return res.status(401).json({
+        type: 'https://api.timeline.studio/errors#unauthorized',
+        title: 'Unauthorized',
+        status: 401,
+        detail: 'Invalid email or reset token',
+      });
+    }
+
+    const userId = userResult.rows[0].id;
+    const resetTokenHash = require('crypto').createHash('sha256').update(resetToken).digest('hex');
+
+    // Find valid reset token
+    const tokenResult = await pool.query(
+      'SELECT id FROM password_reset_tokens WHERE user_id = $1 AND token_hash = $2 AND expires_at > now() AND used_at IS NULL',
+      [userId, resetTokenHash]
+    );
+
+    if (tokenResult.rows.length === 0) {
+      return res.status(401).json({
+        type: 'https://api.timeline.studio/errors#unauthorized',
+        title: 'Unauthorized',
+        status: 401,
+        detail: 'Invalid or expired reset token',
+      });
+    }
+
+    // Update password
+    const newPasswordHash = await hashPassword(newPassword);
+    await pool.query('UPDATE users SET password_hash = $1 WHERE id = $2', [newPasswordHash, userId]);
+
+    // Mark token as used
+    await pool.query('UPDATE password_reset_tokens SET used_at = now() WHERE id = $1', [tokenResult.rows[0].id]);
+
+    res.json({
+      success: true,
+      message: 'Password reset successfully',
+    });
+  } catch (err) {
+    console.error('Error in reset-password:', err);
+    res.status(500).json({
+      type: 'https://api.timeline.studio/errors#internal_error',
+      title: 'Internal Server Error',
+      status: 500,
+      detail: 'An unexpected error occurred',
+    });
+  }
+});
+
 module.exports = router;
