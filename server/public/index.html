@@ -446,6 +446,26 @@
   .dashboard-user-dropdown-item:last-child{border-bottom:none;}
   .dashboard-user-dropdown-item:hover{background:#f5f7fa;}
   .dashboard-user-dropdown-item.logout{color:#d32f2f;}
+  .dashboard-project-menu{position:relative;}
+  .dashboard-project-dropdown{position:absolute;top:0;right:0;background:#fff;border:1px solid #e0e6f2;border-radius:6px;box-shadow:0 8px 16px rgba(0,0,0,.1);min-width:180px;display:none;z-index:50;}
+  .dashboard-project-dropdown.active{display:block;}
+  .dashboard-project-dropdown-item{padding:10px 14px;font-size:12px;color:#0a2540;cursor:pointer;transition:background 200ms;border-bottom:1px solid #f0f3f9;}
+  .dashboard-project-dropdown-item:last-child{border-bottom:none;}
+  .dashboard-project-dropdown-item:hover{background:#f5f7fa;}
+  .dashboard-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;z-index:200;}
+  .dashboard-modal-overlay.active{display:flex;}
+  .dashboard-modal{background:#fff;border-radius:12px;padding:24px;max-width:500px;width:90%;max-height:80vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.3);}
+  .dashboard-modal-title{font-size:20px;font-weight:700;color:#0a2540;margin-bottom:16px;}
+  .dashboard-modal-field{margin-bottom:16px;}
+  .dashboard-modal-label{display:block;font-size:12px;font-weight:700;color:#5a6472;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px;}
+  .dashboard-modal-input{width:100%;padding:10px 12px;border:1px solid #e0e6f2;border-radius:6px;font-size:13px;color:#0a2540;font-family:inherit;}
+  .dashboard-modal-input:focus{outline:none;border-color:#0076BC;box-shadow:0 0 0 3px rgba(0,118,188,.1);}
+  .dashboard-modal-actions{display:flex;gap:12px;justify-content:flex-end;margin-top:24px;}
+  .dashboard-modal-btn{padding:10px 16px;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;border:none;transition:all 200ms;}
+  .dashboard-modal-btn.primary{background:#0076BC;color:#fff;}
+  .dashboard-modal-btn.primary:hover{background:#0056a0;}
+  .dashboard-modal-btn.secondary{background:#f0f3f9;color:#0a2540;}
+  .dashboard-modal-btn.secondary:hover{background:#e0e6f2;}
 </style>
 </head>
 <body>
@@ -1452,6 +1472,71 @@ async function handleLogout(){
   }
 }
 
+function toggleProjectMenu(event, projectId){
+  event.stopPropagation();
+  const menu = document.getElementById(`menu-${projectId}`);
+  if(menu){
+    menu.classList.toggle('active');
+  }
+}
+
+window.addEventListener('click', function(){
+  const dropdowns = document.querySelectorAll('.dashboard-project-dropdown.active');
+  dropdowns.forEach(dropdown => dropdown.classList.remove('active'));
+});
+
+function openEditProjectModal(projectId, projectName){
+  const modal = document.getElementById('editProjectModal');
+  if(modal){
+    document.getElementById('editProjectName').value = projectName;
+    document.getElementById('editProjectId').value = projectId;
+    document.getElementById('editProjectDetails').value = 'Project details...';
+    document.getElementById('editProjectOwner').value = 'Project Owner';
+    document.getElementById('editProjectRole').value = 'Project Manager';
+    modal.classList.add('active');
+  }
+  // Close the dropdown menu
+  const menu = document.getElementById(`menu-${projectId}`);
+  if(menu) menu.classList.remove('active');
+}
+
+function closeEditProjectModal(){
+  const modal = document.getElementById('editProjectModal');
+  if(modal) modal.classList.remove('active');
+}
+
+async function saveProjectChanges(){
+  const projectId = document.getElementById('editProjectId').value;
+  const projectName = document.getElementById('editProjectName').value;
+
+  if(!projectName.trim()){
+    alert('Project name is required');
+    return;
+  }
+
+  try{
+    const res = await apiFetch(`/api/v1/projects/${projectId}`, {
+      method: 'PUT',
+      body: JSON.stringify({
+        projectTitle: projectName,
+        swimlanes: []
+      })
+    });
+
+    if(res && res.ok){
+      alert('Project updated successfully!');
+      closeEditProjectModal();
+      await loadProjectList();
+      renderDashboard();
+    } else {
+      alert('Failed to update project');
+    }
+  } catch(err){
+    console.error('Save error:', err);
+    alert('Error: ' + err.message);
+  }
+}
+
 function renderDashboard(){
   const app = document.getElementById("app");
 
@@ -1619,7 +1704,15 @@ function renderDashboard(){
                       </div>
                     </div>
                   </div>
-                  <div class="dashboard-actions">⋮</div>
+                  <div class="dashboard-project-menu">
+                    <div class="dashboard-actions" onclick="toggleProjectMenu(event, '${escapeAttr(proj.id)}')">⋮</div>
+                    <div class="dashboard-project-dropdown" id="menu-${proj.id}">
+                      <div class="dashboard-project-dropdown-item" onclick="openEditProjectModal('${escapeAttr(proj.id)}', '${escapeAttr(proj.title)}')">✏️ Edit Details</div>
+                      <div class="dashboard-project-dropdown-item" onclick="alert('Duplicate - Coming soon')">📋 Duplicate</div>
+                      <div class="dashboard-project-dropdown-item" onclick="alert('Settings - Coming soon')">⚙️ Project Settings</div>
+                      <div class="dashboard-project-dropdown-item" onclick="alert('Delete - Coming soon')" style="color:#d32f2f;">🗑️ Delete</div>
+                    </div>
+                  </div>
                 </div>
               `;
             }).join('')}
@@ -1635,6 +1728,39 @@ function renderDashboard(){
               </div>
             </div>
           ` : ''}
+        </div>
+      </div>
+    </div>
+
+    <div class="dashboard-modal-overlay" id="editProjectModal" onclick="if(event.target === this) closeEditProjectModal()">
+      <div class="dashboard-modal">
+        <div class="dashboard-modal-title">Edit Project Details</div>
+
+        <input type="hidden" id="editProjectId">
+
+        <div class="dashboard-modal-field">
+          <label class="dashboard-modal-label">Project Name</label>
+          <input type="text" id="editProjectName" class="dashboard-modal-input" placeholder="Enter project name">
+        </div>
+
+        <div class="dashboard-modal-field">
+          <label class="dashboard-modal-label">Project Details</label>
+          <textarea id="editProjectDetails" class="dashboard-modal-input" style="min-height:100px;resize:vertical;" placeholder="Enter project description..."></textarea>
+        </div>
+
+        <div class="dashboard-modal-field">
+          <label class="dashboard-modal-label">Project Owner</label>
+          <input type="text" id="editProjectOwner" class="dashboard-modal-input" placeholder="Owner name">
+        </div>
+
+        <div class="dashboard-modal-field">
+          <label class="dashboard-modal-label">Role</label>
+          <input type="text" id="editProjectRole" class="dashboard-modal-input" placeholder="Role/Title">
+        </div>
+
+        <div class="dashboard-modal-actions">
+          <button class="dashboard-modal-btn secondary" onclick="closeEditProjectModal()">Cancel</button>
+          <button class="dashboard-modal-btn primary" onclick="saveProjectChanges()">Save Changes</button>
         </div>
       </div>
     </div>
