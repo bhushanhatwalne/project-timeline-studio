@@ -1491,9 +1491,6 @@ function openEditProjectModal(event, projectId, projectName){
   if(modal){
     document.getElementById('editProjectName').value = projectName;
     document.getElementById('editProjectId').value = projectId;
-    document.getElementById('editProjectDetails').value = 'Project details...';
-    document.getElementById('editProjectOwner').value = 'Project Owner';
-    document.getElementById('editProjectRole').value = 'Project Manager';
     modal.classList.add('active');
   }
   // Close the dropdown menu
@@ -1770,28 +1767,13 @@ function renderDashboard(){
 
     <div class="dashboard-modal-overlay" id="editProjectModal" onclick="if(event.target === this) closeEditProjectModal()">
       <div class="dashboard-modal">
-        <div class="dashboard-modal-title">Edit Project Details</div>
+        <div class="dashboard-modal-title">Rename Project</div>
 
         <input type="hidden" id="editProjectId">
 
         <div class="dashboard-modal-field">
           <label class="dashboard-modal-label">Project Name</label>
           <input type="text" id="editProjectName" class="dashboard-modal-input" placeholder="Enter project name">
-        </div>
-
-        <div class="dashboard-modal-field">
-          <label class="dashboard-modal-label">Project Details</label>
-          <textarea id="editProjectDetails" class="dashboard-modal-input" style="min-height:100px;resize:vertical;" placeholder="Enter project description..."></textarea>
-        </div>
-
-        <div class="dashboard-modal-field">
-          <label class="dashboard-modal-label">Project Owner</label>
-          <input type="text" id="editProjectOwner" class="dashboard-modal-input" placeholder="Owner name">
-        </div>
-
-        <div class="dashboard-modal-field">
-          <label class="dashboard-modal-label">Role</label>
-          <input type="text" id="editProjectRole" class="dashboard-modal-input" placeholder="Role/Title">
         </div>
 
         <div class="dashboard-modal-actions">
