@@ -843,6 +843,11 @@ async function loadProjectList(){
   myProjects = res && res.ok ? (await res.json()) : [];
 }
 
+function goToDashboard(){
+  currentProjectId = null;
+  renderDashboard();
+}
+
 async function openProject(projectId){
   currentProjectId = projectId;
   const res = await apiFetch(`/api/v1/projects/${projectId}`);
@@ -1593,7 +1598,8 @@ async function saveProjectChanges(){
   }
 }
 
-function renderDashboard(){
+async function renderDashboard(){
+  await loadProjectList();
   const app = document.getElementById("app");
 
   // Calculate stats
@@ -1844,7 +1850,7 @@ function render(){
         <div class="proj-title" contenteditable="true" spellcheck="false" onblur="onTitleChange(this.textContent)" onkeydown="if(event.key==='Enter'){event.preventDefault(); this.blur();}">${escapeHtml(projectTitle)}</div>
       </div>
       <div style="display:flex; align-items:center; gap:14px;">
-        <button class="btn" style="background:transparent;color:#fff;border-color:rgba(255,255,255,.2);" onclick="renderProjectPicker()">← My Projects</button>
+        <button class="btn" style="background:transparent;color:#fff;border-color:rgba(255,255,255,.2);" onclick="goToDashboard()">← My Projects</button>
         <button class="compact-pill ${compactMode?'active':''}" onclick="toggleCompact()" title="Halve the vertical spacing between timeline rows">${compactMode?"☑":"☐"} Compact</button>
         <div class="hist-controls">
           <button class="hist-btn" title="Undo (Ctrl+Z)" onclick="undo()" ${history.length===0?"disabled":""}>↶</button>
