@@ -3,6 +3,7 @@ const { z } = require('zod');
 const pool = require('../db');
 const { hashPassword, comparePassword } = require('../utils/password');
 const { signAccessToken, signRefreshToken, verifyRefreshToken } = require('../utils/jwt');
+const { sendPasswordResetEmail } = require('../utils/email');
 const config = require('../config');
 const authMiddleware = require('../middleware/auth');
 
@@ -477,11 +478,15 @@ router.post('/forgot-password', async (req, res) => {
       [userId, resetTokenHash, expiresAt]
     );
 
-    // For development: return token in response (in production, send via email)
+    // Send email with reset token
+    const emailSent = await sendPasswordResetEmail(email, resetToken);
+
     res.status(200).json({
       success: true,
-      message: 'Reset token generated',
-      resetToken: process.env.NODE_ENV === 'development' ? resetToken : undefined,
+      message: emailSent
+        ? 'If this email exists, a reset code has been sent'
+        : 'Reset code generated (email service unavailable - code shown in app)',
+      resetToken: process.env.NODE_ENV === 'development' && !emailSent ? resetToken : undefined,
       expiresIn: '15 minutes',
     });
   } catch (err) {
