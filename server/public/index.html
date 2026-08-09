@@ -872,20 +872,28 @@ function renderAuthScreen(){
       <div id="forgotPasswordModal" class="modal-overlay" style="display:none;" onclick="if(event.target === this) closeForgotPasswordModal()">
         <div class="modal-card">
           <h2 class="modal-title">Reset Password</h2>
-          <p class="modal-sub">Enter your email to receive a reset code</p>
 
           <div id="forgotPasswordStep1" style="display:block;">
+            <p class="modal-sub">Enter your email to receive a reset code</p>
+            <div id="forgotPasswordError" style="display:none;background:#fee;color:#c33;padding:10px;border-radius:6px;margin-bottom:12px;font-size:12px;"></div>
             <div class="modal-field">
               <label>Email Address</label>
               <input id="forgotPasswordEmail" type="email" placeholder="name@yourcompany.com" />
             </div>
             <div class="modal-actions">
               <button onclick="closeForgotPasswordModal()" style="background:none;border:none;color:#0076BC;cursor:pointer;font-weight:600;">Cancel</button>
-              <button onclick="handleForgotPassword()" style="background:#0076BC;color:white;border:none;padding:8px 16px;border-radius:6px;cursor:pointer;font-weight:600;">Send Reset Code</button>
+              <button id="forgotPasswordSendBtn" onclick="handleForgotPassword()" style="background:#0076BC;color:white;border:none;padding:8px 16px;border-radius:6px;cursor:pointer;font-weight:600;">Send Reset Code</button>
             </div>
           </div>
 
+          <div id="forgotPasswordLoading" style="display:none;text-align:center;padding:20px;">
+            <div style="border:3px solid #e0e0e0;border-top:3px solid #0076BC;border-radius:50%;width:40px;height:40px;animation:spin 1s linear infinite;margin:0 auto;"></div>
+            <p style="margin-top:12px;color:#666;font-size:12px;">Sending reset code...</p>
+          </div>
+
           <div id="forgotPasswordStep2" style="display:none;">
+            <p class="modal-sub">Enter the code from your email and create a new password</p>
+            <div id="resetPasswordError" style="display:none;background:#fee;color:#c33;padding:10px;border-radius:6px;margin-bottom:12px;font-size:12px;"></div>
             <div class="modal-field">
               <label>Reset Code (6 digits)</label>
               <input id="resetCode" type="text" placeholder="000000" maxlength="6" />
@@ -896,12 +904,13 @@ function renderAuthScreen(){
             </div>
             <div class="modal-actions">
               <button onclick="goBackForgotPassword()" style="background:none;border:none;color:#0076BC;cursor:pointer;font-weight:600;">Back</button>
-              <button onclick="handleResetPassword()" style="background:#0076BC;color:white;border:none;padding:8px 16px;border-radius:6px;cursor:pointer;font-weight:600;">Reset Password</button>
+              <button id="resetPasswordBtn" onclick="handleResetPassword()" style="background:#0076BC;color:white;border:none;padding:8px 16px;border-radius:6px;cursor:pointer;font-weight:600;">Reset Password</button>
             </div>
           </div>
 
           <div id="forgotPasswordSuccess" style="display:none;">
-            <p style="text-align:center;margin:16px 0;color:#0076BC;font-weight:600;">✓ Password reset successfully!</p>
+            <p style="text-align:center;margin:16px 0;color:#0076BC;font-weight:600;font-size:16px;">✓ Password reset successfully!</p>
+            <p style="text-align:center;color:#666;font-size:12px;margin-bottom:16px;">You can now log in with your new password.</p>
             <div class="modal-actions">
               <button onclick="closeForgotPasswordModal()" style="background:#0076BC;color:white;border:none;padding:8px 16px;border-radius:6px;cursor:pointer;font-weight:600;width:100%;">Back to Login</button>
             </div>
@@ -1083,10 +1092,25 @@ function renderAuthScreen(){
 
   window.handleForgotPassword = async ()=>{
     const email = document.getElementById("forgotPasswordEmail").value.trim();
+    const errorDiv = document.getElementById("forgotPasswordError");
+
+    errorDiv.style.display = "none";
+    errorDiv.textContent = "";
+
     if(!email){
-      alert("Please enter your email address");
+      errorDiv.textContent = "Please enter your email address";
+      errorDiv.style.display = "block";
       return;
     }
+
+    if(!email.includes("@")){
+      errorDiv.textContent = "Please enter a valid email address";
+      errorDiv.style.display = "block";
+      return;
+    }
+
+    document.getElementById("forgotPasswordStep1").style.display = "none";
+    document.getElementById("forgotPasswordLoading").style.display = "block";
 
     try {
       const res = await apiFetch('/api/v1/auth/forgot-password', {
@@ -1098,20 +1122,28 @@ function renderAuthScreen(){
         const data = await res.json();
         console.log('[FORGOT PASSWORD]', data);
 
+        document.getElementById("forgotPasswordLoading").style.display = "none";
+
         if(data.resetToken){
-          alert("Reset Code: " + data.resetToken + "\n\n📧 Email not configured - Code shown here\n\nPaste this code in the next screen to reset your password");
+          alert("Reset Code: " + data.resetToken + "\n\n📧 Email not configured\n\nPaste this code in the next screen to reset your password");
         } else {
-          alert("✓ Reset code sent!\n\nPlease check your email for the 6-digit code.");
+          alert("✓ Reset code sent to your email!\n\nCheck your inbox for the 6-digit code.");
         }
-        document.getElementById("forgotPasswordStep1").style.display = "none";
         document.getElementById("forgotPasswordStep2").style.display = "block";
       } else {
+        document.getElementById("forgotPasswordLoading").style.display = "none";
+        document.getElementById("forgotPasswordStep1").style.display = "block";
         const errorData = res ? await res.json() : {};
-        alert('Error: ' + (errorData.detail || 'Failed to send reset code'));
+        errorDiv.textContent = errorData.detail || 'Failed to send reset code. Please try again.';
+        errorDiv.style.display = "block";
+        console.error('Forgot password error:', errorData);
       }
     } catch(err){
+      document.getElementById("forgotPasswordLoading").style.display = "none";
+      document.getElementById("forgotPasswordStep1").style.display = "block";
+      errorDiv.textContent = 'Error: ' + err.message;
+      errorDiv.style.display = "block";
       console.error('Forgot password error:', err);
-      alert('Error: ' + err.message);
     }
   };
 
@@ -1124,15 +1156,31 @@ function renderAuthScreen(){
     const email = document.getElementById("forgotPasswordEmail").value.trim();
     const resetToken = document.getElementById("resetCode").value.trim();
     const newPassword = document.getElementById("newPassword").value;
+    const errorDiv = document.getElementById("resetPasswordError");
+
+    errorDiv.style.display = "none";
+    errorDiv.textContent = "";
 
     if(!resetToken || resetToken.length !== 6){
-      alert("Please enter a valid 6-digit reset code");
+      errorDiv.textContent = "Please enter a valid 6-digit reset code";
+      errorDiv.style.display = "block";
       return;
     }
     if(!newPassword){
-      alert("Please enter a new password");
+      errorDiv.textContent = "Please enter a new password";
+      errorDiv.style.display = "block";
       return;
     }
+
+    if(newPassword.length < 8){
+      errorDiv.textContent = "Password must be at least 8 characters";
+      errorDiv.style.display = "block";
+      return;
+    }
+
+    const resetBtn = document.getElementById("resetPasswordBtn");
+    resetBtn.disabled = true;
+    resetBtn.style.opacity = "0.6";
 
     try {
       const res = await apiFetch('/api/v1/auth/reset-password', {
@@ -1144,14 +1192,24 @@ function renderAuthScreen(){
         document.getElementById("forgotPasswordStep2").style.display = "none";
         document.getElementById("forgotPasswordSuccess").style.display = "block";
       } else if(res?.status === 401){
-        alert('Invalid or expired reset code. Please try again.');
+        resetBtn.disabled = false;
+        resetBtn.style.opacity = "1";
+        errorDiv.textContent = 'Invalid or expired reset code. Please try again.';
+        errorDiv.style.display = "block";
       } else {
+        resetBtn.disabled = false;
+        resetBtn.style.opacity = "1";
         const errData = res ? await res.json() : {};
-        alert('Reset failed: ' + (errData.detail || 'Unknown error'));
+        errorDiv.textContent = 'Reset failed: ' + (errData.detail || 'Unknown error');
+        errorDiv.style.display = "block";
+        console.error('Reset password error:', errData);
       }
     } catch(err){
+      resetBtn.disabled = false;
+      resetBtn.style.opacity = "1";
+      errorDiv.textContent = 'Error: ' + err.message;
+      errorDiv.style.display = "block";
       console.error('Reset password error:', err);
-      alert('Error: ' + err.message);
     }
   };
 }
