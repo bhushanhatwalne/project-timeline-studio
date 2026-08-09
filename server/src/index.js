@@ -138,7 +138,7 @@ try {
 
   // Initialize database schema (non-blocking)
   console.log('[STARTUP] Checking/creating database schema...');
-  setImmediate(async () => {
+  setTimeout(async () => {
     try {
       const migrationSql = `
         CREATE TABLE IF NOT EXISTS password_reset_tokens (
@@ -160,7 +160,7 @@ try {
       console.warn('[STARTUP] ⚠️ Schema check failed:', err.message);
       console.warn('[STARTUP] ⚠️ Password reset table may need manual creation');
     }
-  })();
+  }, 100);
 
   console.log(`[STARTUP] Starting app.listen on port ${PORT}...`);
   app.listen(PORT, '0.0.0.0', () => {
