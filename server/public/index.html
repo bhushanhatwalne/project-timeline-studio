@@ -239,6 +239,49 @@
   .view-toggle-btn:hover{border-color:var(--accent);color:var(--accent);}
   .view-toggle-btn.active{background:var(--accent);color:#fff;border-color:var(--accent);}
 
+  /* landing page */
+  .landing-page{display:flex;flex-direction:column;min-height:100vh;background:#fff;}
+  .landing-header{background:#fff;padding:20px 40px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line);box-shadow:0 2px 4px rgba(0,0,0,.02);}
+  .landing-logo{display:flex;align-items:center;gap:10px;font-size:18px;font-weight:700;color:var(--ink);}
+  .landing-logo-mark{width:24px;height:24px;border:2px solid var(--accent);display:flex;align-items:center;justify-content:center;position:relative;}
+  .landing-logo-mark::before,.landing-logo-mark::after{content:'';position:absolute;background:var(--accent);}
+  .landing-logo-mark::before{width:12px;height:2px;}
+  .landing-logo-mark::after{width:2px;height:12px;}
+  .landing-badge{font-size:11px;color:var(--ink-soft);display:flex;gap:6px;align-items:center;}
+  .landing-badge::before{content:'🔒';font-size:12px;}
+  .landing-container{display:flex;flex:1;overflow:hidden;}
+  .landing-left{flex:1;padding:60px 40px;display:flex;flex-direction:column;justify-content:center;background:#f8f9fa;}
+  .landing-hero-title{font-size:42px;font-weight:700;line-height:1.2;color:var(--ink);margin:0 0 20px;}
+  .landing-hero-desc{font-size:16px;line-height:1.6;color:var(--ink-soft);margin:0 0 40px;max-width:480px;}
+  .landing-features{display:flex;flex-direction:column;gap:24px;max-width:480px;}
+  .landing-feature{display:flex;gap:16px;align-items:flex-start;}
+  .landing-feature-icon{width:48px;height:48px;background:var(--paper);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;}
+  .landing-feature-text h4{font-size:15px;font-weight:700;color:var(--ink);margin:0 0 6px;}
+  .landing-feature-text p{font-size:13px;color:var(--ink-soft);margin:0;line-height:1.5;}
+  .landing-right{width:400px;padding:60px 40px;display:flex;flex-direction:column;justify-content:center;background:#fff;border-left:1px solid var(--line);overflow-y:auto;}
+  .landing-form-header{text-align:center;margin-bottom:32px;}
+  .landing-form-title{font-size:24px;font-weight:700;color:var(--ink);margin:0 0 6px;}
+  .landing-form-subtitle{font-size:14px;color:var(--ink-soft);margin:0;}
+  .landing-form-group{margin-bottom:18px;}
+  .landing-form-label{display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-soft);margin-bottom:6px;}
+  .landing-form-input{width:100%;border:1px solid var(--line-strong);background:var(--paper);font-size:14px;border-radius:6px;padding:10px 12px;font-family:var(--font-body);color:var(--ink);transition:all 150ms;}
+  .landing-form-input:focus{outline:none;border-color:var(--accent);background:var(--surface);}
+  .landing-form-input::placeholder{color:var(--ink-faint);}
+  .landing-form-row{display:flex;justify-content:space-between;align-items:center;font-size:12px;margin-bottom:20px;}
+  .landing-form-checkbox{display:flex;align-items:center;gap:6px;}
+  .landing-form-checkbox input{width:14px;height:14px;cursor:pointer;}
+  .landing-form-link{color:var(--accent);text-decoration:none;cursor:pointer;}
+  .landing-form-link:hover{text-decoration:underline;}
+  .landing-form-actions{display:flex;gap:12px;margin-top:28px;}
+  .landing-form-actions button{flex:1;padding:10px 16px;border-radius:6px;border:none;font-size:14px;font-weight:600;cursor:pointer;font-family:var(--font-body);transition:all 150ms;}
+  .landing-form-actions .btn-secondary{background:var(--paper);color:var(--ink);border:1px solid var(--line-strong);}
+  .landing-form-actions .btn-secondary:hover{border-color:var(--accent);color:var(--accent);}
+  .landing-form-actions .btn-primary{background:var(--header);color:#fff;}
+  .landing-form-actions .btn-primary:hover{background:var(--header-soft);}
+  .landing-spinner{display:none;text-align:center;padding:40px 20px;}
+  .landing-spinner-ring{display:inline-block;width:40px;height:40px;border:4px solid var(--line);border-top-color:var(--accent);border-radius:50%;animation:spin 1s linear infinite;}
+  .landing-spinner-text{margin-top:16px;color:var(--ink-soft);font-size:14px;}
+
   /* modal */
   .modal-overlay{position:fixed;inset:0;background:rgba(15,20,28,.42);display:flex;align-items:center;justify-content:center;z-index:200;}
   .modal-card{background:var(--surface);border-radius:12px;box-shadow:0 20px 50px rgba(15,20,28,.28);width:420px;max-width:92vw;padding:22px 24px 20px;}
@@ -629,39 +672,91 @@ async function openProject(projectId){
 function renderAuthScreen(){
   const app = document.getElementById("app");
   app.innerHTML = `
-    <div class="app" style="display:flex;align-items:center;justify-content:center;">
-      <div class="modal-card" style="width:420px;margin:0;">
-        <div style="text-align:center;margin-bottom:30px;">
-          <div style="font-size:28px;font-weight:700;color:var(--header);margin-bottom:8px;">Timeline Studio</div>
-          <div style="color:var(--ink-soft);font-size:14px;">Project Planning & Gantt Charts</div>
+    <div class="landing-page">
+      <div class="landing-header">
+        <div class="landing-logo">
+          <div class="landing-logo-mark"></div>
+          Timeline Studio
+        </div>
+        <div class="landing-badge">Secure • Private • Enterprise Ready</div>
+      </div>
+
+      <div class="landing-container">
+        <div class="landing-left">
+          <div>
+            <h1 class="landing-hero-title">Plan Smarter. See Further. Deliver With Confidence.</h1>
+            <p class="landing-hero-desc">Timeline Studio helps project teams plan, visualize, and track with clarity and precision.</p>
+
+            <div class="landing-features">
+              <div class="landing-feature">
+                <div class="landing-feature-icon">📅</div>
+                <div class="landing-feature-text">
+                  <h4>Smart Planning</h4>
+                  <p>Build timelines that adapt as your project evolves.</p>
+                </div>
+              </div>
+              <div class="landing-feature">
+                <div class="landing-feature-icon">📊</div>
+                <div class="landing-feature-text">
+                  <h4>Clear Visibility</h4>
+                  <p>Visualize milestones, dependencies, and progress in one place.</p>
+                </div>
+              </div>
+              <div class="landing-feature">
+                <div class="landing-feature-icon">👥</div>
+                <div class="landing-feature-text">
+                  <h4>Team Alignment</h4>
+                  <p>Keep stakeholders informed and aligned at every step.</p>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
-        <div id="authForm" style="display:block;">
-          <div id="authFormTitle" style="font-size:18px;font-weight:700;color:var(--ink);margin-bottom:20px;text-align:center;">Login</div>
-
-          <div id="authLoadingSpinner" style="display:none;text-align:center;padding:40px 20px;">
-            <div style="display:inline-block;width:40px;height:40px;border:4px solid var(--line);border-top-color:var(--accent);border-radius:50%;animation:spin 1s linear infinite;"></div>
-            <div style="margin-top:16px;color:var(--ink-soft);font-size:14px;">Authenticating...</div>
+        <div class="landing-right">
+          <div class="landing-form-header">
+            <h2 class="landing-form-title">Timeline Studio</h2>
+            <p class="landing-form-subtitle">Project Planning & Gantt Charts</p>
           </div>
 
-          <div id="authFormContent">
-            <div class="modal-field">
-              <label>Email</label>
-              <input id="authEmail" type="email" placeholder="you@example.com" />
+          <div id="authForm" style="display:block;">
+            <div id="authFormTitle" style="font-size:16px;font-weight:700;color:var(--ink);margin-bottom:24px;text-align:center;">Login</div>
+
+            <div id="authLoadingSpinner" class="landing-spinner">
+              <div class="landing-spinner-ring"></div>
+              <div class="landing-spinner-text">Authenticating...</div>
             </div>
-            <div class="modal-field">
-              <label>Password</label>
-              <input id="authPassword" type="password" placeholder="••••••••" />
-            </div>
-            <div class="modal-field" id="authNameField" style="display:none;">
-              <label>Display Name (optional)</label>
-              <input id="authName" type="text" placeholder="John Doe" />
-            </div>
-            <div class="modal-actions" style="justify-content:center;gap:12px;margin-top:24px;">
-              <button class="btn" onclick="switchToRegister()" style="display:none;" id="switchToRegisterBtn">New User Registration</button>
-              <button class="btn primary" onclick="handleLogin()" id="loginBtn">Login</button>
-              <button class="btn" onclick="switchToLogin()" style="display:none;" id="switchToLoginBtn">Back to Login</button>
-              <button class="btn primary" onclick="handleRegister()" style="display:none;" id="registerBtn">Create Account</button>
+
+            <div id="authFormContent">
+              <div class="landing-form-group">
+                <label class="landing-form-label">Email</label>
+                <input id="authEmail" type="email" class="landing-form-input" placeholder="name@yourcompany.com" />
+              </div>
+
+              <div class="landing-form-group">
+                <label class="landing-form-label">Password</label>
+                <input id="authPassword" type="password" class="landing-form-input" placeholder="Enter your password" />
+              </div>
+
+              <div class="landing-form-group" id="authNameField" style="display:none;">
+                <label class="landing-form-label">Display Name (optional)</label>
+                <input id="authName" type="text" class="landing-form-input" placeholder="John Doe" />
+              </div>
+
+              <div class="landing-form-row">
+                <label class="landing-form-checkbox">
+                  <input type="checkbox" />
+                  Remember me
+                </label>
+                <a class="landing-form-link">Forgot password?</a>
+              </div>
+
+              <div class="landing-form-actions">
+                <button class="btn-secondary" onclick="switchToRegister()" style="display:none;" id="switchToRegisterBtn">New User Registration</button>
+                <button class="btn-primary" onclick="handleLogin()" id="loginBtn">Login</button>
+                <button class="btn-secondary" onclick="switchToLogin()" style="display:none;" id="switchToLoginBtn">Back to Login</button>
+                <button class="btn-primary" onclick="handleRegister()" style="display:none;" id="registerBtn">Create Account</button>
+              </div>
             </div>
           </div>
         </div>
@@ -669,7 +764,6 @@ function renderAuthScreen(){
     </div>
   `;
 
-  // Add spinner animation CSS
   if (!document.getElementById('spinnerStyle')) {
     const style = document.createElement('style');
     style.id = 'spinnerStyle';
