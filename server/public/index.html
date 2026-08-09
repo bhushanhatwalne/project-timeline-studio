@@ -1096,15 +1096,18 @@ function renderAuthScreen(){
 
       if(res && res.ok){
         const data = await res.json();
+        console.log('[FORGOT PASSWORD]', data);
+
         if(data.resetToken){
-          alert("Reset Code: " + data.resetToken + "\n\n(Development mode: Code shown here because email is not configured)");
+          alert("Reset Code: " + data.resetToken + "\n\n📧 Email not configured - Code shown here\n\nPaste this code in the next screen to reset your password");
         } else {
-          alert("Check your email for the reset code!");
+          alert("✓ Reset code sent!\n\nPlease check your email for the 6-digit code.");
         }
         document.getElementById("forgotPasswordStep1").style.display = "none";
         document.getElementById("forgotPasswordStep2").style.display = "block";
       } else {
-        alert('Failed to send reset code. Please try again.');
+        const errorData = res ? await res.json() : {};
+        alert('Error: ' + (errorData.detail || 'Failed to send reset code'));
       }
     } catch(err){
       console.error('Forgot password error:', err);

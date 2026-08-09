@@ -9,8 +9,13 @@ function initializeEmailTransporter() {
   const emailUser = process.env.EMAIL_USER;
   const emailPassword = process.env.EMAIL_PASSWORD;
 
+  console.log('[EMAIL] Checking email configuration...');
+  console.log('[EMAIL] EMAIL_SERVICE:', emailService);
+  console.log('[EMAIL] EMAIL_USER configured:', !!emailUser);
+  console.log('[EMAIL] EMAIL_PASSWORD configured:', !!emailPassword);
+
   if (!emailUser || !emailPassword) {
-    console.warn('[EMAIL] Email credentials not configured. Password reset emails will not be sent.');
+    console.warn('[EMAIL] ⚠️ Email credentials not configured. Set EMAIL_USER and EMAIL_PASSWORD in environment variables.');
     return null;
   }
 
@@ -23,7 +28,7 @@ function initializeEmailTransporter() {
       },
     });
 
-    console.log('[EMAIL] ✓ Email transporter initialized');
+    console.log('[EMAIL] ✓ Email transporter initialized successfully');
     return transporter;
   } catch (err) {
     console.error('[EMAIL] ✗ Failed to initialize email transporter:', err.message);
@@ -35,11 +40,13 @@ async function sendPasswordResetEmail(userEmail, resetToken) {
   const emailTransporter = initializeEmailTransporter();
 
   if (!emailTransporter) {
-    console.warn('[EMAIL] Email not configured. Skipping password reset email.');
+    console.warn('[EMAIL] ⚠️ Email not configured. Password reset code will be displayed in browser.');
     return false;
   }
 
   try {
+    console.log('[EMAIL] Attempting to send reset email to:', userEmail);
+
     const mailOptions = {
       from: process.env.EMAIL_USER,
       to: userEmail,
@@ -58,10 +65,12 @@ async function sendPasswordResetEmail(userEmail, resetToken) {
     };
 
     const info = await emailTransporter.sendMail(mailOptions);
-    console.log('[EMAIL] ✓ Password reset email sent to', userEmail);
+    console.log('[EMAIL] ✓ Password reset email sent successfully to', userEmail, 'MessageID:', info.messageId);
     return true;
   } catch (err) {
-    console.error('[EMAIL] ✗ Failed to send password reset email:', err.message);
+    console.error('[EMAIL] ✗ Failed to send password reset email to', userEmail);
+    console.error('[EMAIL] Error details:', err.message);
+    console.error('[EMAIL] Error code:', err.code);
     return false;
   }
 }
