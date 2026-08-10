@@ -989,10 +989,11 @@ async function openProject(projectId){
       versions = [];
     }
 
-    // Load latest version if available
-    if(versions.length > 0){
+    // Use project's swimlanes for editing (not version's)
+    // Only fallback to latest version if project has no swimlanes
+    if(swimlanes.length === 0 && versions.length > 0){
       const latestVersion = versions[0];
-      console.log('[OPEN_PROJECT] Loading latest version:', latestVersion.id, latestVersion.name);
+      console.log('[OPEN_PROJECT] Project has no swimlanes, loading latest version:', latestVersion.id, latestVersion.name);
       const verRes = await apiFetch(`/api/v1/projects/${projectId}/versions/${latestVersion.id}`);
       if(verRes && verRes.ok){
         const verData = await verRes.json();
@@ -1000,11 +1001,9 @@ async function openProject(projectId){
         projectTitle = verData.projectTitle || projectTitle;
         console.log('[OPEN_PROJECT] Version loaded successfully');
       }
-      activeTab = "timeline";
-    } else {
-      console.log('[OPEN_PROJECT] No versions found, showing data tab');
-      activeTab = "data";
     }
+
+    activeTab = swimlanes.length > 0 ? "timeline" : "data";
     render();
   } else {
     console.error('[OPEN_PROJECT] Failed to load project:', res?.status);
