@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SBPP4 Commission Transition — Program Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#EEF1EF;
+    --panel:#FFFFFF;
+    --ink:#0F2233;
+    --rail:#12283F;
+    --rail-2:#1B3A57;
+    --amber:#D79A2E;
+    --amber-deep:#B87F1C;
+    --amber-soft:#FBEEDA;
+    --slate:#5B6B76;
+    --slate-line:#D7DEDD;
+    --teal:#3E7C82;
+    --teal-soft:#E4EFEE;
+    --green:#3F7D52;
+    --green-soft:#E4EFE6;
+    --red:#B4553F;
+    --red-soft:#F5E7E3;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'IBM Plex Sans',sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1280px;margin:0 auto;padding:56px 32px 96px;}
+
+  /* ---------- HEADER ---------- */
+  header.board{
+    background:linear-gradient(180deg,var(--rail) 0%, var(--rail-2) 100%);
+    border-radius:6px;
+    padding:36px 40px 28px;
+    color:#EDE6D6;
+    position:relative;
+    overflow:hidden;
+    box-shadow:0 18px 40px -20px rgba(15,34,51,0.55);
+  }
+  header.board::after{
+    content:"";
+    position:absolute; inset:0;
+    background:repeating-linear-gradient(180deg, rgba(255,255,255,0.025) 0px, rgba(255,255,255,0.025) 1px, transparent 1px, transparent 3px);
+    pointer-events:none;
+  }
+  .board-eyebrow{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11.5px;
+    letter-spacing:0.16em;
+    text-transform:uppercase;
+    color:var(--amber);
+    margin:0 0 10px;
+    position:relative; z-index:1;
+  }
+  .board-title{
+    font-family:'Fraunces',serif;
+    font-weight:600;
+    font-size:clamp(28px,3.4vw,42px);
+    line-height:1.08;
+    margin:0 0 14px;
+    color:#F6F1E6;
+    position:relative; z-index:1;
+  }
+  .board-sub{
+    font-size:14.5px;
+    color:#B9C6CE;
+    max-width:680px;
+    line-height:1.55;
+    margin:0 0 26px;
+    position:relative; z-index:1;
+  }
+  .board-stats{
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+    font-family:'IBM Plex Mono',monospace;
+    position:relative;
+    z-index:1;
+  }
+  .stat-chip{
+    background:rgba(255,255,255,0.06);
+    border:1px solid rgba(237,230,214,0.18);
+    border-radius:3px;
+    padding:9px 14px;
+    font-size:12px;
+    letter-spacing:0.03em;
+    color:#DCE4E8;
+    display:flex; align-items:baseline; gap:7px;
+  }
+  .stat-chip b{
+    font-family:'Fraunces',serif;
+    font-size:17px;
+    color:var(--amber);
+    font-weight:600;
+  }
+  .stat-chip.live b{ color:#8FD6C9; }
+
+  /* ---------- SECTION LABELS ---------- */
+  .section-label{
+    display:flex; align-items:baseline; gap:10px;
+    margin:48px 2px 16px;
+  }
+  .section-label .num{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px; color:var(--amber-deep);
+    background:var(--amber-soft);
+    border:1px solid #EAD3A3;
+    border-radius:3px;
+    padding:2px 7px;
+  }
+  .section-label h2{
+    font-family:'Fraunces',serif;
+    font-size:21px; font-weight:600;
+    margin:0; color:var(--ink);
+  }
+  .section-label .sub{
+    font-size:12.5px; color:var(--slate); margin-left:auto;
+  }
+
+  /* ---------- LEGEND ---------- */
+  .legend{
+    display:flex;
+    flex-wrap:wrap;
+    gap:18px;
+    margin:0 2px 22px;
+    padding:12px 18px;
+    background:var(--panel);
+    border:1px solid var(--slate-line);
+    border-radius:5px;
+    font-size:12px;
+    color:var(--slate);
+    align-items:center;
+  }
+  .legend-dot{ display:inline-flex; align-items:center; gap:6px; }
+  .dot{ width:9px; height:9px; border-radius:2px; display:inline-block; }
+  .dot.blocked{ background:repeating-linear-gradient(45deg,#C8CFCE,#C8CFCE 3px,#DCE1E0 3px,#DCE1E0 6px); }
+  .dot.ready{ background:var(--amber); }
+  .dot.progress{ background:var(--teal); }
+  .dot.done{ background:var(--green); }
+  .dot.ongoing{ background:var(--rail); }
+  .legend-note{ margin-left:auto; font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--slate);}
+
+  /* ---------- GANTT ---------- */
+  .gantt-scroll{
+    overflow-x:auto;
+    background:var(--panel);
+    border:1px solid var(--slate-line);
+    border-radius:6px;
+    padding:6px 0 4px;
+  }
+  .gantt{ min-width:980px; }
+  .gantt-header{
+    display:grid;
+    grid-template-columns:290px repeat(9,1fr);
+    border-bottom:1px solid var(--slate-line);
+    padding:0 18px 10px;
+    position:sticky; top:0; background:var(--panel); z-index:2;
+  }
+  .gantt-header .corner{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:10.5px; letter-spacing:0.08em; text-transform:uppercase;
+    color:var(--slate); align-self:end;
+  }
+  .gantt-header .wk{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:10.5px; color:var(--slate);
+    text-align:center; align-self:end; padding-bottom:2px;
+    border-left:1px dashed var(--slate-line);
+  }
+  .gantt-header .wk.cutover{ color:var(--amber-deep); font-weight:600; }
+  .gantt-row{
+    display:grid;
+    grid-template-columns:290px 1fr;
+    align-items:center;
+    padding:9px 18px;
+    border-bottom:1px solid #EEF1F1;
+    gap:0;
+  }
+  .gantt-row:last-child{ border-bottom:none; }
+  .gantt-row:hover{ background:#FAFBFA; }
+  .grow-label{
+    display:flex; align-items:baseline; gap:8px; padding-right:14px;
+    min-width:0;
+  }
+  .grow-id{
+    font-family:'IBM Plex Mono',monospace; font-size:10.5px; color:var(--slate);
+    flex:none;
+  }
+  .grow-name{
+    font-size:12.5px; font-weight:500; color:var(--ink);
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+  }
+  .grow-track{
+    position:relative;
+    height:22px;
+    background-image:repeating-linear-gradient(90deg, transparent 0, transparent calc(100%/9 - 1px), var(--slate-line) calc(100%/9 - 1px), var(--slate-line) calc(100%/9));
+  }
+  .gbar{
+    position:absolute; top:2px; height:18px;
+    border-radius:3px;
+    cursor:pointer;
+    display:flex; align-items:center; padding:0 8px;
+    font-family:'IBM Plex Mono',monospace; font-size:10px; font-weight:600;
+    color:#fff; white-space:nowrap; overflow:hidden;
+    transition:filter .12s ease, transform .12s ease;
+    border:1px solid transparent;
+  }
+  .gbar:hover{ filter:brightness(1.06); transform:translateY(-1px); }
+  .gbar.blocked{
+    background:repeating-linear-gradient(45deg,#C3CBCA,#C3CBCA 4px,#D5DBDA 4px,#D5DBDA 8px);
+    color:#4B5A5F;
+  }
+  .gbar.ready{ background:var(--amber); color:#3A2A08; }
+  .gbar.progress{ background:var(--teal); }
+  .gbar.done{ background:var(--green); }
+  .gbar.ongoing{ background:var(--rail); background-image:repeating-linear-gradient(90deg, var(--rail) 0, var(--rail) 10px, var(--rail-2) 10px, var(--rail-2) 20px); }
+
+  /* ---------- FILTERS ---------- */
+  .filters{ display:flex; flex-wrap:wrap; gap:8px; margin:0 2px 22px; }
+  .filter-btn{
+    font-family:'IBM Plex Mono',monospace; font-size:11.5px;
+    padding:7px 13px; border-radius:20px;
+    border:1px solid var(--slate-line); background:var(--panel);
+    color:var(--slate); cursor:pointer; letter-spacing:0.02em;
+    transition:all .12s ease;
+  }
+  .filter-btn:hover{ border-color:var(--amber-deep); color:var(--ink); }
+  .filter-btn.active{ background:var(--rail); border-color:var(--rail); color:#F1EADB; }
+  .filter-btn .n{ opacity:0.7; margin-left:3px; }
+
+  /* ---------- TIMELINE / GROUPS ---------- */
+  .timeline{ position:relative; }
+  .timeline::before{
+    content:"";
+    position:absolute;
+    left:19px; top:6px; bottom:6px;
+    width:2px;
+    background:repeating-linear-gradient(180deg, var(--rail) 0, var(--rail) 6px, transparent 6px, transparent 11px);
+  }
+  .station{ position:relative; padding-left:56px; margin-bottom:40px; }
+  .station:last-child{ margin-bottom:0; }
+  .station-marker{
+    position:absolute; left:0; top:2px;
+    width:40px; height:40px;
+    border-radius:50%;
+    background:var(--rail);
+    border:3px solid var(--paper);
+    box-shadow:0 0 0 1.5px var(--rail);
+    display:flex; align-items:center; justify-content:center;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px; font-weight:600;
+    color:var(--amber);
+    text-align:center; line-height:1.1;
+  }
+  .station.ongoing .station-marker{
+    background:var(--teal);
+    box-shadow:0 0 0 1.5px var(--teal);
+    color:#EAF6F5;
+  }
+  .station-head{
+    display:flex;
+    align-items:baseline;
+    gap:12px;
+    flex-wrap:wrap;
+    margin-bottom:14px;
+  }
+  .station-flap{
+    font-family:'IBM Plex Mono',monospace;
+    font-weight:600;
+    font-size:12.5px;
+    letter-spacing:0.06em;
+    text-transform:uppercase;
+    background:var(--rail);
+    color:var(--amber);
+    padding:6px 12px;
+    border-radius:3px;
+  }
+  .station.ongoing .station-flap{ background:var(--teal); color:#EAF6F5; }
+  .station-window{
+    font-family:'Fraunces',serif;
+    font-size:19px;
+    font-weight:600;
+    color:var(--ink);
+  }
+  .station-count{
+    font-size:12px;
+    color:var(--slate);
+    margin-left:auto;
+  }
+
+  .cards{ display:grid; grid-template-columns:repeat(auto-fit,minmax(310px,1fr)); gap:14px; }
+  .card{
+    background:var(--panel);
+    border:1px solid var(--slate-line);
+    border-radius:6px;
+    padding:16px 18px 14px;
+    position:relative;
+    transition:border-color .15s ease, box-shadow .15s ease, transform .15s ease;
+  }
+  .card:hover{
+    border-color:var(--amber-deep);
+    box-shadow:0 10px 24px -16px rgba(15,34,51,0.35);
+    transform:translateY(-1px);
+  }
+  .card.is-done{ opacity:0.62; }
+  .card-top{ display:flex; align-items:flex-start; gap:10px; margin-bottom:9px; }
+  .card-id{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px;
+    font-weight:600;
+    color:var(--slate);
+    background:var(--paper);
+    border:1px solid var(--slate-line);
+    border-radius:3px;
+    padding:2px 6px;
+    flex:none;
+    margin-top:2px;
+  }
+  .card-title{
+    font-size:14.5px;
+    font-weight:600;
+    line-height:1.35;
+    color:var(--ink);
+    flex:1;
+  }
+  .card-timing{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:10.5px;
+    color:var(--amber-deep);
+    letter-spacing:0.03em;
+    margin:0 0 4px 30px;
+  }
+  .card-dep{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:10.5px;
+    color:var(--slate);
+    margin:0 0 10px 30px;
+  }
+  .status-pill{
+    font-family:'IBM Plex Mono',monospace; font-size:10.5px; font-weight:600;
+    padding:4px 10px; border-radius:20px; cursor:pointer; border:1px solid transparent;
+    white-space:nowrap; user-select:none; letter-spacing:0.02em;
+  }
+  .status-pill.blocked{ background:var(--paper); color:var(--slate); border-color:var(--slate-line); }
+  .status-pill.ready{ background:var(--amber-soft); color:var(--amber-deep); border-color:#EAD3A3; }
+  .status-pill.progress{ background:var(--teal-soft); color:var(--teal); border-color:#C7DDDC; }
+  .status-pill.done{ background:var(--green-soft); color:var(--green); border-color:#C9DECD; }
+  .status-pill.ongoing{ background:#E7ECEF; color:var(--rail); border-color:#CBD6DD; }
+
+  .raci{
+    margin:0 0 0 30px;
+    display:flex;
+    flex-direction:column;
+    gap:5px;
+  }
+  .raci-row{ display:flex; gap:8px; font-size:12.5px; line-height:1.4; }
+  .raci-tag{
+    flex:none; width:16px;
+    font-family:'IBM Plex Mono',monospace;
+    font-weight:600;
+    font-size:11px;
+    color:var(--teal);
+  }
+  .raci-val{ color:#33454F; }
+  .raci-val.r{ color:var(--ink); font-weight:500; }
+
+  details.notes{ margin:10px 0 0 30px; }
+  details.notes summary{
+    cursor:pointer;
+    font-size:11.5px;
+    color:var(--slate);
+    list-style:none;
+    display:flex; align-items:center; gap:5px;
+    user-select:none;
+  }
+  details.notes summary::-webkit-details-marker{ display:none; }
+  details.notes summary::before{
+    content:"+";
+    font-family:'IBM Plex Mono',monospace;
+    font-weight:600;
+    color:var(--amber-deep);
+    width:12px;
+  }
+  details.notes[open] summary::before{ content:"–"; }
+  details.notes p{
+    margin:7px 0 0;
+    font-size:12.5px;
+    color:#425059;
+    line-height:1.5;
+    padding-left:17px;
+    border-left:2px solid var(--slate-line);
+  }
+
+  footer{
+    margin-top:56px;
+    padding-top:18px;
+    border-top:1px solid var(--slate-line);
+    font-size:11.5px;
+    color:var(--slate);
+    font-family:'IBM Plex Mono',monospace;
+    display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px;
+  }
+
+  @media (max-width:640px){
+    .wrap{ padding:32px 16px 64px; }
+    header.board{ padding:26px 20px 22px; }
+    .station{ padding-left:44px; }
+    .station-marker{ width:32px; height:32px; font-size:9px; left:0; }
+    .timeline::before{ left:15px; }
+    .card-timing, .card-dep, .raci, details.notes{ margin-left:0; }
+  }
+  @media (prefers-reduced-motion: reduce){
+    .card, .gbar{ transition:none; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="board">
+    <p class="board-eyebrow">Program Action Tracker · Commission Systems</p>
+    <h1 class="board-title">SBPP4 Commission Transition</h1>
+    <p class="board-sub">Rollout of Spectrum Business Partner Program (SBPP4) commission handling — from field mapping through the first live payout for September sales. Seventeen actions, seven work windows, one cutover on 16&nbsp;Sept.</p>
+    <div class="board-stats" id="statChips">
+      <div class="stat-chip"><b>17</b> actions</div>
+      <div class="stat-chip"><b>Sept 16</b> cutover date</div>
+      <div class="stat-chip"><b>Nov</b> first payout</div>
+      <div class="stat-chip live"><b id="chipDone">0</b> done</div>
+      <div class="stat-chip live"><b id="chipProgress">0</b> in progress</div>
+      <div class="stat-chip live"><b id="chipReady">0</b> ready to start</div>
+    </div>
+  </header>
+
+  <div class="section-label">
+    <span class="num">01</span>
+    <h2>Schedule</h2>
+    <span class="sub">Aug Wk3 → Nov Wk2 · click any bar to advance its status</span>
+  </div>
+
+  <div class="legend">
+    <span class="legend-dot"><span class="dot blocked"></span>Blocked — waiting on a dependency</span>
+    <span class="legend-dot"><span class="dot ready"></span>Ready to start</span>
+    <span class="legend-dot"><span class="dot progress"></span>In progress</span>
+    <span class="legend-dot"><span class="dot done"></span>Done</span>
+    <span class="legend-dot"><span class="dot ongoing"></span>Ongoing / parallel track</span>
+    <span class="legend-note">R = Responsible · A = Accountable · C = Consulted · I = Informed</span>
+  </div>
+
+  <div class="gantt-scroll">
+    <div class="gantt">
+      <div class="gantt-header">
+        <div class="corner">Action</div>
+        <div class="wk">Aug Wk3</div>
+        <div class="wk">Aug Wk4</div>
+        <div class="wk">Sep Wk1</div>
+        <div class="wk">Sep Wk2</div>
+        <div class="wk cutover">Sep Wk3</div>
+        <div class="wk cutover">Sep Wk4</div>
+        <div class="wk">Oct Wk1</div>
+        <div class="wk">Oct Wk2–4</div>
+        <div class="wk">Nov Wk1–2</div>
+      </div>
+      <div id="ganttBody"></div>
+    </div>
+  </div>
+
+  <div class="section-label">
+    <span class="num">02</span>
+    <h2>Action board</h2>
+    <span class="sub">Grouped by work window · same status as the schedule above</span>
+  </div>
+
+  <div class="filters" id="filters"></div>
+
+  <div class="timeline" id="timeline"></div>
+
+  <footer>
+    <span>Source: GANTT.jpg + SBPP4 action tracker — 17 action items</span>
+    <span>Statuses reset when this page is reloaded — treat as a working session, not a saved record</span>
+  </footer>
+
+</div>
+
+<script>
+const WEEKS = ["Aug Wk3","Aug Wk4","Sep Wk1","Sep Wk2","Sep Wk3","Sep Wk4","Oct Wk1","Oct Wk2-4","Nov Wk1-2"];
+
+// startCol/endCol are 0-indexed positions into WEEKS
+const items = [
+  { id:1, item:"Share processing files / required fields", owner:"Darryl Estes", start:"Immediate", end:"Aug Wk3", startCol:0, endCol:0, dep:[], ongoing:false,
+    accountable:"Stefan / Commission leadership", consulted:"Gaby Martinez; Daniel; Tanzil", informed:"Marcus; John; Moya",
+    notes:"Darryl confirmed multiple files; small business partitioning needed." },
+  { id:2, item:"Create field definitions / mapping dictionary", owner:"Gaby Martinez", start:"Aug Wk3", end:"Aug Wk4", startCol:0, endCol:1, dep:[1], ongoing:false,
+    accountable:"Gaby Martinez", consulted:"Darryl Estes; Daniel Forester; Tanzil Manawar", informed:"John Muscarella; Marcus Thomas",
+    notes:"Need to define sub-agent ID, referral ID, affiliate ID, and similar fields." },
+  { id:3, item:"Reconcile BI feed vs Charter requirements", owner:"Daniel / Tanzil", start:"Aug Wk3", end:"Aug Wk4", startCol:0, endCol:1, dep:[1], ongoing:false,
+    accountable:"Tanzil Manawar", consulted:"Darryl Estes; Gaby Martinez", informed:"Marcus; Moya; John",
+    notes:"Daniel's team to quickly review what is in the file / BI feed." },
+  { id:4, item:"Confirm missing fields / CR needs", owner:"Daniel / BI", start:"Aug Wk4", end:"Sep Wk1", startCol:1, endCol:2, dep:[3], ongoing:false,
+    accountable:"Tanzil Manawar", consulted:"Darryl Estes; Gaby Martinez", informed:"Marcus; John",
+    notes:"Confirm whether change requests for the BI feed are necessary." },
+  { id:5, item:"Confirm calendar vs physical/fiscal month", owner:"Gaby / BI / PI", start:"Aug Wk4", end:"Sep Wk1", startCol:1, endCol:2, dep:[3], ongoing:false,
+    accountable:"Gaby Martinez", consulted:"Marcus Thomas; Tanzil Manawar", informed:"Darryl Estes; John Muscarella",
+    notes:"Calendars differ; impacts payment timing and manual adjustments." },
+  { id:6, item:"Finalize September split-payment design", owner:"Gaby, Marcus, Tanzil, Darryl", start:"Aug Wk4", end:"Sep Wk2", startCol:1, endCol:3, dep:[4,5], ongoing:false,
+    accountable:"Marcus Thomas", consulted:"John Muscarella; Daniel Forester", informed:"Moya Neville",
+    notes:"Split-month approach: legacy continues; SBPP4 paid via new treatment." },
+  { id:7, item:"Define product-routing and double-pay prevention", owner:"Tanzil, Daniel", start:"Aug Wk4", end:"Sep Wk2", startCol:1, endCol:3, dep:[3,6], ongoing:false,
+    accountable:"Tanzil Manawar", consulted:"Gaby Martinez; Darryl Estes; Marcus Thomas", informed:"Moya Neville; John Muscarella",
+    notes:"Separate SBPP4 and non-SBPP4 routing to avoid double payment." },
+  { id:8, item:"Update filters, queries, logs", owner:"Tanzil, Daniel, Darryl", start:"Sep Wk1", end:"Sep Wk2", startCol:2, endCol:3, dep:[7], ongoing:false,
+    accountable:"Tanzil Manawar; Darryl Estes", consulted:"Gaby Martinez", informed:"Marcus Thomas; John Muscarella",
+    notes:"Technical updates required for bifurcation." },
+  { id:9, item:"Prepare Charter-side data receiving", owner:"Darryl", start:"Sep Wk1", end:"Sep Wk2", startCol:2, endCol:3, dep:[3,6], ongoing:false,
+    accountable:"Darryl Estes", consulted:"Daniel Forester; Tanzil Manawar; Gaby Martinez", informed:"Stefan Isidore; Marcus Thomas",
+    notes:"Semi-automated Redshift-based processing; integration needed." },
+  { id:10, item:"Validate BI/data-layer solution readiness", owner:"Tanzil, Darryl, Daniel", start:"Sep Wk2", end:"Sep Wk3", startCol:3, endCol:4, dep:[8,9], ongoing:false,
+    accountable:"Tanzil Manawar", consulted:"Gaby Martinez; Darryl Estes", informed:"Moya Neville; Marcus Thomas",
+    notes:"Preferred to stay a data/BI-reporting fix rather than a major tech build." },
+  { id:11, item:"Go-live readiness for September selling", owner:"Cross-functional", start:"Sep Wk2", end:"Sep Wk3", startCol:3, endCol:4, dep:[10], ongoing:false,
+    accountable:"Marcus Thomas", consulted:"Gaby Martinez; Tanzil Manawar; Darryl Estes; John Muscarella", informed:"Broader stakeholders",
+    notes:"Must be prepared for Spectrum Day product availability." },
+  { id:12, item:"Transition processing for SBPP4 sales", owner:"Cross-functional", start:"16-Sep", end:"28-Sep", startCol:4, endCol:5, dep:[11], ongoing:false,
+    accountable:"Marcus Thomas", consulted:"Gaby Martinez; Tanzil Manawar; Darryl Estes; Daniel Forester", informed:"Moya Neville; John Muscarella",
+    notes:"Prorated transition treatment with separate handling, 16–28 Sept." },
+  { id:13, item:"Continue legacy Cox compensation", owner:"Cox legacy owners", start:"Ongoing", end:"Ongoing", startCol:0, endCol:8, dep:[], ongoing:true,
+    accountable:"Marcus Thomas / Cox leadership", consulted:"John Muscarella; Tanzil Manawar; Daniel Forester", informed:"Moya Neville; Gaby Martinez",
+    notes:"Legacy process remains in place for non-SBPP4 and residuals throughout." },
+  { id:14, item:"Reporting design for distributors", owner:"Darryl / reporting", start:"Sep Wk3", end:"Oct Wk1", startCol:4, endCol:6, dep:[12], ongoing:false,
+    accountable:"Darryl Estes", consulted:"Gaby Martinez; John Muscarella", informed:"Marcus Thomas; Brad Colonna",
+    notes:"Darryl's team to own reporting design for the new payments." },
+  { id:15, item:"Reporting labels for legacy vs new treatment", owner:"Reporting team", start:"Sep Wk3", end:"Oct Wk1", startCol:4, endCol:6, dep:[14], ongoing:false,
+    accountable:"Darryl Estes", consulted:"Gaby Martinez; John Muscarella", informed:"Distributors / partners",
+    notes:"Clarify mixed treatment in distributor-facing reporting." },
+  { id:16, item:"Draft partner communication / contract addendum", owner:"Gaby / John / Legal", start:"Sep Wk3", end:"Oct Wk2-4", startCol:4, endCol:7, dep:[6], ongoing:false,
+    accountable:"John Muscarella", consulted:"Gaby Martinez; Legal; Marcus Thomas", informed:"Moya Neville; Darryl Estes",
+    notes:"Clarify this is an addition, not a full Spectrum plan migration." },
+  { id:17, item:"First payout for September sales", owner:"Payment teams", start:"Nov Wk1", end:"Nov Wk2", startCol:8, endCol:8, dep:[12,14,15], ongoing:false,
+    accountable:"Marcus Thomas", consulted:"Darryl Estes; Gaby Martinez; Tanzil Manawar", informed:"John Muscarella; Moya Neville",
+    notes:"Payments expected to land for September sales." },
+];
+
+const groups = [
+  { label:"Foundations", window:"Aug Wk3 – Wk4", ids:[1,2,3] },
+  { label:"Design & build", window:"Aug Wk4 – Sep Wk2", ids:[4,5,6,7] },
+  { label:"Validate & ready", window:"Sep Wk1 – Wk3", ids:[8,9,10,11] },
+  { label:"Cutover window", window:"16–28 Sept", ids:[12] },
+  { label:"Parallel track", window:"Ongoing", ids:[13] },
+  { label:"Reporting & partner comms", window:"Sep Wk3 – Oct", ids:[14,15,16] },
+  { label:"First payout", window:"Nov Wk1 – Wk2", ids:[17] },
+];
+
+// status: 'blocked' | 'ready' | 'progress' | 'done'  (computed for non-ongoing; ongoing items are fixed)
+const state = {};
+items.forEach(it => { state[it.id] = it.ongoing ? 'ongoing' : 'not-started'; });
+
+const byId = Object.fromEntries(items.map(it => [it.id, it]));
+
+function computedStatus(it){
+  if (it.ongoing) return 'ongoing';
+  const s = state[it.id];
+  if (s === 'progress' || s === 'done') return s;
+  const depsDone = it.dep.every(d => state[d] === 'done');
+  return depsDone ? 'ready' : 'blocked';
+}
+
+function cycleStatus(id){
+  const it = byId[id];
+  if (it.ongoing) return;
+  const cur = computedStatus(it);
+  if (cur === 'blocked') return; // can't advance a blocked item
+  if (cur === 'ready') state[id] = 'progress';
+  else if (cur === 'progress') state[id] = 'done';
+  else if (cur === 'done') state[id] = 'not-started';
+  renderAll();
+}
+
+const statusLabel = { blocked:"Blocked", ready:"Ready", progress:"In progress", done:"Done", ongoing:"Ongoing" };
+
+let activeFilter = 'all';
+
+function renderGantt(){
+  const body = document.getElementById('ganttBody');
+  body.innerHTML = '';
+  items.forEach(it => {
+    const st = computedStatus(it);
+    const row = document.createElement('div');
+    row.className = 'gantt-row';
+    const leftPct = (it.startCol / 9) * 100;
+    const widthPct = ((it.endCol - it.startCol + 1) / 9) * 100;
+    row.innerHTML = `
+      <div class="grow-label">
+        <span class="grow-id">#${it.id}</span>
+        <span class="grow-name" title="${it.item}">${it.item}</span>
+      </div>
+      <div class="grow-track">
+        <div class="gbar ${st}" style="left:${leftPct}%; width:${widthPct}%;" title="${it.owner} · ${it.start} → ${it.end}${it.dep.length ? ' · needs #' + it.dep.join(', #') : ''}">${it.ongoing ? 'ongoing' : statusLabel[st]}</div>
+      </div>
+    `;
+    row.querySelector('.gbar').addEventListener('click', () => cycleStatus(it.id));
+    body.appendChild(row);
+  });
+}
+
+function renderFilters(){
+  const counts = { all: items.length, blocked:0, ready:0, progress:0, done:0, ongoing:0 };
+  items.forEach(it => counts[computedStatus(it)]++);
+  const defs = [
+    { key:'all', label:'All' },
+    { key:'blocked', label:'Blocked' },
+    { key:'ready', label:'Ready' },
+    { key:'progress', label:'In progress' },
+    { key:'done', label:'Done' },
+    { key:'ongoing', label:'Ongoing' },
+  ];
+  const el = document.getElementById('filters');
+  el.innerHTML = '';
+  defs.forEach(d => {
+    const btn = document.createElement('button');
+    btn.className = 'filter-btn' + (activeFilter === d.key ? ' active' : '');
+    btn.innerHTML = `${d.label}<span class="n">${counts[d.key]}</span>`;
+    btn.addEventListener('click', () => { activeFilter = d.key; renderAll(); });
+    el.appendChild(btn);
+  });
+}
+
+function renderChips(){
+  const counts = { blocked:0, ready:0, progress:0, done:0, ongoing:0 };
+  items.forEach(it => counts[computedStatus(it)]++);
+  document.getElementById('chipDone').textContent = counts.done;
+  document.getElementById('chipProgress').textContent = counts.progress;
+  document.getElementById('chipReady').textContent = counts.ready;
+}
+
+function renderBoard(){
+  const timelineEl = document.getElementById('timeline');
+  timelineEl.innerHTML = '';
+
+  groups.forEach((group, gi) => {
+    const rows = group.ids.map(id => byId[id]).filter(it => {
+      if (activeFilter === 'all') return true;
+      return computedStatus(it) === activeFilter;
+    });
+    if (!rows.length) return;
+
+    const station = document.createElement('div');
+    station.className = 'station' + (group.ids.length === 1 && byId[group.ids[0]].ongoing ? ' ongoing' : '');
+    station.innerHTML = `
+      <div class="station-marker">${String(gi + 1).padStart(2,'0')}</div>
+      <div class="station-head">
+        <span class="station-flap">${group.window}</span>
+        <span class="station-window">${group.label}</span>
+        <span class="station-count">${rows.length} action${rows.length > 1 ? 's' : ''}</span>
+      </div>
+      <div class="cards"></div>
+    `;
+
+    const cardsEl = station.querySelector('.cards');
+    rows.forEach(it => {
+      const st = computedStatus(it);
+      const card = document.createElement('div');
+      card.className = 'card' + (st === 'done' ? ' is-done' : '');
+      card.innerHTML = `
+        <div class="card-top">
+          <span class="card-id">#${it.id}</span>
+          <span class="card-title">${it.item}</span>
+          <span class="status-pill ${st}" data-id="${it.id}">${statusLabel[st]}</span>
+        </div>
+        <div class="card-timing">${it.owner} · ${it.start} → ${it.end}</div>
+        ${it.dep.length ? `<div class="card-dep">Needs #${it.dep.join(', #')}</div>` : ''}
+        <div class="raci">
+          <div class="raci-row"><span class="raci-tag">A</span><span class="raci-val r">${it.accountable}</span></div>
+        </div>
+        <details class="notes">
+          <summary>Details</summary>
+          <p>
+            <strong>Consulted:</strong> ${it.consulted}<br>
+            <strong>Informed:</strong> ${it.informed}<br>
+            <strong>Notes:</strong> ${it.notes}
+          </p>
+        </details>
+      `;
+      const pill = card.querySelector('.status-pill');
+      pill.addEventListener('click', (e) => { e.stopPropagation(); cycleStatus(it.id); });
+      cardsEl.appendChild(card);
+    });
+
+    timelineEl.appendChild(station);
+  });
+
+  if (!timelineEl.children.length) {
+    timelineEl.innerHTML = `<p style="color:var(--slate); font-size:13px; padding-left:56px;">No actions match this filter.</p>`;
+  }
+}
+
+function renderAll(){
+  renderGantt();
+  renderFilters();
+  renderChips();
+  renderBoard();
+}
+
+renderAll();
+</script>
+</body>
+</html>

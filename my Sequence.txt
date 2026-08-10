@@ -1,0 +1,18 @@
+1. Landing Page: https://timeline-studio-nvjh.onrender.com/#
+    - Login
+    - Login - multiple sessions/multiple machines. only allow one session. auto log out from all other sessions
+    - Logout 
+    - Logout after 30 mins of inactivity
+    - incorrect password - 3 incorrect attempts - account locked
+    - New User registration - display password criteria Gett
+    - Forgot password (NEED TO BE DONE)
+    - Spinning
+    - UI
+    - Mobile compaible
+
+2. Dashboard Page:
+    When user clicks on their profile:
+    - 👤 My Account
+    - ⚙️ User Settings
+    - ❓ Help
+    - 🚪 Log Out (functional - logs out and returns to login)

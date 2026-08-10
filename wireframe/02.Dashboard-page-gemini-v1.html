@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Timeline Studio - Dashboard</title>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: #f8fafc;
+            color: #0f172a;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* --- Top Header Navigation --- */
+        .top-navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 64px;
+            background-color: #032b56;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+            z-index: 100;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .brand-logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .brand-icon {
+            width: 34px;
+            height: 34px;
+            background: linear-gradient(135deg, #0284c7, #2563eb);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        .brand-name {
+            font-size: 18px;
+            font-weight: 700;
+            letter-spacing: -0.3px;
+        }
+
+        .nav-actions {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 6px 12px;
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            font-size: 13px;
+            cursor: pointer;
+        }
+
+        .avatar {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background-color: #0284c7;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 12px;
+        }
+
+        .btn-logout {
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: #ffffff;
+            padding: 7px 14px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s;
+        }
+
+        .btn-logout:hover {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.5);
+        }
+
+        /* --- Main Layout Frame --- */
+        .app-container {
+            display: flex;
+            width: 100%;
+            margin-top: 64px;
+            height: calc(100vh - 64px);
+        }
+
+        /* --- Sidebar Navigation --- */
+        .sidebar {
+            width: 260px;
+            background-color: #ffffff;
+            border-right: 1px solid #e2e8f0;
+            padding: 24px 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            flex-shrink: 0;
+        }
+
+        .btn-primary-action {
+            width: 100%;
+            background-color: #0284c7;
+            color: white;
+            border: none;
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(2, 132, 199, 0.2);
+            transition: background 0.2s;
+        }
+
+        .btn-primary-action:hover {
+            background-color: #0369a1;
+        }
+
+        .sidebar-section-title {
+            font-size: 11px;
+            font-weight: 700;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            margin-bottom: 8px;
+            padding-left: 8px;
+        }
+
+        .menu-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .menu-item a {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 12px;
+            border-radius: 8px;
+            color: #475569;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.15s;
+        }
+
+        .menu-item a .link-content {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .menu-item a:hover {
+            background-color: #f1f5f9;
+            color: #0f172a;
+        }
+
+        .menu-item.active a {
+            background-color: #e0f2fe;
+            color: #0284c7;
+            font-weight: 600;
+        }
+
+        .badge {
+            background-color: #f1f5f9;
+            color: #475569;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .menu-item.active .badge {
+            background-color: #bae6fd;
+            color: #0369a1;
+        }
+
+        /* --- Workspace / Main Content --- */
+        .workspace {
+            flex: 1;
+            padding: 32px 40px;
+            overflow-y: auto;
+            background-color: #f8fafc;
+        }
+
+        /* Controls / Header Bar */
+        .workspace-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .title-group h1 {
+            font-size: 24px;
+            color: #0f172a;
+            font-weight: 700;
+        }
+
+        .title-group p {
+            font-size: 13px;
+            color: #64748b;
+            margin-top: 2px;
+        }
+
+        .controls-group {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .search-box {
+            position: relative;
+            width: 280px;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 9px 12px 9px 36px;
+            background: #ffffff;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            font-size: 14px;
+            outline: none;
+            transition: border 0.2s;
+        }
+
+        .search-box input:focus {
+            border-color: #0284c7;
+            box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.1);
+        }
+
+        .search-box i {
+            position: absolute;
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #94a3b8;
+            width: 18px;
+            height: 18px;
+        }
+
+        .filter-btn {
+            background: #ffffff;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            padding: 9px 12px;
+            color: #334155;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+        }
+
+        .filter-btn:hover {
+            background: #f1f5f9;
+        }
+
+        /* --- Projects Grid Area --- */
+        .projects-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .project-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 18px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+        }
+
+        .project-card:hover {
+            border-color: #cbd5e1;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            transform: translateY(-1px);
+        }
+
+        .project-main {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .project-icon-box {
+            width: 44px;
+            height: 44px;
+            background: #f0f9ff;
+            border: 1px solid #bae6fd;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #0284c7;
+            flex-shrink: 0;
+        }
+
+        .project-details h3 {
+            font-size: 16px;
+            color: #0f172a;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .project-meta {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            font-size: 13px;
+            color: #64748b;
+        }
+
+        .project-meta-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        /* Right Side Details/Actions */
+        .project-status {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+        }
+
+        .status-pill {
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status-active {
+            background-color: #dcfce7;
+            color: #15803d;
+        }
+
+        .status-review {
+            background-color: #fef9c3;
+            color: #a16207;
+        }
+
+        .card-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .action-icon-btn {
+            background: transparent;
+            border: none;
+            color: #94a3b8;
+            padding: 6px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .action-icon-btn:hover {
+            background: #f1f5f9;
+            color: #0f172a;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Top Navigation Header -->
+    <header class="top-navbar">
+        <div class="brand-logo">
+            <div class="brand-icon">T</div>
+            <span class="brand-name">Timeline Studio</span>
+        </div>
+
+        <div class="nav-actions">
+            <div class="user-profile">
+                <div class="avatar">JD</div>
+                <span>John Doe</span>
+            </div>
+            <button class="btn-logout">
+                <i data-lucide="log-out" style="width: 15px; height: 15px;"></i>
+                Log Out
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Workspace Container -->
+    <div class="app-container">
+        
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <button class="btn-primary-action">
+                <i data-lucide="plus" style="width: 18px; height: 18px;"></i>
+                New Project
+            </button>
+
+            <div>
+                <div class="sidebar-section-title">My Projects</div>
+                <ul class="menu-list">
+                    <li class="menu-item active">
+                        <a href="#">
+                            <div class="link-content">
+                                <i data-lucide="folder" style="width: 18px; height: 18px;"></i>
+                                <span>All Projects</span>
+                            </div>
+                            <span class="badge">3</span>
+                        </a>
+                    </li>
+                    <li class="menu-item">
+                        <a href="#">
+                            <div class="link-content">
+                                <i data-lucide="star" style="width: 18px; height: 18px;"></i>
+                                <span>Starred</span>
+                            </div>
+                            <span class="badge">1</span>
+                        </a>
+                    </li>
+                    <li class="menu-item">
+                        <a href="#">
+                            <div class="link-content">
+                                <i data-lucide="archive" style="width: 18px; height: 18px;"></i>
+                                <span>Archived</span>
+                            </div>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- Main Workspace -->
+        <main class="workspace">
+            
+            <!-- Workspace Header & Controls -->
+            <div class="workspace-header">
+                <div class="title-group">
+                    <h1>All Projects</h1>
+                    <p>Manage and track your timeline schedules</p>
+                </div>
+
+                <div class="controls-group">
+                    <div class="search-box">
+                        <i data-lucide="search"></i>
+                        <input type="text" placeholder="Search projects...">
+                    </div>
+                    <button class="filter-btn">
+                        <i data-lucide="sliders-horizontal" style="width: 16px; height: 16px;"></i>
+                        Filter
+                    </button>
+                </div>
+            </div>
+
+            <!-- Project Card List -->
+            <div class="projects-grid">
+                
+                <!-- Card 1 -->
+                <div class="project-card">
+                    <div class="project-main">
+                        <div class="project-icon-box">
+                            <i data-lucide="gantt-chart-square" style="width: 22px; height: 22px;"></i>
+                        </div>
+                        <div class="project-details">
+                            <h3>Spectrum Reach</h3>
+                            <div class="project-meta">
+                                <span class="project-meta-item">
+                                    <i data-lucide="clock" style="width: 14px; height: 14px;"></i>
+                                    Updated Aug 8, 2026
+                                </span>
+                                <span>•</span>
+                                <span class="project-meta-item">
+                                    <i data-lucide="users" style="width: 14px; height: 14px;"></i>
+                                    5 Members
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="project-status">
+                        <span class="status-pill status-active">Active</span>
+                        <div class="card-actions">
+                            <button class="action-icon-btn"><i data-lucide="star" style="width: 18px; height: 18px;"></i></button>
+                            <button class="action-icon-btn"><i data-lucide="more-vertical" style="width: 18px; height: 18px;"></i></button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 2 -->
+                <div class="project-card">
+                    <div class="project-main">
+                        <div class="project-icon-box">
+                            <i data-lucide="gantt-chart-square" style="width: 22px; height: 22px;"></i>
+                        </div>
+                        <div class="project-details">
+                            <h3>Spectrum Business</h3>
+                            <div class="project-meta">
+                                <span class="project-meta-item">
+                                    <i data-lucide="clock" style="width: 14px; height: 14px;"></i>
+                                    Updated Aug 8, 2026
+                                </span>
+                                <span>•</span>
+                                <span class="project-meta-item">
+                                    <i data-lucide="users" style="width: 14px; height: 14px;"></i>
+                                    3 Members
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="project-status">
+                        <span class="status-pill status-active">Active</span>
+                        <div class="card-actions">
+                            <button class="action-icon-btn"><i data-lucide="star" style="width: 18px; height: 18px;"></i></button>
+                            <button class="action-icon-btn"><i data-lucide="more-vertical" style="width: 18px; height: 18px;"></i></button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 3 -->
+                <div class="project-card">
+                    <div class="project-main">
+                        <div class="project-icon-box">
+                            <i data-lucide="gantt-chart-square" style="width: 22px; height: 22px;"></i>
+                        </div>
+                        <div class="project-details">
+                            <h3>Credit Services Phase 1 (CRT) Timelines</h3>
+                            <div class="project-meta">
+                                <span class="project-meta-item">
+                                    <i data-lucide="clock" style="width: 14px; height: 14px;"></i>
+                                    Updated Aug 6, 2026
+                                </span>
+                                <span>•</span>
+                                <span class="project-meta-item">
+                                    <i data-lucide="users" style="width: 14px; height: 14px;"></i>
+                                    8 Members
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="project-status">
+                        <span class="status-pill status-review">In Review</span>
+                        <div class="card-actions">
+                            <button class="action-icon-btn"><i data-lucide="star" style="width: 18px; height: 18px;"></i></button>
+                            <button class="action-icon-btn"><i data-lucide="more-vertical" style="width: 18px; height: 18px;"></i></button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <script>
+        lucide.createIcons();
+    </script>
+</body>
+</html>

@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Timeline Studio</title>
+  <!-- Tailwind CSS via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    body {
+      background-color: #f8fafc;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    }
+  </style>
+</head>
+<body class="text-slate-800 antialiased min-h-screen flex flex-col justify-between">
+
+  <!-- Header / Top Branding -->
+  <header class="max-w-7xl mx-auto w-full px-6 pt-8 pb-4">
+    <div class="flex items-center space-x-3">
+      <!-- Dynamic Logo Mark -->
+      <div class="h-10 w-10 bg-gradient-to-tr from-blue-700 to-cyan-400 rounded-lg flex items-center justify-center text-white shadow-md font-bold text-xl">
+        T
+      </div>
+      <div>
+        <h1 class="text-2xl font-bold tracking-tight text-slate-900 leading-none">Timeline Studio</h1>
+        <p class="text-xs uppercase tracking-widest text-slate-400 font-semibold mt-1">Project Planning & Gantt Charts</p>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Hero Section -->
+  <main class="max-w-7xl mx-auto w-full px-6 py-8">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+      
+      <!-- Left Hero Content -->
+      <div class="lg:col-span-6 space-y-8">
+        <div>
+          <h2 class="text-4xl sm:text-5xl font-extrabold text-slate-900 leading-tight">
+            Plan Smarter. See Further.<br />
+            <span class="text-blue-700">Deliver With Confidence.</span>
+          </h2>
+          <p class="mt-4 text-lg text-slate-600 leading-relaxed max-w-xl">
+            Timeline Studio helps project teams plan, visualize, and track milestones with ultimate clarity and precision.
+          </p>
+        </div>
+
+        <!-- Value Props -->
+        <div class="space-y-4">
+          <div class="flex items-start space-x-4 bg-white/60 p-3 rounded-xl border border-slate-200/60 shadow-sm">
+            <div class="p-2.5 bg-blue-50 text-blue-600 rounded-lg shrink-0">
+              <i data-lucide="calendar"></i>
+            </div>
+            <div>
+              <h3 class="font-semibold text-slate-900">Smart Planning</h3>
+              <p class="text-sm text-slate-500">Build interactive timelines that automatically adapt as your project scope evolves.</p>
+            </div>
+          </div>
+
+          <div class="flex items-start space-x-4 bg-white/60 p-3 rounded-xl border border-slate-200/60 shadow-sm">
+            <div class="p-2.5 bg-blue-50 text-blue-600 rounded-lg shrink-0">
+              <i data-lucide="bar-chart-3"></i>
+            </div>
+            <div>
+              <h3 class="font-semibold text-slate-900">Clear Visibility</h3>
+              <p class="text-sm text-slate-500">Visualize milestones, dependencies, and team progress together in one place.</p>
+            </div>
+          </div>
+
+          <div class="flex items-start space-x-4 bg-white/60 p-3 rounded-xl border border-slate-200/60 shadow-sm">
+            <div class="p-2.5 bg-blue-50 text-blue-600 rounded-lg shrink-0">
+              <i data-lucide="users"></i>
+            </div>
+            <div>
+              <h3 class="font-semibold text-slate-900">Team Alignment</h3>
+              <p class="text-sm text-slate-500">Keep stakeholders informed and cross-functional teams aligned at every phase.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Login Card -->
+      <div class="lg:col-span-6 flex justify-center lg:justify-end">
+        <div class="w-full max-w-md bg-white rounded-2xl shadow-xl border border-slate-100 p-8">
+          <div class="text-center mb-6">
+            <h3 class="text-xl font-bold text-slate-900">Timeline Studio</h3>
+            <p class="text-xs text-slate-400 font-medium">Project Planning & Gantt Charts</p>
+            <h4 class="mt-6 text-lg font-semibold text-slate-800">Login</h4>
+          </div>
+
+          <form class="space-y-4" onsubmit="event.preventDefault();">
+            <div>
+              <label class="block text-xs font-bold uppercase text-slate-500 mb-1 tracking-wider">Email</label>
+              <input 
+                type="email" 
+                placeholder="name@yourcompany.com" 
+                class="w-full px-4 py-2.5 rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600 bg-slate-50/50"
+              />
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold uppercase text-slate-500 mb-1 tracking-wider">Password</label>
+              <input 
+                type="password" 
+                placeholder="Enter your password" 
+                class="w-full px-4 py-2.5 rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600 bg-slate-50/50"
+              />
+            </div>
+
+            <div class="flex items-center justify-between text-xs text-slate-500 pt-1">
+              <label class="flex items-center space-x-2 cursor-pointer">
+                <input type="checkbox" class="rounded border-slate-300 text-blue-600 focus:ring-blue-500" />
+                <span>Remember me</span>
+              </label>
+              <a href="#" class="text-blue-600 hover:underline font-medium">Forgot password?</a>
+            </div>
+
+            <div class="pt-4 flex items-center space-x-3">
+              <button 
+                type="button" 
+                class="w-1/2 py-2.5 px-3 border border-slate-300 text-slate-700 font-semibold rounded-lg text-xs hover:bg-slate-50 transition"
+              >
+                New User Registration
+              </button>
+              <button 
+                type="submit" 
+                class="w-1/2 py-2.5 px-3 bg-slate-900 hover:bg-slate-800 text-white font-semibold rounded-lg text-xs shadow-md transition"
+              >
+                Login
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Process / Workflow Section -->
+  <section class="max-w-7xl mx-auto w-full px-6 py-12">
+    <div class="text-center mb-10">
+      <h3 class="text-xl font-bold text-slate-900">How Timeline Studio Works</h3>
+      <div class="h-1 w-12 bg-blue-600 mx-auto mt-2 rounded-full"></div>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      
+      <!-- Step 1 -->
+      <div class="bg-white p-6 rounded-xl border border-slate-100 shadow-sm text-center flex flex-col items-center">
+        <div class="p-3 bg-blue-50 text-blue-600 rounded-xl mb-4">
+          <i data-lucide="calendar"></i>
+        </div>
+        <div class="flex items-center space-x-2 mb-2">
+          <span class="w-5 h-5 bg-slate-800 text-white text-xs font-bold rounded-full flex items-center justify-center">1</span>
+          <h4 class="font-semibold text-slate-900 text-sm">Create Your Plan</h4>
+        </div>
+        <p class="text-xs text-slate-500">Define tasks, milestones, and dependencies.</p>
+      </div>
+
+      <!-- Step 2 -->
+      <div class="bg-white p-6 rounded-xl border border-slate-100 shadow-sm text-center flex flex-col items-center">
+        <div class="p-3 bg-blue-50 text-blue-600 rounded-xl mb-4">
+          <i data-lucide="flag"></i>
+        </div>
+        <div class="flex items-center space-x-2 mb-2">
+          <span class="w-5 h-5 bg-slate-800 text-white text-xs font-bold rounded-full flex items-center justify-center">2</span>
+          <h4 class="font-semibold text-slate-900 text-sm">Visualize Timeline</h4>
+        </div>
+        <p class="text-xs text-slate-500">See your project come to life on an interactive timeline.</p>
+      </div>
+
+      <!-- Step 3 -->
+      <div class="bg-white p-6 rounded-xl border border-slate-100 shadow-sm text-center flex flex-col items-center">
+        <div class="p-3 bg-blue-50 text-blue-600 rounded-xl mb-4">
+          <i data-lucide="trending-up"></i>
+        </div>
+        <div class="flex items-center space-x-2 mb-2">
+          <span class="w-5 h-5 bg-slate-800 text-white text-xs font-bold rounded-full flex items-center justify-center">3</span>
+          <h4 class="font-semibold text-slate-900 text-sm">Track Progress</h4>
+        </div>
+        <p class="text-xs text-slate-500">Monitor real-time updates and stay on track.</p>
+      </div>
+
+      <!-- Step 4 -->
+      <div class="bg-white p-6 rounded-xl border border-slate-100 shadow-sm text-center flex flex-col items-center">
+        <div class="p-3 bg-blue-50 text-blue-600 rounded-xl mb-4">
+          <i data-lucide="award"></i>
+        </div>
+        <div class="flex items-center space-x-2 mb-2">
+          <span class="w-5 h-5 bg-slate-800 text-white text-xs font-bold rounded-full flex items-center justify-center">4</span>
+          <h4 class="font-semibold text-slate-900 text-sm">Deliver Success</h4>
+        </div>
+        <p class="text-xs text-slate-500">Keep your team aligned and deliver with confidence.</p>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Icons Initialization -->
+  <script>
+    lucide.createIcons();
+  </script>
+</body>
+</html>

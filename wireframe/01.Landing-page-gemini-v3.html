@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Timeline Studio - Enterprise Workspace</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    body {
+      background-color: #f1f5f9;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+  </style>
+</head>
+<body class="text-slate-800 antialiased min-h-screen flex flex-col justify-between relative">
+
+  <!-- 1. Top Dark Navigation Bar -->
+  <nav class="bg-[#0b1e36] text-white px-8 py-3.5 flex items-center justify-between shadow-md">
+    <!-- Brand / Logo -->
+    <div class="flex items-center space-x-3">
+      <div class="h-8 w-8 bg-blue-500 rounded flex items-center justify-center font-bold text-lg text-white">
+        T
+      </div>
+      <span class="text-xl font-bold tracking-tight">Timeline Studio</span>
+    </div>
+
+    <!-- Center Links -->
+    <div class="hidden md:flex items-center space-x-8 text-sm font-medium text-slate-200">
+      <a href="#" class="flex items-center space-x-1.5 hover:text-white transition">
+        <i data-lucide="layout-grid" class="w-4 h-4"></i>
+        <span>Features</span>
+      </a>
+      <a href="#" class="flex items-center space-x-1.5 hover:text-white transition">
+        <i data-lucide="building-2" class="w-4 h-4"></i>
+        <span>Enterprise</span>
+      </a>
+      <a href="#" class="flex items-center space-x-1.5 hover:text-white transition">
+        <i data-lucide="tag" class="w-4 h-4"></i>
+        <span>Pricing</span>
+      </a>
+      <a href="#" class="flex items-center space-x-1.5 hover:text-white transition">
+        <i data-lucide="help-circle" class="w-4 h-4"></i>
+        <span>Support</span>
+      </a>
+    </div>
+
+    <!-- Right Actions -->
+    <div class="flex items-center space-x-3">
+      <button class="px-4 py-1.5 bg-white text-slate-900 rounded-md font-semibold text-xs hover:bg-slate-100 transition">
+        Contact Sales
+      </button>
+      <div class="relative">
+        <button class="px-3.5 py-1.5 bg-slate-800 border border-slate-700 text-white rounded-md font-semibold text-xs flex items-center space-x-1 hover:bg-slate-700 transition">
+          <span>Login</span>
+          <i data-lucide="chevron-down" class="w-3.5 h-3.5"></i>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Content Container -->
+  <div class="max-w-7xl mx-auto w-full px-6 py-6 space-y-8 relative">
+
+    <!-- 2. Full-Width Hero Callout Header -->
+    <section class="bg-[#dce4ec] border border-slate-300 rounded-lg p-8 text-center shadow-inner">
+      <h1 class="text-3xl font-extrabold text-slate-900 tracking-tight">
+        Welcome to Timeline Studio
+      </h1>
+      <p class="text-slate-600 font-medium text-base mt-2">
+        Streamline Your Project Management Workflow.
+      </p>
+    </section>
+
+    <!-- 3. Side-by-Side Features & Security Section -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      
+      <!-- Left: Features -->
+      <div>
+        <h2 class="text-lg font-bold text-slate-900 mb-4">Features</h2>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          
+          <!-- Card 1 -->
+          <div class="bg-white border border-slate-300 rounded-lg p-4 shadow-sm flex items-start space-x-3">
+            <div class="p-2 border border-slate-200 rounded text-slate-700 shrink-0">
+              <i data-lucide="kanban" class="w-5 h-5"></i>
+            </div>
+            <div>
+              <h3 class="font-bold text-xs text-slate-900">Dynamic Gantt Charts</h3>
+              <p class="text-[11px] text-slate-500 mt-1 leading-snug">
+                Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed diam vno.
+              </p>
+            </div>
+          </div>
+
+          <!-- Card 2 -->
+          <div class="bg-white border border-slate-300 rounded-lg p-4 shadow-sm flex items-start space-x-3">
+            <div class="p-2 border border-slate-200 rounded text-slate-700 shrink-0">
+              <i data-lucide="users" class="w-5 h-5"></i>
+            </div>
+            <div>
+              <h3 class="font-bold text-xs text-slate-900">Resource Allocation</h3>
+              <p class="text-[11px] text-slate-500 mt-1 leading-snug">
+                Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed diam vno.
+              </p>
+            </div>
+          </div>
+
+          <!-- Card 3 -->
+          <div class="bg-white border border-slate-300 rounded-lg p-4 shadow-sm flex items-start space-x-3">
+            <div class="p-2 border border-slate-200 rounded text-slate-700 shrink-0">
+              <i data-lucide="sliders" class="w-5 h-5"></i>
+            </div>
+            <div>
+              <h3 class="font-bold text-xs text-slate-900">Resource Workload Balancing</h3>
+              <p class="text-[11px] text-slate-500 mt-1 leading-snug">
+                Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed diam vno.
+              </p>
+            </div>
+          </div>
+
+          <!-- Card 4 -->
+          <div class="bg-white border border-slate-300 rounded-lg p-4 shadow-sm flex items-start space-x-3">
+            <div class="p-2 border border-slate-200 rounded text-slate-700 shrink-0">
+              <i data-lucide="code-2" class="w-5 h-5"></i>
+            </div>
+            <div>
+              <h3 class="font-bold text-xs text-slate-900">API Integration</h3>
+              <p class="text-[11px] text-slate-500 mt-1 leading-snug">
+                Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed diam vno.
+              </p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Right: Security -->
+      <div>
+        <h2 class="text-lg font-bold text-slate-900 mb-4">Security</h2>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          
+          <!-- Card 1 -->
+          <div class="bg-white border border-slate-300 rounded-lg p-4 shadow-sm flex items-start space-x-3">
+            <div class="p-2 border border-slate-200 rounded text-slate-700 shrink-0">
+              <i data-lucide="shield-check" class="w-5 h-5"></i>
+            </div>
+            <div>
+              <h3 class="font-bold text-xs text-slate-900">SSO & MFA Integration</h3>
+              <p class="text-[11px] text-slate-500 mt-1 leading-snug">
+                Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed diam vno.
+              </p>
+            </div>
+          </div>
+
+          <!-- Card 2 -->
+          <div class="bg-white border border-slate-300 rounded-lg p-4 shadow-sm flex items-start space-x-3">
+            <div class="p-2 border border-slate-200 rounded text-slate-700 shrink-0">
+              <i data-lucide="lock" class="w-5 h-5"></i>
+            </div>
+            <div>
+              <h3 class="font-bold text-xs text-slate-900">Audit Logging & Compliance</h3>
+              <p class="text-[11px] text-slate-500 mt-1 leading-snug">
+                Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed diam vno.
+              </p>
+            </div>
+          </div>
+
+          <!-- Card 3 -->
+          <div class="bg-white border border-slate-300 rounded-lg p-4 shadow-sm flex items-start space-x-3">
+            <div class="p-2 border border-slate-200 rounded text-slate-700 shrink-0">
+              <i data-lucide="file-check" class="w-5 h-5"></i>
+            </div>
+            <div>
+              <h3 class="font-bold text-xs text-slate-900">Audit Logging & Compliance</h3>
+              <p class="text-[11px] text-slate-500 mt-1 leading-snug">
+                Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed diam vno.
+              </p>
+            </div>
+          </div>
+
+          <!-- Card 4 -->
+          <div class="bg-white border border-slate-300 rounded-lg p-4 shadow-sm flex items-start space-x-3">
+            <div class="p-2 border border-slate-200 rounded text-slate-700 shrink-0">
+              <i data-lucide="file-text" class="w-5 h-5"></i>
+            </div>
+            <div>
+              <h3 class="font-bold text-xs text-slate-900">Audit Logging & Compliance</h3>
+              <p class="text-[11px] text-slate-500 mt-1 leading-snug">
+                Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed diam vno.
+              </p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Overlay Floating Login Modal (Positioned over center-screen like wireframe) -->
+    <div class="absolute left-1/2 top-[120px] -translate-x-1/2 z-20 w-full max-w-sm bg-white rounded-xl shadow-2xl border border-slate-200 p-6">
+      <div class="text-center mb-5">
+        <h3 class="text-xl font-bold text-slate-900">Secure Login</h3>
+        <p class="text-[11px] text-slate-400 font-medium mt-1">Log in to your Timeline Studio workspace.</p>
+        <h4 class="mt-4 text-xs font-bold uppercase tracking-wider text-slate-700">Login</h4>
+      </div>
+
+      <form class="space-y-3" onsubmit="event.preventDefault();">
+        <div>
+          <label class="block text-[10px] font-bold uppercase text-slate-400 mb-1">EMAIL</label>
+          <input 
+            type="email" 
+            value="user@corp-enterprise.com" 
+            class="w-full px-3 py-2 rounded border border-slate-300 text-xs text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-600 bg-blue-50/20"
+          />
+        </div>
+
+        <div>
+          <label class="block text-[10px] font-bold uppercase text-slate-400 mb-1">PASSWORD</label>
+          <input 
+            type="password" 
+            value="••••••••" 
+            class="w-full px-3 py-2 rounded border border-slate-300 text-xs text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-600 bg-blue-50/20"
+          />
+        </div>
+
+        <div class="pt-3 flex items-center space-x-2">
+          <button 
+            type="button" 
+            class="w-1/2 py-2 px-1 border border-slate-300 text-slate-700 font-bold rounded text-[10px] hover:bg-slate-50 transition"
+          >
+            New User Registration
+          </button>
+          <button 
+            type="submit" 
+            class="w-1/2 py-2 px-1 bg-[#0b1e36] hover:bg-slate-800 text-white font-bold rounded text-[10px] shadow transition"
+          >
+            Login
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- 4. Testimonials Slider -->
+    <div class="pt-4">
+      <h2 class="text-lg font-bold text-slate-900 mb-4">Testimonials</h2>
+      <div class="flex items-center space-x-4">
+        
+        <!-- Navigation Arrow Left -->
+        <button class="p-2 bg-white border border-slate-300 rounded-full text-slate-600 hover:bg-slate-100 transition shrink-0">
+          <i data-lucide="chevron-left" class="w-4 h-4"></i>
+        </button>
+
+        <!-- Testimonial Cards Slider -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
+          
+          <!-- Testimonial 1 -->
+          <div class="bg-white border border-slate-300 rounded-lg p-4 shadow-sm flex items-center space-x-4">
+            <div class="w-12 h-12 bg-slate-300 rounded-full flex items-center justify-center shrink-0">
+              <i data-lucide="user" class="w-6 h-6 text-slate-500"></i>
+            </div>
+            <div>
+              <p class="text-xs text-slate-600 italic">"Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed d..."</p>
+              <p class="text-[11px] font-bold text-slate-800 mt-1">Profile Photo</p>
+            </div>
+          </div>
+
+          <!-- Testimonial 2 -->
+          <div class="bg-white border border-slate-300 rounded-lg p-4 shadow-sm flex items-center space-x-4">
+            <div class="w-12 h-12 bg-slate-300 rounded-full flex items-center justify-center shrink-0">
+              <i data-lucide="user" class="w-6 h-6 text-slate-500"></i>
+            </div>
+            <div>
+              <p class="text-xs text-slate-600 italic">"Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed d..."</p>
+              <p class="text-[11px] font-bold text-slate-800 mt-1">Profile Photo</p>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Navigation Arrow Right -->
+        <button class="p-2 bg-white border border-slate-300 rounded-full text-slate-600 hover:bg-slate-100 transition shrink-0">
+          <i data-lucide="chevron-right" class="w-4 h-4"></i>
+        </button>
+
+      </div>
+    </div>
+
+  </div>
+
+  <!-- 5. Enterprise Footer Bar -->
+  <footer class="bg-[#cbd5e1] border-t border-slate-300 mt-12 py-8 px-12">
+    <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-start md:items-center space-y-6 md:space-y-0">
+      
+      <!-- Sitemap Links -->
+      <div class="flex space-x-16 text-xs text-slate-700">
+        <div>
+          <h4 class="font-bold text-slate-900 mb-2">Site-map</h4>
+          <ul class="space-y-1">
+            <li><a href="#" class="hover:underline">Site-map</a></li>
+            <li><a href="#" class="hover:underline">Enterprise</a></li>
+            <li><a href="#" class="hover:underline">Feature Page</a></li>
+            <li><a href="#" class="hover:underline">Support</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <h4 class="font-bold text-slate-900 mb-2">Legal</h4>
+          <ul class="space-y-1">
+            <li><a href="#" class="hover:underline">Privacy Policy</a></li>
+            <li><a href="#" class="hover:underline">Terms</a></li>
+            <li><a href="#" class="hover:underline">Terms and Conditions</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Social Icons & Enterprise Security Badge -->
+      <div class="flex flex-col items-end space-y-4">
+        <div class="flex space-x-3 text-slate-700">
+          <a href="#" class="hover:text-slate-900"><i data-lucide="linkedin" class="w-4 h-4"></i></a>
+          <a href="#" class="hover:text-slate-900"><i data-lucide="twitter" class="w-4 h-4"></i></a>
+          <a href="#" class="hover:text-slate-900"><i data-lucide="youtube" class="w-4 h-4"></i></a>
+          <a href="#" class="hover:text-slate-900"><i data-lucide="github" class="w-4 h-4"></i></a>
+        </div>
+
+        <!-- Security Badge -->
+        <div class="flex items-center space-x-2 bg-slate-200 border border-slate-400 rounded-md p-1.5 px-3">
+          <div class="w-6 h-6 bg-cyan-600 rounded-full flex items-center justify-center text-[8px] font-bold text-white">
+            SOC2
+          </div>
+          <span class="text-[10px] font-bold text-slate-800">Enterprise Security Certification</span>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="max-w-7xl mx-auto border-t border-slate-400/50 mt-6 pt-4 text-[11px] text-slate-600">
+      Privacy Policy | Terms LC. All rights reserved.
+    </div>
+  </footer>
+
+  <!-- Lucide Script -->
+  <script>
+    lucide.createIcons();
+  </script>
+</body>
+</html>

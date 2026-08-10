@@ -2335,12 +2335,7 @@ function renderToolbar(){
                   <button class="btn" onclick="addSwimlane()">+ Swimlane</button>
                   <span class="toolbar-sep"></span>
                   <button class="btn" onclick="openSaveModal()">💾 Save version</button>
-                  <button class="btn" id="pptxBtn" onclick="exportPptx()">⬇ Export PPTX</button>
-                  <span class="toolbar-sep"></span>
-                  <span style="display:flex;align-items:center;gap:6px;font-size:12px;color:#666;">
-                    <span class="save-dot" style="width:8px;height:8px;border-radius:50%;background:#4CAF50;opacity:0;">●</span>
-                    <span class="save-lbl">Saved</span>
-                  </span>`;
+                  <button class="btn" id="pptxBtn" onclick="exportPptx()">⬇ Export</button>`;
 }
 function escapeAttr(s){ return String(s).replace(/"/g,"&quot;"); }
 function escapeHtml(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
@@ -3562,7 +3557,7 @@ function renderTimeline(){
         <div class="tl-bar-wrap ${isPhase?"phase":""}" style="left:${left}%; width:${width}%;">
           <div class="tl-bar-track" style="background:${trackColor};"></div>
           <div class="tl-bar-fill" style="width:${fillPct}%; background:${barColor};"></div>
-          ${isPhase ? `<div class="tl-bar-label-inside" style="color:#fff;">${escapeAttr(row.title)}</div>` : ""}
+          ${isPhase ? `<div class="tl-bar-label-inside" style="color:#333; overflow:hidden; text-overflow:ellipsis;">${escapeAttr(row.title)}</div>` : ""}
           <div class="tl-bar-caption left">${durationLabel(row.start,row.end)}</div>
           <div class="tl-bar-caption right">${fmtShort(s)} – ${fmtShort(e)}</div>
         </div>
@@ -3743,7 +3738,7 @@ async function exportPptx(){
     console.error(err);
     alert("Something went wrong generating the PowerPoint file. Please try again.");
   } finally {
-    if(btn){ btn.disabled = false; btn.textContent = "⬇ Export PPTX"; }
+    if(btn){ btn.disabled = false; btn.textContent = "⬇ Export"; }
   }
 }
 function escapeAttrText(s){ return String(s); }

@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Timeline Studio</title>
+    <!-- Lucide Icons for clean vector icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: #f4f6f9;
+            color: #1e293b;
+            display: flex;
+            justify-content: center;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 1100px;
+            width: 100%;
+        }
+
+        /* --- Header / Logo --- */
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 40px;
+        }
+
+        .brand-logo {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #0284c7, #2563eb);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 24px;
+        }
+
+        .brand-text h1 {
+            font-size: 26px;
+            color: #0f172a;
+            letter-spacing: -0.5px;
+        }
+
+        .brand-text p {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+            color: #64748b;
+            font-weight: 600;
+        }
+
+        /* --- Hero Section --- */
+        .hero {
+            display: flex;
+            gap: 60px;
+            align-items: flex-start;
+            margin-bottom: 70px;
+            position: relative;
+        }
+
+        .hero-left {
+            flex: 1;
+            padding-top: 10px;
+        }
+
+        .hero-title {
+            font-size: 40px;
+            line-height: 1.2;
+            color: #0f172a;
+            font-weight: 700;
+            margin-bottom: 20px;
+        }
+
+        .hero-subtitle {
+            font-size: 16px;
+            color: #475569;
+            line-height: 1.5;
+            margin-bottom: 35px;
+            max-width: 480px;
+        }
+
+        /* Feature List */
+        .features {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .feature-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+        }
+
+        .feature-icon {
+            width: 48px;
+            height: 48px;
+            background-color: #e0f2fe;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #0284c7;
+            flex-shrink: 0;
+        }
+
+        .feature-content h3 {
+            font-size: 16px;
+            color: #0f172a;
+            margin-bottom: 4px;
+        }
+
+        .feature-content p {
+            font-size: 14px;
+            color: #64748b;
+            line-height: 1.4;
+        }
+
+        /* --- Login Card --- */
+        .hero-right {
+            width: 420px;
+            flex-shrink: 0;
+        }
+
+        .login-card {
+            background: #ffffff;
+            border-radius: 16px;
+            padding: 36px 32px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01);
+            border: 1px solid #f1f5f9;
+        }
+
+        .card-header {
+            text-align: center;
+            margin-bottom: 28px;
+        }
+
+        .card-header h2 {
+            font-size: 22px;
+            color: #0f172a;
+            margin-bottom: 4px;
+        }
+
+        .card-header p {
+            font-size: 12px;
+            color: #64748b;
+            margin-bottom: 20px;
+        }
+
+        .card-header h3 {
+            font-size: 18px;
+            color: #1e293b;
+        }
+
+        /* Form Controls */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            color: #475569;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px 14px;
+            background-color: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+            color: #1e293b;
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        .form-group input:focus {
+            border-color: #0284c7;
+            background-color: #fff;
+        }
+
+        .input-icon {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #94a3b8;
+            cursor: pointer;
+        }
+
+        .form-options {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 13px;
+            margin-bottom: 24px;
+        }
+
+        .remember-me {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #475569;
+            cursor: pointer;
+        }
+
+        .forgot-link {
+            color: #0284c7;
+            text-decoration: underline;
+            font-weight: 500;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn {
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            transition: background-color 0.2s;
+        }
+
+        .btn-secondary {
+            background-color: #f1f5f9;
+            color: #334155;
+            flex: 1;
+        }
+
+        .btn-secondary:hover {
+            background-color: #e2e8f0;
+        }
+
+        .btn-primary {
+            background-color: #032b56;
+            color: #ffffff;
+            flex: 1;
+        }
+
+        .btn-primary:hover {
+            background-color: #021e3d;
+        }
+
+        /* --- Steps Section --- */
+        .steps-section {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .steps-title {
+            font-size: 24px;
+            color: #0f172a;
+            margin-bottom: 8px;
+        }
+
+        .steps-divider {
+            width: 30px;
+            height: 3px;
+            background-color: #0284c7;
+            margin: 0 auto 40px auto;
+            border-radius: 2px;
+        }
+
+        .steps-grid {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .step-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 24px 16px;
+            flex: 1;
+            text-align: left;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02);
+            min-height: 210px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .step-icon {
+            color: #0284c7;
+            margin-bottom: 20px;
+            align-self: center;
+        }
+
+        .step-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+
+        .step-badge {
+            width: 24px;
+            height: 24px;
+            background-color: #1e293b;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        .step-header h4 {
+            font-size: 14px;
+            color: #0f172a;
+        }
+
+        .step-card p {
+            font-size: 12px;
+            color: #64748b;
+            line-height: 1.4;
+            padding-left: 34px;
+        }
+
+        .step-arrow {
+            color: #cbd5e1;
+            font-size: 18px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <!-- Logo -->
+        <header class="brand">
+            <div class="brand-logo">T</div>
+            <div class="brand-text">
+                <h1>Timeline Studio</h1>
+                <p>Project Planning & Gantt Charts</p>
+            </div>
+        </header>
+
+        <!-- Main Hero & Login Split -->
+        <main class="hero">
+            <!-- Left Info Column -->
+            <section class="hero-left">
+                <h2 class="hero-title">Plan Smarter. See Further.<br>Deliver With Confidence.</h2>
+                <p class="hero-subtitle">Timeline Studio helps project teams plan, visualize, and track with clarity and precision.</p>
+
+                <div class="features">
+                    <div class="feature-item">
+                        <div class="feature-icon"><i data-lucide="calendar"></i></div>
+                        <div class="feature-content">
+                            <h3>Smart Planning</h3>
+                            <p>Build timelines that adapt as your project evolves.</p>
+                        </div>
+                    </div>
+
+                    <div class="feature-item">
+                        <div class="feature-icon"><i data-lucide="bar-chart-2"></i></div>
+                        <div class="feature-content">
+                            <h3>Clear Visibility</h3>
+                            <p>Visualize milestones, dependencies, and progress in one place.</p>
+                        </div>
+                    </div>
+
+                    <div class="feature-item">
+                        <div class="feature-icon"><i data-lucide="users"></i></div>
+                        <div class="feature-content">
+                            <h3>Team Alignment</h3>
+                            <p>Keep stakeholders informed and aligned at every step.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Right Login Form Column -->
+            <section class="hero-right">
+                <div class="login-card">
+                    <div class="card-header">
+                        <h2>Timeline Studio</h2>
+                        <p>Project Planning & Gantt Charts</p>
+                        <h3>Login</h3>
+                    </div>
+
+                    <form onsubmit="event.preventDefault();">
+                        <div class="form-group">
+                            <label for="email">Email</label>
+                            <input type="email" id="email" placeholder="name@yourcompany.com">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="password">Password</label>
+                            <div class="input-wrapper">
+                                <input type="password" id="password" placeholder="Enter your password">
+                                <i data-lucide="eye" class="input-icon" style="width: 18px; height: 18px;"></i>
+                            </div>
+                        </div>
+
+                        <div class="form-options">
+                            <label class="remember-me">
+                                <input type="checkbox"> Remember me
+                            </label>
+                            <a href="#" class="forgot-link">Forgot password?</a>
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="button" class="btn btn-secondary">New User Registration</button>
+                            <button type="submit" class="btn btn-primary">Login</button>
+                        </div>
+                    </form>
+                </div>
+            </section>
+        </main>
+
+        <!-- Bottom How It Works Section -->
+        <section class="steps-section">
+            <h3 class="steps-title">How Timeline Studio Works</h3>
+            <div class="steps-divider"></div>
+
+            <div class="steps-grid">
+                <!-- Step 1 -->
+                <div class="step-card">
+                    <div class="step-icon"><i data-lucide="calendar" style="width: 36px; height: 36px;"></i></div>
+                    <div class="step-header">
+                        <span class="step-badge">1</span>
+                        <h4>Create Your Plan</h4>
+                    </div>
+                    <p>Define tasks, milestones, and dependencies.</p>
+                </div>
+
+                <div class="step-arrow"><i data-lucide="chevron-right"></i></div>
+
+                <!-- Step 2 -->
+                <div class="step-card">
+                    <div class="step-icon"><i data-lucide="flag" style="width: 36px; height: 36px;"></i></div>
+                    <div class="step-header">
+                        <span class="step-badge">2</span>
+                        <h4>Visualize Timeline</h4>
+                    </div>
+                    <p>See your project come to life on an interactive timeline.</p>
+                </div>
+
+                <div class="step-arrow"><i data-lucide="chevron-right"></i></div>
+
+                <!-- Step 3 -->
+                <div class="step-card">
+                    <div class="step-icon"><i data-lucide="trending-up" style="width: 36px; height: 36px;"></i></div>
+                    <div class="step-header">
+                        <span class="step-badge">3</span>
+                        <h4>Track Progress</h4>
+                    </div>
+                    <p>Monitor real-time updates and stay on track.</p>
+                </div>
+
+                <div class="step-arrow"><i data-lucide="chevron-right"></i></div>
+
+                <!-- Step 4 -->
+                <div class="step-card">
+                    <div class="step-icon"><i data-lucide="award" style="width: 36px; height: 36px;"></i></div>
+                    <div class="step-header">
+                        <span class="step-badge">4</span>
+                        <h4>Deliver Success</h4>
+                    </div>
+                    <p>Keep your team aligned and deliver with confidence.</p>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Render Lucide Icons -->
+    <script>
+        lucide.createIcons();
+    </script>
+</body>
+</html>
