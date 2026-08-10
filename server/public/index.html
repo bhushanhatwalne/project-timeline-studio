@@ -915,6 +915,7 @@ async function deleteProject(projectId, projectTitle){
 
 function calculateProjectProgress(projectData){
   if(!projectData || !projectData.swimlanes || projectData.swimlanes.length === 0){
+    console.log('[PROGRESS] No swimlanes found');
     return 0;
   }
 
@@ -938,8 +939,9 @@ function calculateProjectProgress(projectData){
     }
   });
 
-  // Return average progress
-  return taskCount > 0 ? Math.round(totalPercent / taskCount) : 0;
+  const progress = taskCount > 0 ? Math.round(totalPercent / taskCount) : 0;
+  console.log('[PROGRESS] Calculated progress:', progress, '| Tasks:', taskCount, '| Total %:', totalPercent);
+  return progress;
 }
 
 async function openProject(projectId){
@@ -1712,12 +1714,16 @@ async function renderDashboard(){
   await loadProjectList();
 
   // Load and cache project data for progress calculation
+  console.log('[DASHBOARD] Loading project data for', myProjects.length, 'projects');
   for(const proj of myProjects){
     if(!projectDataCache[proj.id]){
       try{
         const res = await apiFetch(`/api/v1/projects/${proj.id}`);
         if(res && res.ok){
-          projectDataCache[proj.id] = await res.json();
+          const data = await res.json();
+          projectDataCache[proj.id] = data;
+          const progress = calculateProjectProgress(data);
+          console.log('[DASHBOARD] Loaded', proj.title, '- Progress:', progress, '- Swimlanes:', data.swimlanes?.length);
         }
       } catch(err){
         console.warn(`Failed to load data for project ${proj.id}:`, err);
@@ -1862,6 +1868,8 @@ async function renderDashboard(){
               let progress = 0;
               if(projectDataCache[proj.id]){
                 progress = calculateProjectProgress(projectDataCache[proj.id]);
+              } else {
+                console.log('[DASHBOARD_ROW] No cached data for project:', proj.id);
               }
 
               return `
