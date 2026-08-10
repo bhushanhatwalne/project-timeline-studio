@@ -971,17 +971,26 @@ function calculateTaskStatus(task){
   try{
     const actual = task.percent || 0;
     const planned = calculatePlannedProgress(task.start, task.end);
-    const variance = calculateScheduleVariance(actual, task.start, task.end);
 
-    if(task.title) console.log('[TASK_STATUS]', task.title, '| Actual:', actual + '%', '| Planned:', planned + '%', '| Variance:', variance + '%');
+    if(task.title) console.log('[TASK_STATUS]', task.title, '| Actual:', actual + '%', '| Planned:', planned + '%');
 
+    // Per skill point 7 - Task Status Rules:
+    // 🟢 Complete: If Actual % = 100%
     if(actual === 100) return 'Complete';
+
+    // ⚪ Not Started: If Actual % = 0% AND Start Date > Today
     if(actual === 0){
       const startDate = new Date(task.start);
       if(!isNaN(startDate.getTime()) && startDate > new Date()) return 'Not Started';
     }
-    if(variance >= -10) return 'On Track';
-    if(variance >= -20) return 'At Risk';
+
+    // 🟢 On Track: If Actual Progress >= Planned Progress - 10%
+    if(actual >= planned - 10) return 'On Track';
+
+    // 🟡 At Risk: If Actual Progress < Planned Progress - 10% but >= Planned Progress - 20%
+    if(actual >= planned - 20) return 'At Risk';
+
+    // 🔴 Off Track: If Actual Progress < Planned Progress - 20%
     return 'Off Track';
   }catch(e){
     console.warn('[TASK_STATUS] Error:', e.message);
