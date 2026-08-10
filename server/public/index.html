@@ -436,13 +436,14 @@
   .dashboard-sidebar-item.active{background:#0076BC;color:#fff;}
   .dashboard-sidebar-section{margin-top:0;padding:12px 0 0;}
   .dashboard-sidebar-label{font-size:11px;font-weight:700;text-transform:uppercase;color:rgba(255,255,255,.5);margin-bottom:8px;padding:0 8px;}
-  .dashboard-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px;}
+  .dashboard-stats{display:grid;grid-template-columns:repeat(5,1fr);gap:16px;margin-bottom:24px;}
   .dashboard-stat-card{background:#fff;padding:20px;border-radius:10px;box-shadow:0 2px 8px rgba(0,0,0,.05);border-left:4px solid transparent;}
   .dashboard-stat-card.total-projects{background:#E8F4FF;border-left-color:#0076BC;}
   .dashboard-stat-card.on-track{background:#E6F4EA;border-left-color:#1B7A45;}
   .dashboard-stat-card.at-risk{background:#FFF3E0;border-left-color:#D98324;}
   .dashboard-stat-card.off-track{background:#FFEBEE;border-left-color:#C0392B;}
-  .dashboard-stat-label{font-size:12px;color:#8a94a0;margin-bottom:8px;}
+  .dashboard-stat-card.not-started{background:#F5F5F5;border-left-color:#77787B;}
+  .dashboard-stat-label{font-size:14px;font-weight:600;color:#8a94a0;margin-bottom:8px;}
   .dashboard-stat-value{font-size:32px;font-weight:700;color:#0a2540;}
   .dashboard-stat-meta{font-size:11px;color:#b0b8c1;margin-top:4px;}
   .dashboard-section-title{font-size:20px;font-weight:700;color:#0a2540;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;}
@@ -919,6 +920,18 @@ function goToDashboard(){
   currentProjectId = null;
   projectDataCache = {}; // Clear cache to force reload of project data
   renderDashboard();
+}
+
+function onDashboardSearch(){
+  const searchInput = document.getElementById("dashboardSearchInput");
+  const query = (searchInput?.value || "").toLowerCase().trim();
+  const tableRows = document.querySelectorAll(".dashboard-table-row");
+
+  tableRows.forEach(row => {
+    const projectName = row.querySelector("div:first-child")?.textContent.toLowerCase() || "";
+    const matches = !query || projectName.includes(query);
+    row.style.display = matches ? "" : "none";
+  });
 }
 
 async function duplicateProject(projectId, projectTitle){
@@ -1951,6 +1964,7 @@ async function renderDashboard(){
   let onTrackCount = 0;
   let atRiskCount = 0;
   let offTrackCount = 0;
+  let notStartedCount = 0;
 
   myProjects.forEach(proj => {
     const projectData = projectDataCache[proj.id];
@@ -1959,6 +1973,7 @@ async function renderDashboard(){
       if(status === 'On Track') onTrackCount++;
       else if(status === 'At Risk') atRiskCount++;
       else if(status === 'Off Track') offTrackCount++;
+      else if(status === 'Not Started') notStartedCount++;
     }
   });
 
@@ -2016,7 +2031,7 @@ async function renderDashboard(){
             <button onclick="addNewProject()" style="padding:8px 16px;background:#0076BC;color:white;border:none;border-radius:6px;cursor:pointer;font-weight:600;">+ New Project</button>
             <div class="dashboard-search">
               <span style="color:#8a94a0;">🔍</span>
-              <input type="text" placeholder="Search projects by name, owner, or keyword..." style="width:100%;">
+              <input type="text" id="dashboardSearchInput" placeholder="Search projects by name, owner, or keyword..." style="width:100%;" oninput="onDashboardSearch()">
             </div>
           </div>
           <div class="dashboard-topbar-right">
@@ -2061,6 +2076,11 @@ async function renderDashboard(){
               <div class="dashboard-stat-label">Off Track</div>
               <div class="dashboard-stat-value">${offTrackCount}</div>
               <div class="dashboard-stat-meta">${totalProjects > 0 ? Math.round((offTrackCount/totalProjects)*100) : 0}% of projects</div>
+            </div>
+            <div class="dashboard-stat-card not-started">
+              <div class="dashboard-stat-label">Not Started</div>
+              <div class="dashboard-stat-value">${notStartedCount}</div>
+              <div class="dashboard-stat-meta">${totalProjects > 0 ? Math.round((notStartedCount/totalProjects)*100) : 0}% of projects</div>
             </div>
           </div>
 
