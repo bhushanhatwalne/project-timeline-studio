@@ -450,8 +450,12 @@
   .dashboard-controls{display:flex;gap:12px;align-items:center;}
   .dashboard-filter{padding:8px 12px;background:#fff;border:1px solid #e0e6f2;border-radius:6px;font-size:12px;color:#333;cursor:pointer;}
   .dashboard-table{background:#fff;border-radius:10px;overflow:visible;box-shadow:0 2px 8px rgba(0,0,0,.05);}
-  .dashboard-table-head{display:grid;grid-template-columns:1fr 1fr 1fr 1fr 0.5fr;gap:16px;padding:16px 20px;background:#f5f7fa;border-bottom:1px solid #e8eef7;font-weight:600;font-size:12px;color:#5a6472;text-transform:uppercase;letter-spacing:.5px;}
-  .dashboard-table-row{display:grid;grid-template-columns:1fr 1fr 1fr 1fr 0.5fr;gap:16px;padding:16px 20px;border-bottom:1px solid #f0f3f9;align-items:center;transition:background 200ms;}
+  .dashboard-table-head{display:grid;grid-template-columns:2fr 1fr 1fr 1.5fr 0.5fr;gap:24px;padding:16px 24px;background:#f5f7fa;border-bottom:1px solid #e8eef7;font-weight:600;font-size:12px;color:#5a6472;text-transform:uppercase;letter-spacing:.5px;}
+  .dashboard-table-head div{cursor:pointer;user-select:none;display:flex;align-items:center;gap:6px;padding:4px 0;}
+  .dashboard-table-head div:hover{color:#0076BC;}
+  .dashboard-table-head .sort-arrow{font-size:10px;opacity:0;transition:opacity 200ms;}
+  .dashboard-table-head div.sorted .sort-arrow{opacity:1;}
+  .dashboard-table-row{display:grid;grid-template-columns:2fr 1fr 1fr 1.5fr 0.5fr;gap:24px;padding:16px 24px;border-bottom:1px solid #f0f3f9;align-items:center;transition:background 200ms;}
   .dashboard-table-row:hover{background:#fafbfc;}
   .dashboard-table-row:last-child{border-bottom:none;}
   .dashboard-project-name{font-weight:600;color:#0a2540;font-size:13px;cursor:pointer;}
@@ -521,6 +525,8 @@ let authUser = null; // {id, email, displayName} once logged in
 let myProjects = []; // [{id, title, createdAt, updatedAt}] for picker
 let currentProjectId = null; // currently open project
 let projectDataCache = {}; // cache for project swimlanes data
+let dashboardSortField = 'updated'; // current sort field
+let dashboardSortAsc = false; // sort ascending
 
 /* API wrapper with auth */
 async function apiFetch(path, opts={}, attemptCount=0){
@@ -932,6 +938,43 @@ function onDashboardSearch(){
     const matches = !query || projectName.includes(query);
     row.style.display = matches ? "" : "none";
   });
+}
+
+function sortDashboardProjects(field){
+  if(dashboardSortField === field){
+    dashboardSortAsc = !dashboardSortAsc;
+  } else {
+    dashboardSortField = field;
+    dashboardSortAsc = false;
+  }
+
+  myProjects.sort((a, b) => {
+    let valA, valB;
+
+    if(field === 'name'){
+      valA = (a.title || "").toLowerCase();
+      valB = (b.title || "").toLowerCase();
+      return dashboardSortAsc ? valA.localeCompare(valB) : valB.localeCompare(valA);
+    } else if(field === 'updated'){
+      valA = new Date(a.updatedAt).getTime();
+      valB = new Date(b.updatedAt).getTime();
+      return dashboardSortAsc ? valA - valB : valB - valA;
+    } else if(field === 'status'){
+      const statusOrder = {'Off Track': 0, 'At Risk': 1, 'On Track': 2, 'Complete': 3, 'Not Started': 4};
+      const statusA = calculateProjectStatus(projectDataCache[a.id]) || 'Not Started';
+      const statusB = calculateProjectStatus(projectDataCache[b.id]) || 'Not Started';
+      const orderA = statusOrder[statusA] ?? 5;
+      const orderB = statusOrder[statusB] ?? 5;
+      return dashboardSortAsc ? orderA - orderB : orderB - orderA;
+    } else if(field === 'progress'){
+      const progA = calculateProjectProgress(projectDataCache[a.id]) || 0;
+      const progB = calculateProjectProgress(projectDataCache[b.id]) || 0;
+      return dashboardSortAsc ? progA - progB : progB - progA;
+    }
+    return 0;
+  });
+
+  renderDashboard();
 }
 
 async function duplicateProject(projectId, projectTitle){
@@ -2084,20 +2127,13 @@ async function renderDashboard(){
             </div>
           </div>
 
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-            <div></div>
-            <div class="dashboard-controls">
-              <button class="dashboard-filter">🔽 Sort: Recently Updated</button>
-              <button class="dashboard-filter">⚙️ Filter</button>
-            </div>
-          </div>
 
           <div class="dashboard-table">
             <div class="dashboard-table-head">
-              <div>Project</div>
-              <div>Status</div>
-              <div>Progress</div>
-              <div>Updated</div>
+              <div onclick="sortDashboardProjects('name')">Project<span class="sort-arrow" data-field="name">↑</span></div>
+              <div onclick="sortDashboardProjects('status')">Status<span class="sort-arrow" data-field="status">↑</span></div>
+              <div onclick="sortDashboardProjects('progress')">Progress<span class="sort-arrow" data-field="progress">↑</span></div>
+              <div onclick="sortDashboardProjects('updated')">Updated<span class="sort-arrow" data-field="updated">↑</span></div>
             </div>
             ${myProjects.length === 0 ? `
               <div style="padding:40px;text-align:center;color:#8a94a0;">
@@ -2216,6 +2252,21 @@ async function renderDashboard(){
       }
     }
   }
+
+  // Update sort arrows in table headers
+  setTimeout(() => {
+    const headers = document.querySelectorAll(".dashboard-table-head div");
+    headers.forEach(header => {
+      const arrow = header.querySelector(".sort-arrow");
+      if(arrow && arrow.dataset.field === dashboardSortField){
+        header.classList.add("sorted");
+        arrow.textContent = dashboardSortAsc ? "↑" : "↓";
+      } else {
+        header.classList.remove("sorted");
+        if(arrow) arrow.textContent = "↑";
+      }
+    });
+  }, 0);
 }
 
 function setProjectViewMode(mode){
