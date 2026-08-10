@@ -388,9 +388,10 @@
 
   /* Dashboard styles */
   .dashboard-container{display:flex;height:100vh;background:#f5f7fa;}
-  .dashboard-sidebar{width:240px;background:#0a2540;color:#fff;padding:0;overflow-y:auto;box-shadow:2px 0 8px rgba(0,0,0,.1);transition:width 200ms ease-in-out;position:relative;display:flex;flex-direction:column;}
-  .dashboard-sidebar-header{display:flex;align-items:center;justify-content:space-between;padding:20px;border-bottom:1px solid rgba(255,255,255,.1);}
-  .dashboard-sidebar-footer{margin-top:auto;padding:16px;display:flex;justify-content:flex-end;border-top:1px solid rgba(255,255,255,.1);}
+  .dashboard-sidebar{width:240px;background:#0a2540;color:#fff;padding:0;box-shadow:2px 0 8px rgba(0,0,0,.1);transition:width 200ms ease-in-out;position:relative;display:flex;flex-direction:column;height:100vh;}
+  .dashboard-sidebar-header{display:flex;align-items:center;justify-content:space-between;padding:20px;border-bottom:1px solid rgba(255,255,255,.1);flex-shrink:0;}
+  .dashboard-sidebar-content{flex:1;overflow-y:auto;padding:0;}
+  .dashboard-sidebar-footer{flex-shrink:0;padding:16px;display:flex;justify-content:flex-end;border-top:1px solid rgba(255,255,255,.1);background:#0a2540;}
   .dashboard-sidebar-toggle{background:#0076BC;border:2px solid #fff;color:#fff;width:36px;height:36px;border-radius:6px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:18px;transition:all 200ms;flex-shrink:0;font-weight:bold;}
   .dashboard-sidebar-toggle:hover{background:#005a9d;transform:scale(1.05);}
   .dashboard-sidebar.collapsed{width:70px;}
@@ -412,13 +413,13 @@
   .dashboard-content{flex:1;overflow-y:auto;padding:24px;}
   .dashboard-sidebar-logo{margin:0;flex:0 0 auto;}
   .dashboard-sidebar-logo img{height:24px;display:block;}
-  .dashboard-sidebar-menu{display:flex;flex-direction:column;gap:4px;padding:0 8px;}
+  .dashboard-sidebar-menu{display:flex;flex-direction:column;gap:4px;padding:8px;}
   .dashboard-sidebar-item{display:flex;align-items:center;gap:8px;padding:10px 12px;margin:4px 0;border-radius:6px;cursor:pointer;font-size:13px;transition:all 200ms;color:rgba(255,255,255,.7);}
   .dashboard-sidebar-item span{display:inline;}
   .dashboard-sidebar-item:hover{background:rgba(255,255,255,.1);color:#fff;}
   .dashboard-sidebar-item.active{background:#0076BC;color:#fff;}
-  .dashboard-sidebar-section{margin-top:0;padding:12px 8px 0;}
-  .dashboard-sidebar-label{font-size:11px;font-weight:700;text-transform:uppercase;color:rgba(255,255,255,.5);margin-bottom:8px;padding:0 12px;}
+  .dashboard-sidebar-section{margin-top:0;padding:12px 0 0;}
+  .dashboard-sidebar-label{font-size:11px;font-weight:700;text-transform:uppercase;color:rgba(255,255,255,.5);margin-bottom:8px;padding:0 8px;}
   .dashboard-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px;}
   .dashboard-stat-card{background:#fff;padding:20px;border-radius:10px;box-shadow:0 2px 8px rgba(0,0,0,.05);border-left:4px solid transparent;}
   .dashboard-stat-card.total-projects{background:#E8F4FF;border-left-color:#0076BC;}
@@ -1946,6 +1947,7 @@ async function renderDashboard(){
           </div>
         </div>
 
+        <div class="dashboard-sidebar-content">
         <div class="dashboard-sidebar-menu">
           <div class="dashboard-sidebar-item active" data-emoji="📊" onclick="alert('Dashboard')"><span>📊 Dashboard</span></div>
           <div class="dashboard-sidebar-item" data-emoji="📁" onclick="renderProjectPicker()"><span>📁 All Projects</span></div>
@@ -1969,6 +1971,7 @@ async function renderDashboard(){
             <div class="dashboard-sidebar-item" data-emoji="🔗" onclick="alert('Integrations')"><span>🔗 Integrations</span></div>
             <div class="dashboard-sidebar-item" data-emoji="⚙️" onclick="alert('Settings')"><span>⚙️ Settings</span></div>
           </div>
+        </div>
         </div>
 
         <div class="dashboard-sidebar-footer">
