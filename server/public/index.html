@@ -1735,19 +1735,6 @@ function renderProjectPicker(){
     </div>
   `;
 
-  window.addNewProject = async ()=>{
-    const title = prompt("Project name:", "New Project");
-    if(!title) return;
-    const res = await apiFetch('/api/v1/projects', {
-      method: 'POST',
-      body: JSON.stringify({ title })
-    });
-    if(res && res.ok){
-      await loadProjectList();
-      await renderDashboard();
-    }
-  };
-
   window.deleteProject = async (projId)=>{
     if(!confirm("Delete this project? This cannot be undone.")) return;
     const res = await apiFetch(`/api/v1/projects/${projId}`, { method: 'DELETE' });
@@ -1853,6 +1840,19 @@ function openEditProjectModal(event, projectId, projectName){
 function closeEditProjectModal(){
   const modal = document.getElementById('editProjectModal');
   if(modal) modal.classList.remove('active');
+}
+
+async function addNewProject(){
+  const title = prompt("Project name:", "New Project");
+  if(!title) return;
+  const res = await apiFetch('/api/v1/projects', {
+    method: 'POST',
+    body: JSON.stringify({ title })
+  });
+  if(res && res.ok){
+    await loadProjectList();
+    await renderDashboard();
+  }
 }
 
 async function saveProjectChanges(){
