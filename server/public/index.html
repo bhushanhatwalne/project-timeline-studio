@@ -2027,6 +2027,7 @@ async function renderDashboard(){
               let status = 'Not Started';
               let statusClass = 'not-started';
               let statusLabel = 'Not Started';
+              let statusKey = 'not-started';
 
               if(projectDataCache[proj.id]){
                 const cachedData = projectDataCache[proj.id];
@@ -2041,13 +2042,14 @@ async function renderDashboard(){
                   'Off Track': 'off-track',
                   'Not Started': 'not-started'
                 };
-                const statusKey = statusMap[status] || 'not-started';
+                statusKey = statusMap[status] || 'not-started';
                 statusClass = statusKey === 'complete' ? 'completed' : statusKey;
                 statusLabel = STATUS_META[statusKey]?.label || status;
 
                 console.log('[DASHBOARD_ROW]', proj.title, '| Progress:', progress + '%', '| Status:', status);
               } else {
                 console.log('[DASHBOARD_ROW] No cached data for project:', proj.id, proj.title);
+                statusKey = 'not-started';
                 statusLabel = STATUS_META['not-started']?.label || 'Not Started';
               }
 
