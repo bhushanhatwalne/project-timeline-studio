@@ -765,8 +765,16 @@ function toggleVisible(row){
   saveFlash(); render();
 }
 function onFieldChange(slId, rowId, isPhase, field, val){
+  console.log('[FIELD_CHANGE]', field, '=', val);
   const row = findRow(slId, rowId, isPhase);
-  if(row){ pushHistory(); row[field] = val; saveFlash(); render(); }
+  console.log('[FIELD_CHANGE] Row found:', !!row);
+  if(row){
+    pushHistory();
+    row[field] = val;
+    console.log('[FIELD_CHANGE] Updated row, calling saveFlash');
+    saveFlash();
+    render();
+  }
 }
 
 /* ---------------- row menu ---------------- */
