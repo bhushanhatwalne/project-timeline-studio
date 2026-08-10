@@ -974,7 +974,106 @@ function sortDashboardProjects(field){
     return 0;
   });
 
-  renderDashboard();
+  reRenderDashboardTable();
+}
+
+function reRenderDashboardTable(){
+  const searchInput = document.getElementById("dashboardSearchInput");
+  const searchQuery = (searchInput?.value || "").toLowerCase().trim();
+
+  const tableBody = document.querySelector(".dashboard-table");
+  if(!tableBody) return;
+
+  const contentHtml = myProjects.length === 0 ? `
+    <div style="padding:40px;text-align:center;color:#8a94a0;">
+      <p>No projects yet. Create your first project to get started!</p>
+      <button onclick="addNewProject()" style="margin-top:16px;padding:8px 16px;background:#0076BC;color:white;border:none;border-radius:6px;cursor:pointer;">Create Project</button>
+    </div>
+  ` : myProjects.map((proj) => {
+    const updated = new Date(proj.updatedAt);
+    const month = updated.toLocaleString('default', { month: 'short' });
+    const day = updated.getDate();
+    const time = updated.toLocaleTimeString('en-US', { hour: '2-digit', minute:'2-digit' });
+    const updatedStr = `${month} ${day}, ${updated.getFullYear()} ${time}`;
+
+    let progress = 0;
+    let status = 'Not Started';
+    let statusClass = 'not-started';
+    let statusLabel = 'Not Started';
+    let statusKey = 'not-started';
+
+    if(projectDataCache[proj.id]){
+      const cachedData = projectDataCache[proj.id];
+      progress = calculateProjectProgress(cachedData);
+      status = calculateProjectStatus(cachedData);
+
+      const statusMap = {
+        'Complete': 'complete',
+        'On Track': 'on-track',
+        'At Risk': 'at-risk',
+        'Off Track': 'off-track',
+        'Not Started': 'not-started'
+      };
+      statusKey = statusMap[status] || 'not-started';
+      statusClass = statusKey === 'complete' ? 'completed' : statusKey;
+      statusLabel = STATUS_META[statusKey]?.label || status;
+    }
+
+    const projectName = (proj.title || "").toLowerCase();
+    const searchMatch = !searchQuery || projectName.includes(searchQuery);
+    const displayStyle = searchMatch ? "" : "none";
+
+    return `
+      <div class="dashboard-table-row" onclick="openProject('${escapeAttr(proj.id)}')" style="display:${displayStyle};">
+        <div>
+          <div class="dashboard-project-name">${escapeHtml(proj.title)}</div>
+        </div>
+        <div><span class="dashboard-status ${statusClass}">${statusLabel}</span></div>
+        <div>
+          <div class="dashboard-progress">
+            <div class="dashboard-progress-bar">
+              <div class="dashboard-progress-fill" style="width:${progress}%;background:${STATUS_META[statusKey]?.bar || '#0076BC'};"></div>
+            </div>
+            <div class="dashboard-progress-text" style="min-width:40px;text-align:right;font-weight:600;color:#0a2540;">${progress}%</div>
+          </div>
+        </div>
+        <div style="font-size:12px;color:#5a6472;">${updatedStr}</div>
+        <div class="dashboard-project-menu">
+          <div class="dashboard-actions" onclick="event.stopPropagation(); toggleProjectMenu(event, '${escapeAttr(proj.id)}')">⋮</div>
+          <div class="dashboard-project-dropdown" id="menu-${proj.id}">
+            <div class="dashboard-project-dropdown-item" onclick="openEditProjectModal(event, '${escapeAttr(proj.id)}', '${escapeAttr(proj.title)}')">✏️ Rename</div>
+            <div class="dashboard-project-dropdown-item" onclick="event.stopPropagation(); duplicateProject('${escapeAttr(proj.id)}', '${escapeAttr(proj.title)}')">📋 Duplicate</div>
+            <div class="dashboard-project-dropdown-item" onclick="event.stopPropagation(); alert('Download - Coming soon')">⬇️ Download</div>
+            <div class="dashboard-project-dropdown-item" onclick="event.stopPropagation(); deleteProject('${escapeAttr(proj.id)}', '${escapeAttr(proj.title)}')" style="color:#d32f2f;">🗑️ Delete</div>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  tableBody.innerHTML = `
+    <div class="dashboard-table-head">
+      <div onclick="sortDashboardProjects('name')">Project<span class="sort-arrow" data-field="name">↑</span></div>
+      <div onclick="sortDashboardProjects('status')">Status<span class="sort-arrow" data-field="status">↑</span></div>
+      <div onclick="sortDashboardProjects('progress')">Progress<span class="sort-arrow" data-field="progress">↑</span></div>
+      <div onclick="sortDashboardProjects('updated')">Updated<span class="sort-arrow" data-field="updated">↑</span></div>
+    </div>
+    ${contentHtml}
+  `;
+
+  setTimeout(() => {
+    const headers = document.querySelectorAll(".dashboard-table-head div");
+    headers.forEach(header => {
+      const arrow = header.querySelector(".sort-arrow");
+      if(arrow && arrow.dataset.field === dashboardSortField){
+        header.classList.add("sorted");
+        arrow.textContent = dashboardSortAsc ? "↑" : "↓";
+      } else {
+        header.classList.remove("sorted");
+        if(arrow) arrow.textContent = "↑";
+      }
+    });
+  }, 0);
 }
 
 async function duplicateProject(projectId, projectTitle){
