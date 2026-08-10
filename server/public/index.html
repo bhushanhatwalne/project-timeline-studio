@@ -970,7 +970,10 @@ function calculateScheduleVariance(actual, start, end){
 function calculateTaskStatus(task){
   try{
     const actual = task.percent || 0;
+    const planned = calculatePlannedProgress(task.start, task.end);
     const variance = calculateScheduleVariance(actual, task.start, task.end);
+
+    if(task.title) console.log('[TASK_STATUS]', task.title, '| Actual:', actual + '%', '| Planned:', planned + '%', '| Variance:', variance + '%');
 
     if(actual === 100) return 'Complete';
     if(actual === 0){
