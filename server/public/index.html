@@ -408,7 +408,11 @@
   .dashboard-sidebar-section{margin-top:24px;}
   .dashboard-sidebar-label{font-size:11px;font-weight:700;text-transform:uppercase;color:rgba(255,255,255,.5);margin-bottom:8px;padding:0 4px;}
   .dashboard-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px;}
-  .dashboard-stat-card{background:#fff;padding:20px;border-radius:10px;box-shadow:0 2px 8px rgba(0,0,0,.05);}
+  .dashboard-stat-card{background:#fff;padding:20px;border-radius:10px;box-shadow:0 2px 8px rgba(0,0,0,.05);border-left:4px solid transparent;}
+  .dashboard-stat-card.total-projects{background:#E8F4FF;border-left-color:#0076BC;}
+  .dashboard-stat-card.on-track{background:#E6F4EA;border-left-color:#1B7A45;}
+  .dashboard-stat-card.at-risk{background:#FFF3E0;border-left-color:#D98324;}
+  .dashboard-stat-card.off-track{background:#FFEBEE;border-left-color:#C0392B;}
   .dashboard-stat-label{font-size:12px;color:#8a94a0;margin-bottom:8px;}
   .dashboard-stat-value{font-size:32px;font-weight:700;color:#0a2540;}
   .dashboard-stat-meta{font-size:11px;color:#b0b8c1;margin-top:4px;}
@@ -1973,22 +1977,22 @@ async function renderDashboard(){
           <div class="dashboard-section-title">All Projects</div>
 
           <div class="dashboard-stats">
-            <div class="dashboard-stat-card">
+            <div class="dashboard-stat-card total-projects">
               <div class="dashboard-stat-label">Total Projects</div>
               <div class="dashboard-stat-value">${totalProjects}</div>
               <div class="dashboard-stat-meta">All time</div>
             </div>
-            <div class="dashboard-stat-card">
+            <div class="dashboard-stat-card on-track">
               <div class="dashboard-stat-label">On Track</div>
               <div class="dashboard-stat-value">${onTrackCount}</div>
               <div class="dashboard-stat-meta">${totalProjects > 0 ? Math.round((onTrackCount/totalProjects)*100) : 0}% of projects</div>
             </div>
-            <div class="dashboard-stat-card">
+            <div class="dashboard-stat-card at-risk">
               <div class="dashboard-stat-label">At Risk</div>
               <div class="dashboard-stat-value">${atRiskCount}</div>
               <div class="dashboard-stat-meta">${totalProjects > 0 ? Math.round((atRiskCount/totalProjects)*100) : 0}% of projects</div>
             </div>
-            <div class="dashboard-stat-card">
+            <div class="dashboard-stat-card off-track">
               <div class="dashboard-stat-label">Off Track</div>
               <div class="dashboard-stat-value">${offTrackCount}</div>
               <div class="dashboard-stat-meta">${totalProjects > 0 ? Math.round((offTrackCount/totalProjects)*100) : 0}% of projects</div>
