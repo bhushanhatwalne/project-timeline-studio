@@ -7,12 +7,16 @@ A lightweight, browser-based project timeline and Gantt chart tool for planning,
 ✨ **What You Can Do**
 - Create swimlanes (phases) and organize tasks within them
 - Add milestones and major events to your timeline
-- Track task progress with 5-state status indicators
+- Track task progress with dynamic status indicators (Not Started, On Track, At Risk, Off Track, Complete)
 - Drag-and-drop to reorder phases and tasks
 - Undo/redo with keyboard shortcuts (Ctrl+Z, Ctrl+Shift+Z)
 - Save multiple versions of your timeline by business group
 - View the same data as an interactive Gantt chart
 - Export your timeline to PowerPoint slides
+- **Dashboard with status overview** — See all projects at a glance with color-coded status cards
+- **Collapsible sidebar** — Minimize navigation panel to maximize workspace (state persists)
+- **Professional data table** — Auto-adjusting columns with copy/paste date support
+- **Advanced date input** — Paste dates in multiple formats (YYYY-MM-DD, MM/DD/YYYY, MMDDYYYY)
 - All data saved locally in your browser (no account required yet)
 
 ## Getting Started
@@ -52,6 +56,18 @@ xdg-open project-timeline-studio.html
 
 ## User Guide
 
+### Dashboard
+After logging in, you'll see the **Dashboard** showing:
+- **Status Cards** — Color-coded summary of all projects:
+  - 🔵 **Total Projects** (Blue)
+  - 🟢 **On Track** (Green) — Tasks progressing as planned
+  - 🟡 **At Risk** (Amber) — Tasks slightly delayed
+  - 🔴 **Off Track** (Red) — Tasks significantly delayed
+- **Project Table** — List of all your projects with status, progress bar, and last updated date
+- **Sidebar Navigation** — Access your projects, templates, reports, and settings
+  - Click **←** button at bottom-right to collapse sidebar and maximize workspace
+  - Sidebar state is saved automatically
+
 ### Table Columns (Data Tab)
 
 | Column | Purpose |
@@ -65,12 +81,19 @@ xdg-open project-timeline-studio.html
 | **Assigned to** | Person/team responsible (free text) |
 | **Status** | Not Started, In Progress, Complete, Behind Schedule, At Risk |
 
-### Status Colors
-- 🔵 **In Progress** — Task is underway
-- ✅ **Complete** — Task is done
-- ⚪ **Not Started** — Task hasn't begun
-- 🟠 **Behind Schedule** — Task is delayed
-- 🔴 **At Risk** — Task faces obstacles
+### Status Indicators
+Status is **automatically calculated** based on task progress and dates:
+
+- ⚪ **Not Started** — Percent = 0% AND start date is in the future
+- 🟢 **On Track** — Progress meets or exceeds plan (variance ≥ -10%)
+- 🟡 **At Risk** — Slight delay in progress (variance between -10% and -20%)
+- 🔴 **Off Track** — Significant delay (variance < -20%)
+- 🟢 **Complete** — Percent = 100%
+
+**Project Status** aggregates task statuses:
+- If no tasks have started → **Not Started**
+- If any task is in progress → Determined by worst schedule variance
+- If all tasks complete → **Complete**
 
 ### Row Menu (⋯ Button)
 Right-click on any row or click the **⋯** button to:
@@ -144,7 +167,13 @@ Works on any modern browser:
 3. **Dependency chains**: Use milestone dates as signposts; explicitly list "Unblock on Milestone X" in assignee field as a note
 4. **Version naming**: Use a date prefix for snapshots (e.g., "2026-08-06 - v2 Client Review")
 5. **Hide completed phases**: Eye icon (👁) toggles visibility on the timeline without deleting
-6. **Bulk date shifts**: Edit swimlane start/end dates to auto-propagate to all child tasks (in future version)
+6. **Paste dates easily**: In the Data tab, paste dates in any of these formats:
+   - `2026-09-15` (standard)
+   - `09/15/2026` (US format)
+   - `9/15/2026` (short US format)
+   - `09152026` (compact)
+7. **Maximize workspace**: Click the **←** button in the sidebar footer to collapse navigation
+8. **Future-dated projects**: Projects with all tasks starting in the future show as "Not Started" on the dashboard
 
 ## Troubleshooting
 
@@ -182,6 +211,29 @@ Timeline Studio is actively being developed! To request features or report bugs:
 
 ---
 
-**Version 1.0.0** | No backend required | All data in your browser | Made with ❤️
+---
 
-*Last updated: 2026-08-06*
+## Version History
+
+### v1.1.0 (2026-08-10)
+**UI/UX Improvements:**
+- ✨ Collapsible sidebar on dashboard with persistent state
+- ✨ Status-based color-coded cards (Blue, Green, Amber, Red)
+- ✨ Professional data table with auto-adjusting columns
+- ✨ Enhanced date input with copy/paste support (multiple formats)
+- 🐛 Fixed project status calculation for future-dated projects
+- 🐛 Improved form field focus states and visual feedback
+
+### v1.0.0 (2026-08-06)
+Initial release with core features:
+- Timeline creation and management
+- Gantt chart visualization
+- Version snapshots
+- PowerPoint export
+- Local storage persistence
+
+---
+
+**Current Version: 1.1.0** | No backend required | All data in your browser | Made with ❤️
+
+*Last updated: 2026-08-10*
