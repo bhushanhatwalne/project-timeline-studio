@@ -2107,7 +2107,12 @@ function renderToolbar(){
                   <button class="btn" onclick="addSwimlane()">+ Swimlane</button>
                   <span class="toolbar-sep"></span>
                   <button class="btn" onclick="openSaveModal()">💾 Save version</button>
-                  <button class="btn" id="pptxBtn" onclick="exportPptx()">⬇ Export PPTX</button>`;
+                  <button class="btn" id="pptxBtn" onclick="exportPptx()">⬇ Export PPTX</button>
+                  <span class="toolbar-sep"></span>
+                  <span style="display:flex;align-items:center;gap:6px;font-size:12px;color:#666;">
+                    <span class="save-dot" style="width:8px;height:8px;border-radius:50%;background:#4CAF50;opacity:0;">●</span>
+                    <span class="save-lbl">Saved</span>
+                  </span>`;
 }
 function escapeAttr(s){ return String(s).replace(/"/g,"&quot;"); }
 function escapeHtml(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
