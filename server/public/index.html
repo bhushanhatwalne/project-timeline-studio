@@ -414,8 +414,8 @@
   .dashboard-controls{display:flex;gap:12px;align-items:center;}
   .dashboard-filter{padding:8px 12px;background:#fff;border:1px solid #e0e6f2;border-radius:6px;font-size:12px;color:#333;cursor:pointer;}
   .dashboard-table{background:#fff;border-radius:10px;overflow:visible;box-shadow:0 2px 8px rgba(0,0,0,.05);}
-  .dashboard-table-head{display:grid;grid-template-columns:2fr 1fr 1fr 1.5fr 0.5fr;gap:16px;padding:16px 20px;background:#f5f7fa;border-bottom:1px solid #e8eef7;font-weight:600;font-size:12px;color:#5a6472;text-transform:uppercase;letter-spacing:.5px;}
-  .dashboard-table-row{display:grid;grid-template-columns:2fr 1fr 1fr 1.5fr 0.5fr;gap:16px;padding:16px 20px;border-bottom:1px solid #f0f3f9;align-items:center;transition:background 200ms;}
+  .dashboard-table-head{display:grid;grid-template-columns:1fr 1fr 1fr 1fr 0.5fr;gap:16px;padding:16px 20px;background:#f5f7fa;border-bottom:1px solid #e8eef7;font-weight:600;font-size:12px;color:#5a6472;text-transform:uppercase;letter-spacing:.5px;}
+  .dashboard-table-row{display:grid;grid-template-columns:1fr 1fr 1fr 1fr 0.5fr;gap:16px;padding:16px 20px;border-bottom:1px solid #f0f3f9;align-items:center;transition:background 200ms;}
   .dashboard-table-row:hover{background:#fafbfc;}
   .dashboard-table-row:last-child{border-bottom:none;}
   .dashboard-project-name{font-weight:600;color:#0a2540;font-size:13px;cursor:pointer;}
@@ -482,6 +482,7 @@ let compactMode = false; // when true, halves the vertical spacing between timel
 let authUser = null; // {id, email, displayName} once logged in
 let myProjects = []; // [{id, title, createdAt, updatedAt}] for picker
 let currentProjectId = null; // currently open project
+let projectDataCache = {}; // cache for project swimlanes data
 
 /* API wrapper with auth */
 async function apiFetch(path, opts={}, attemptCount=0){
@@ -910,6 +911,35 @@ async function deleteProject(projectId, projectTitle){
     console.error('[DELETE_PROJECT] Error deleting project:', err);
     alert('Error deleting project: ' + err.message);
   }
+}
+
+function calculateProjectProgress(projectData){
+  if(!projectData || !projectData.swimlanes || projectData.swimlanes.length === 0){
+    return 0;
+  }
+
+  let totalPercent = 0;
+  let taskCount = 0;
+
+  // Iterate through all swimlanes and their tasks
+  projectData.swimlanes.forEach(swimlane => {
+    // Count the phase itself
+    if(swimlane.phase){
+      totalPercent += (swimlane.phase.percent || 0);
+      taskCount++;
+    }
+
+    // Count all child tasks
+    if(swimlane.children && swimlane.children.length > 0){
+      swimlane.children.forEach(child => {
+        totalPercent += (child.percent || 0);
+        taskCount++;
+      });
+    }
+  });
+
+  // Return average progress
+  return taskCount > 0 ? Math.round(totalPercent / taskCount) : 0;
 }
 
 async function openProject(projectId){
@@ -1680,6 +1710,21 @@ async function saveProjectChanges(){
 
 async function renderDashboard(){
   await loadProjectList();
+
+  // Load and cache project data for progress calculation
+  for(const proj of myProjects){
+    if(!projectDataCache[proj.id]){
+      try{
+        const res = await apiFetch(`/api/v1/projects/${proj.id}`);
+        if(res && res.ok){
+          projectDataCache[proj.id] = await res.json();
+        }
+      } catch(err){
+        console.warn(`Failed to load data for project ${proj.id}:`, err);
+      }
+    }
+  }
+
   const app = document.getElementById("app");
 
   // Calculate stats
@@ -1812,7 +1857,12 @@ async function renderDashboard(){
               const statuses = ['On Track', 'At Risk', 'On Track'];
               const status = statuses[idx % statuses.length];
               const statusClass = status === 'On Track' ? 'on-track' : 'at-risk';
-              const progress = [68, 42, 18][idx % 3] || 50;
+
+              // Calculate progress from cached project data or default to 0
+              let progress = 0;
+              if(projectDataCache[proj.id]){
+                progress = calculateProjectProgress(projectDataCache[proj.id]);
+              }
 
               return `
                 <div class="dashboard-table-row" onclick="openProject('${escapeAttr(proj.id)}')">
