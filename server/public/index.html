@@ -1735,7 +1735,7 @@ function renderProjectPicker(){
     </div>
   `;
 
-  window.createNewProject = async ()=>{
+  window.addNewProject = async ()=>{
     const title = prompt("Project name:", "New Project");
     if(!title) return;
     const res = await apiFetch('/api/v1/projects', {
@@ -1744,7 +1744,7 @@ function renderProjectPicker(){
     });
     if(res && res.ok){
       await loadProjectList();
-      renderProjectPicker();
+      await renderDashboard();
     }
   };
 
