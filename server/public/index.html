@@ -928,6 +928,36 @@ function goToDashboard(){
   renderDashboard();
 }
 
+function matchesSearchQuery(projectName, statusText, progress, query){
+  if(!query) return true;
+
+  const parts = query.split(/\s+/);
+  return parts.every(part => {
+    if(!part) return true;
+
+    // Check if it's a progress filter (contains > < >= <= =)
+    const progressMatch = part.match(/^([><=]+)(\d+)%?$/);
+    if(progressMatch){
+      const operator = progressMatch[1];
+      const value = parseInt(progressMatch[2]);
+      if(operator === '>') return progress > value;
+      if(operator === '<') return progress < value;
+      if(operator === '>=') return progress >= value;
+      if(operator === '<=') return progress <= value;
+      if(operator === '=') return progress === value;
+      return false;
+    }
+
+    // Check project name
+    if(projectName.includes(part)) return true;
+
+    // Check status
+    if(statusText.includes(part)) return true;
+
+    return false;
+  });
+}
+
 function onDashboardSearch(){
   const searchInput = document.getElementById("dashboardSearchInput");
   const query = (searchInput?.value || "").toLowerCase().trim();
@@ -935,7 +965,12 @@ function onDashboardSearch(){
 
   tableRows.forEach(row => {
     const projectName = row.querySelector("div:first-child")?.textContent.toLowerCase() || "";
-    const matches = !query || projectName.includes(query);
+    const statusElement = row.querySelector(".dashboard-status");
+    const statusText = (statusElement?.textContent || "").toLowerCase();
+    const progressText = row.querySelector(".dashboard-progress-text")?.textContent || "0%";
+    const progress = parseInt(progressText) || 0;
+
+    const matches = matchesSearchQuery(projectName, statusText, progress, query);
     row.style.display = matches ? "" : "none";
   });
 }
@@ -1020,7 +1055,8 @@ function reRenderDashboardTable(){
     }
 
     const projectName = (proj.title || "").toLowerCase();
-    const searchMatch = !searchQuery || projectName.includes(searchQuery);
+    const statusText = (status || "").toLowerCase();
+    const searchMatch = matchesSearchQuery(projectName, statusText, progress, searchQuery);
     const displayStyle = searchMatch ? "" : "none";
 
     return `
@@ -2173,7 +2209,7 @@ async function renderDashboard(){
             <button onclick="addNewProject()" style="padding:8px 16px;background:#0076BC;color:white;border:none;border-radius:6px;cursor:pointer;font-weight:600;">+ New Project</button>
             <div class="dashboard-search">
               <span style="color:#8a94a0;">🔍</span>
-              <input type="text" id="dashboardSearchInput" placeholder="Search projects by name, owner, or keyword..." style="width:100%;" oninput="onDashboardSearch()">
+              <input type="text" id="dashboardSearchInput" placeholder="Search by name, status, or progress (e.g., '>50%', 'on track')..." style="width:100%;" oninput="onDashboardSearch()">
             </div>
           </div>
           <div class="dashboard-topbar-right">
