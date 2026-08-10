@@ -1767,10 +1767,10 @@ async function renderDashboard(){
     const progress = projectDataCache[proj.id] ? calculateProjectProgress(projectDataCache[proj.id]) : 0;
     if(progress >= 100){
       completedCount++;
-    } else if(progress < 50){
-      atRiskCount++;
-    } else {
+    } else if(progress >= 50){
       onTrackCount++;
+    } else {
+      atRiskCount++;
     }
   });
 
@@ -1907,14 +1907,14 @@ async function renderDashboard(){
               }
 
               // Determine status based on progress
-              let status = 'On Track';
-              let statusClass = 'on-track';
+              let status = 'At Risk';
+              let statusClass = 'at-risk';
               if(progress >= 100){
                 status = 'Completed';
                 statusClass = 'completed';
-              } else if(progress < 50){
-                status = 'At Risk';
-                statusClass = 'at-risk';
+              } else if(progress >= 50){
+                status = 'On Track';
+                statusClass = 'on-track';
               }
 
               return `
