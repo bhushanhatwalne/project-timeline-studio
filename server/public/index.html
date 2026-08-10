@@ -664,16 +664,27 @@ function saveFlash(){
     console.log('[SAVE] Current swimlanes count:', swimlanes.length);
     swimlanes.forEach((sl, i) => {
       console.log(`[SAVE] Swimlane ${i}:`, sl.name, '- children:', sl.children?.length);
+      if(sl.children){
+        sl.children.forEach((child, j) => {
+          console.log(`[SAVE]   Child ${j}:`, child.title, '- percent:', child.percent);
+        });
+      }
     });
 
     const payload = { swimlanes, projectTitle };
-    console.log('[SAVE] Full payload:', JSON.stringify(payload).substring(0, 500) + '...');
+    console.log('[SAVE] Payload size:', JSON.stringify(payload).length, 'bytes');
     console.log('[SAVE] Sending to server for project:', currentProjectId);
 
     const res = await apiFetch(`/api/v1/projects/${currentProjectId}`, {
       method:'PUT', body: JSON.stringify(payload)
     });
     console.log('[SAVE] Response:', res?.status, res?.ok);
+    if(res?.ok){
+      console.log('[SAVE] ✓ Data saved successfully');
+      projectDataCache[currentProjectId] = null; // Invalidate cache for this project
+    } else {
+      console.error('[SAVE] ✗ Save failed with status:', res?.status);
+    }
 
     if(dot){
       lbl.textContent = (res && res.ok) ? "Saved" : "Save failed — retrying";
@@ -869,6 +880,7 @@ async function loadProjectList(){
 
 function goToDashboard(){
   currentProjectId = null;
+  projectDataCache = {}; // Clear cache to force reload of project data
   renderDashboard();
 }
 
