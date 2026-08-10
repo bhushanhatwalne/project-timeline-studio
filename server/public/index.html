@@ -660,14 +660,19 @@ function saveFlash(){
   clearTimeout(autosaveTimer);
   autosaveTimer = setTimeout(async ()=>{
     if(!currentProjectId) return;
+    console.log('[SAVE] Sending swimlanes to server:', swimlanes.length, 'swimlanes');
     const res = await apiFetch(`/api/v1/projects/${currentProjectId}`, {
       method:'PUT', body: JSON.stringify({ swimlanes, projectTitle })
     });
+    console.log('[SAVE] Response status:', res?.status, 'OK:', res?.ok);
     if(dot){
       lbl.textContent = (res && res.ok) ? "Saved" : "Save failed — retrying";
       dot.style.opacity = 1;
     }
-    if(!res || !res.ok) autosaveTimer = setTimeout(()=>saveFlash(), 3000);
+    if(!res || !res.ok){
+      console.warn('[SAVE] Save failed, retrying in 3 seconds');
+      autosaveTimer = setTimeout(()=>saveFlash(), 3000);
+    }
   }, 800);
 }
 
