@@ -72,22 +72,22 @@
   .view{flex:1;overflow:auto;}
   .data-wrap{padding:0 12px 40px;}
   table.data{width:100%;border-collapse:collapse;font-size:13px;table-layout:fixed;}
-  table.data thead th{text-align:left;font-size:10.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-soft);font-weight:700;padding:8px 6px;border-bottom:2px solid var(--line-strong);position:sticky;top:0;background:var(--paper);white-space:nowrap;position:relative;}
+  table.data thead th{text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--ink-soft);font-weight:700;padding:12px 10px;border-bottom:2px solid var(--line-strong);position:sticky;top:0;background:var(--paper);white-space:nowrap;position:relative;}
   table.data thead th:not(:last-child)::after{content:'';position:absolute;right:0;top:0;bottom:0;width:4px;cursor:col-resize;background:transparent;z-index:10;}
   table.data thead th:not(:last-child):hover::after{background:rgba(0,0,0,0.1);}
-  table.data td{padding:6px 6px;border-bottom:1px solid var(--line);vertical-align:middle;overflow:visible;word-wrap:break-word;}
+  table.data td{padding:10px 10px;border-bottom:1px solid var(--line);vertical-align:middle;overflow:visible;word-wrap:break-word;}
   tr.hidden-row{opacity:.45;}
   tr.hidden-row input, tr.hidden-row select{font-style:italic;}
-  .title-in{border:none;background:transparent;font-size:13.5px;width:100%;color:var(--ink);font-family:var(--font-body);padding:4px 2px;border-radius:4px;}
+  .title-in{border:none;background:transparent;font-size:13.5px;width:100%;color:var(--ink);font-family:var(--font-body);padding:6px 8px;border-radius:4px;}
   .title-in:focus{background:var(--accent-soft);outline:none;}
   .type-pick{display:flex;align-items:center;gap:6px;}
   .type-icon{width:13px;height:13px;flex:0 0 auto;display:inline-block;}
-  select.type-sel{border:1px solid var(--line);background:var(--surface);font-size:12px;border-radius:4px;padding:3px 4px;font-family:var(--font-body);color:var(--ink);width:100%;box-sizing:border-box;}
+  select.type-sel{border:1px solid var(--line);background:var(--surface);font-size:12px;border-radius:4px;padding:6px 8px;font-family:var(--font-body);color:var(--ink);width:100%;box-sizing:border-box;}
   .dur{font-family:var(--font-mono);font-size:12px;color:var(--ink-soft);white-space:nowrap;}
-  input.date-in{border:1px solid var(--line);background:var(--surface);font-size:12px;border-radius:4px;padding:3px 4px;font-family:var(--font-mono);color:var(--ink);width:100%;box-sizing:border-box;}
-  input.pct-in{border:1px solid var(--line);background:var(--surface);font-size:12px;border-radius:4px;padding:4px 6px;font-family:var(--font-mono);width:100%;box-sizing:border-box;color:var(--ink);}
-  input.assign-in{border:1px solid var(--line);background:var(--surface);font-size:12px;border-radius:4px;padding:4px 6px;font-family:var(--font-body);width:100%;color:var(--ink);box-sizing:border-box;}
-  select.status-sel{border:none;font-size:11.5px;font-weight:700;border-radius:20px;padding:4px 10px;font-family:var(--font-body);color:#fff;cursor:pointer;width:100%;box-sizing:border-box;}
+  input.date-in{border:1px solid var(--line);background:var(--surface);font-size:12px;border-radius:4px;padding:6px 8px;font-family:var(--font-mono);color:var(--ink);width:100%;box-sizing:border-box;}
+  input.pct-in{border:1px solid var(--line);background:var(--surface);font-size:12px;border-radius:4px;padding:6px 8px;font-family:var(--font-mono);width:100%;box-sizing:border-box;color:var(--ink);}
+  input.assign-in{border:1px solid var(--line);background:var(--surface);font-size:12px;border-radius:4px;padding:6px 8px;font-family:var(--font-body);width:100%;color:var(--ink);box-sizing:border-box;}
+  select.status-sel{border:none;font-size:11.5px;font-weight:700;border-radius:20px;padding:5px 12px;font-family:var(--font-body);color:#fff;cursor:pointer;width:100%;box-sizing:border-box;text-align:center;}
   .eye-btn,.icon-btn{border:none;background:transparent;cursor:pointer;color:var(--ink-faint);font-size:14px;padding:4px;border-radius:4px;}
   .eye-btn:hover,.icon-btn:hover{color:var(--ink);background:var(--paper);}
   .icon-btn.del:hover{color:var(--danger);}
@@ -3036,14 +3036,14 @@ function renderData(){
           <tr>
             <th class="drag-cell"></th>
             <th style="width:20px"></th>
-            <th>Title</th>
-            <th style="width:80px">Type</th>
-            <th style="width:70px">Duration</th>
-            <th style="width:110px">Start</th>
-            <th style="width:110px">End</th>
-            <th style="width:50px">%</th>
-            <th style="width:150px">Assigned to</th>
-            <th style="width:110px">Status</th>
+            <th style="min-width:200px">Title</th>
+            <th style="width:90px">Type</th>
+            <th style="width:100px">Duration</th>
+            <th style="width:140px">Start</th>
+            <th style="width:140px">End</th>
+            <th style="width:60px">%</th>
+            <th style="width:180px">Assigned to</th>
+            <th style="width:130px">Status</th>
             <th style="width:28px"></th>
             <th style="width:28px"></th>
           </tr>
