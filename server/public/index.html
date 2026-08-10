@@ -1026,23 +1026,25 @@ function calculateProjectStatus(projectData){
       return 'Not Started';
     }
 
-    let statuses = [];
-    let totalVariance = 0;
-    let taskCount = 0;
+    let taskVariances = [];
 
     projectData.swimlanes.forEach(swimlane => {
       try{
         if(swimlane.phase){
-          statuses.push(calculateTaskStatus(swimlane.phase));
-          totalVariance += calculateScheduleVariance(swimlane.phase.percent || 0, swimlane.phase.start, swimlane.phase.end);
-          taskCount++;
+          const variance = calculateScheduleVariance(swimlane.phase.percent || 0, swimlane.phase.start, swimlane.phase.end);
+          // Only consider if not complete
+          if((swimlane.phase.percent || 0) < 100){
+            taskVariances.push(variance);
+          }
         }
 
         if(swimlane.children && swimlane.children.length > 0){
           swimlane.children.forEach(child => {
-            statuses.push(calculateTaskStatus(child));
-            totalVariance += calculateScheduleVariance(child.percent || 0, child.start, child.end);
-            taskCount++;
+            const variance = calculateScheduleVariance(child.percent || 0, child.start, child.end);
+            // Only consider if not complete
+            if((child.percent || 0) < 100){
+              taskVariances.push(variance);
+            }
           });
         }
       }catch(e){
@@ -1050,11 +1052,18 @@ function calculateProjectStatus(projectData){
       }
     });
 
-    // Calculate overall status based on average schedule variance
-    const avgVariance = taskCount > 0 ? totalVariance / taskCount : 0;
+    // If no in-progress tasks, project is complete
+    if(taskVariances.length === 0){
+      return 'Complete';
+    }
 
-    if(avgVariance >= -10) return 'On Track';
-    if(avgVariance >= -20) return 'At Risk';
+    // Use worst (minimum) variance of in-progress tasks
+    // This ensures that a significantly delayed task affects project status
+    const worstVariance = Math.min(...taskVariances);
+    console.log('[PROJECT_STATUS] In-progress tasks:', taskVariances.length, '| Worst variance:', worstVariance + '%');
+
+    if(worstVariance >= -10) return 'On Track';
+    if(worstVariance >= -20) return 'At Risk';
     return 'Off Track';
   }catch(e){
     console.warn('[PROJECT_STATUS] Error:', e.message);
