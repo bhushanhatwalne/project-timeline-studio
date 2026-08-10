@@ -388,8 +388,9 @@
 
   /* Dashboard styles */
   .dashboard-container{display:flex;height:100vh;background:#f5f7fa;}
-  .dashboard-sidebar{width:240px;background:#0a2540;color:#fff;padding:0;overflow-y:auto;box-shadow:2px 0 8px rgba(0,0,0,.1);transition:width 200ms ease-in-out;position:relative;}
+  .dashboard-sidebar{width:240px;background:#0a2540;color:#fff;padding:0;overflow-y:auto;box-shadow:2px 0 8px rgba(0,0,0,.1);transition:width 200ms ease-in-out;position:relative;display:flex;flex-direction:column;}
   .dashboard-sidebar-header{display:flex;align-items:center;justify-content:space-between;padding:20px;border-bottom:1px solid rgba(255,255,255,.1);}
+  .dashboard-sidebar-footer{margin-top:auto;padding:16px;display:flex;justify-content:flex-end;border-top:1px solid rgba(255,255,255,.1);}
   .dashboard-sidebar-toggle{background:#0076BC;border:2px solid #fff;color:#fff;width:36px;height:36px;border-radius:6px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:18px;transition:all 200ms;flex-shrink:0;font-weight:bold;}
   .dashboard-sidebar-toggle:hover{background:#005a9d;transform:scale(1.05);}
   .dashboard-sidebar.collapsed{width:70px;}
@@ -1943,7 +1944,6 @@ async function renderDashboard(){
           <div class="dashboard-sidebar-logo">
             <img src="/logo-icon.png" alt="Timeline Studio">
           </div>
-          <button class="dashboard-sidebar-toggle" onclick="toggleDashboardSidebar()" style="background:#0076BC !important;border:2px solid white !important;color:white !important;width:36px !important;height:36px !important;display:flex !important;align-items:center !important;justify-content:center !important;">←</button>
         </div>
 
         <div class="dashboard-sidebar-menu">
@@ -1969,6 +1969,10 @@ async function renderDashboard(){
             <div class="dashboard-sidebar-item" data-emoji="🔗" onclick="alert('Integrations')"><span>🔗 Integrations</span></div>
             <div class="dashboard-sidebar-item" data-emoji="⚙️" onclick="alert('Settings')"><span>⚙️ Settings</span></div>
           </div>
+        </div>
+
+        <div class="dashboard-sidebar-footer">
+          <button class="dashboard-sidebar-toggle" onclick="toggleDashboardSidebar()" style="background:#0076BC !important;border:2px solid white !important;color:white !important;width:40px !important;height:40px !important;display:flex !important;align-items:center !important;justify-content:center !important;font-size:20px !important;">←</button>
         </div>
       </div>
 
