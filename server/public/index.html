@@ -71,9 +71,11 @@
   /* ===== DATA VIEW ===== */
   .view{flex:1;overflow:auto;}
   .data-wrap{padding:0 12px 40px;}
-  table.data{width:100%;border-collapse:collapse;font-size:13px;}
-  table.data thead th{text-align:left;font-size:10.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-soft);font-weight:700;padding:8px 6px;border-bottom:2px solid var(--line-strong);position:sticky;top:0;background:var(--paper);white-space:nowrap;}
-  table.data td{padding:6px 6px;border-bottom:1px solid var(--line);vertical-align:middle;}
+  table.data{width:100%;border-collapse:collapse;font-size:13px;table-layout:fixed;}
+  table.data thead th{text-align:left;font-size:10.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-soft);font-weight:700;padding:8px 6px;border-bottom:2px solid var(--line-strong);position:sticky;top:0;background:var(--paper);white-space:nowrap;position:relative;}
+  table.data thead th:not(:last-child)::after{content:'';position:absolute;right:0;top:0;bottom:0;width:4px;cursor:col-resize;background:transparent;z-index:10;}
+  table.data thead th:not(:last-child):hover::after{background:rgba(0,0,0,0.1);}
+  table.data td{padding:6px 6px;border-bottom:1px solid var(--line);vertical-align:middle;overflow:hidden;text-overflow:ellipsis;}
   tr.hidden-row{opacity:.45;}
   tr.hidden-row input, tr.hidden-row select{font-style:italic;}
   .title-in{border:none;background:transparent;font-size:13.5px;width:100%;color:var(--ink);font-family:var(--font-body);padding:4px 2px;border-radius:4px;}
@@ -2948,6 +2950,65 @@ function renderModal(){
 }
 
 /* ---------------- rendering: DATA TAB ---------------- */
+function initColumnResizing(){
+  const table = document.querySelector('table.data');
+  if(!table) return;
+
+  const headers = table.querySelectorAll('thead th');
+  headers.forEach((th, idx) => {
+    if(idx === headers.length - 1) return; // Skip last column
+
+    th.addEventListener('mousedown', (e) => {
+      if(e.offsetX < th.offsetWidth - 10) return; // Only on the resize handle
+
+      const startX = e.clientX;
+      const startWidth = th.offsetWidth;
+      const colIndex = idx;
+
+      const onMouseMove = (e) => {
+        const diff = e.clientX - startX;
+        const newWidth = Math.max(40, startWidth + diff); // Min 40px
+        th.style.width = newWidth + 'px';
+
+        // Also set width on body cells of the same column
+        table.querySelectorAll(`tbody tr`).forEach(row => {
+          const cells = row.querySelectorAll('td');
+          if(cells[colIndex]) cells[colIndex].style.width = newWidth + 'px';
+        });
+      };
+
+      const onMouseUp = () => {
+        document.removeEventListener('mousemove', onMouseMove);
+        document.removeEventListener('mouseup', onMouseUp);
+        // Save column widths to localStorage
+        saveColumnWidths();
+      };
+
+      document.addEventListener('mousemove', onMouseMove);
+      document.addEventListener('mouseup', onMouseUp);
+    });
+  });
+}
+
+function saveColumnWidths(){
+  const headers = document.querySelectorAll('table.data thead th');
+  const widths = Array.from(headers).map(h => h.style.width || h.offsetWidth + 'px');
+  localStorage.setItem('dataTableColumnWidths', JSON.stringify(widths));
+}
+
+function loadColumnWidths(){
+  const widths = localStorage.getItem('dataTableColumnWidths');
+  if(!widths) return;
+
+  try{
+    const parsed = JSON.parse(widths);
+    const headers = document.querySelectorAll('table.data thead th');
+    headers.forEach((h, i) => {
+      if(parsed[i]) h.style.width = parsed[i];
+    });
+  }catch(e){ console.warn('Failed to load column widths:', e); }
+}
+
 function renderData(){
   const view = document.getElementById("view");
   let rowsHtml = "";
@@ -2980,6 +3041,12 @@ function renderData(){
       </table>
     </div>
   `;
+
+  // Initialize column resizing after rendering
+  setTimeout(() => {
+    loadColumnWidths();
+    initColumnResizing();
+  }, 0);
 }
 
 function typeIconSvg(type, color){
