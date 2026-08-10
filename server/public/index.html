@@ -660,11 +660,15 @@ function saveFlash(){
   clearTimeout(autosaveTimer);
   autosaveTimer = setTimeout(async ()=>{
     if(!currentProjectId) return;
-    console.log('[SAVE] Sending swimlanes to server:', swimlanes.length, 'swimlanes');
+    const payload = { swimlanes, projectTitle };
+    console.log('[SAVE] Payload:', JSON.stringify(payload, null, 2));
+    console.log('[SAVE] Sending to server for project:', currentProjectId);
     const res = await apiFetch(`/api/v1/projects/${currentProjectId}`, {
-      method:'PUT', body: JSON.stringify({ swimlanes, projectTitle })
+      method:'PUT', body: JSON.stringify(payload)
     });
-    console.log('[SAVE] Response status:', res?.status, 'OK:', res?.ok);
+    console.log('[SAVE] Response:', res?.status, res?.ok);
+    const resText = await res?.text();
+    console.log('[SAVE] Response body:', resText);
     if(dot){
       lbl.textContent = (res && res.ok) ? "Saved" : "Save failed — retrying";
       dot.style.opacity = 1;
