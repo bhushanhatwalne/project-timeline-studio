@@ -708,11 +708,11 @@ function allRows(){
 }
 
 const STATUS_META = {
-  "not-started": {label:"Not Started", color:"var(--st-notstarted)", bar:"var(--st-notstarted-bar)", track:"var(--st-notstarted-track)"},
-  "in-progress": {label:"In Progress", color:"var(--st-progress)", bar:"var(--st-progress)", track:"var(--st-progress-track)"},
-  "complete": {label:"Complete", color:"var(--st-complete)", bar:"var(--st-complete)", track:"var(--st-complete-track)"},
-  "behind-schedule": {label:"Behind Schedule", color:"var(--st-behind)", bar:"var(--st-behind)", track:"var(--st-behind-track)"},
-  "at-risk": {label:"At Risk", color:"var(--st-risk)", bar:"var(--st-risk)", track:"var(--st-risk-track)"}
+  "not-started": {label:"⚪ Not Started", color:"#999999", bar:"#CCCCCC", track:"#E8E8E8"},
+  "on-track": {label:"🟢 On Track", color:"#0076BC", bar:"#0099D8", track:"#D4E4F7"},
+  "complete": {label:"🟢 Complete", color:"#1B7A45", bar:"#1B7A45", track:"#D4F4DD"},
+  "at-risk": {label:"🟡 At Risk", color:"#D98324", bar:"#E8A855", track:"#FDEBD8"},
+  "off-track": {label:"🔴 Off Track", color:"#C0392B", bar:"#E74C3C", track:"#F5C6C1"}
 };
 
 /* ---------------- mutations ---------------- */
@@ -3019,9 +3019,9 @@ function statusSelect(row, slId, rowId, isPhase){
   // Map calculated status to STATUS_META keys
   const statusMap = {
     'Complete': 'complete',
-    'On Track': 'in-progress',
+    'On Track': 'on-track',
     'At Risk': 'at-risk',
-    'Off Track': 'behind-schedule',
+    'Off Track': 'off-track',
     'Not Started': 'not-started'
   };
 
@@ -3336,9 +3336,9 @@ function renderTimeline(){
       const calculatedStatus = calculateTaskStatus(row);
       const statusMap = {
         'Complete': 'complete',
-        'On Track': 'in-progress',
+        'On Track': 'on-track',
         'At Risk': 'at-risk',
-        'Off Track': 'behind-schedule',
+        'Off Track': 'off-track',
         'Not Started': 'not-started'
       };
       statusKey = statusMap[calculatedStatus] || 'not-started';
