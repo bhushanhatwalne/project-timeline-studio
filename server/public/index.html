@@ -937,33 +937,53 @@ async function deleteProject(projectId, projectTitle){
 }
 
 function calculatePlannedProgress(start, end){
-  if(!start || !end) return 0;
-  const startDate = new Date(start);
-  const endDate = new Date(end);
-  const today = new Date();
+  try{
+    if(!start || !end) return 0;
+    const startDate = new Date(start);
+    const endDate = new Date(end);
+    const today = new Date();
 
-  if(today <= startDate) return 0;
-  if(today >= endDate) return 100;
+    if(isNaN(startDate.getTime()) || isNaN(endDate.getTime())) return 0;
 
-  const totalDays = (endDate - startDate) / (1000 * 60 * 60 * 24);
-  const elapsedDays = (today - startDate) / (1000 * 60 * 60 * 24);
-  return Math.round((elapsedDays / totalDays) * 100);
+    if(today <= startDate) return 0;
+    if(today >= endDate) return 100;
+
+    const totalDays = (endDate - startDate) / (1000 * 60 * 60 * 24);
+    const elapsedDays = (today - startDate) / (1000 * 60 * 60 * 24);
+    return Math.round((elapsedDays / totalDays) * 100);
+  }catch(e){
+    console.warn('[PLANNED_PROGRESS] Error:', e.message);
+    return 0;
+  }
 }
 
 function calculateScheduleVariance(actual, start, end){
-  const planned = calculatePlannedProgress(start, end);
-  return actual - planned;
+  try{
+    const planned = calculatePlannedProgress(start, end);
+    return actual - planned;
+  }catch(e){
+    console.warn('[SCHEDULE_VARIANCE] Error:', e.message);
+    return 0;
+  }
 }
 
 function calculateTaskStatus(task){
-  const actual = task.percent || 0;
-  const variance = calculateScheduleVariance(actual, task.start, task.end);
+  try{
+    const actual = task.percent || 0;
+    const variance = calculateScheduleVariance(actual, task.start, task.end);
 
-  if(actual === 100) return 'Complete';
-  if(actual === 0 && new Date(task.start) > new Date()) return 'Not Started';
-  if(variance >= -10) return 'On Track';
-  if(variance >= -20) return 'At Risk';
-  return 'Off Track';
+    if(actual === 100) return 'Complete';
+    if(actual === 0){
+      const startDate = new Date(task.start);
+      if(!isNaN(startDate.getTime()) && startDate > new Date()) return 'Not Started';
+    }
+    if(variance >= -10) return 'On Track';
+    if(variance >= -20) return 'At Risk';
+    return 'Off Track';
+  }catch(e){
+    console.warn('[TASK_STATUS] Error:', e.message);
+    return 'On Track';
+  }
 }
 
 function calculateProjectProgress(projectData){
@@ -998,36 +1018,45 @@ function calculateProjectProgress(projectData){
 }
 
 function calculateProjectStatus(projectData){
-  if(!projectData || !projectData.swimlanes || projectData.swimlanes.length === 0){
-    return 'Not Started';
+  try{
+    if(!projectData || !projectData.swimlanes || projectData.swimlanes.length === 0){
+      return 'Not Started';
+    }
+
+    let statuses = [];
+    let totalVariance = 0;
+    let taskCount = 0;
+
+    projectData.swimlanes.forEach(swimlane => {
+      try{
+        if(swimlane.phase){
+          statuses.push(calculateTaskStatus(swimlane.phase));
+          totalVariance += calculateScheduleVariance(swimlane.phase.percent || 0, swimlane.phase.start, swimlane.phase.end);
+          taskCount++;
+        }
+
+        if(swimlane.children && swimlane.children.length > 0){
+          swimlane.children.forEach(child => {
+            statuses.push(calculateTaskStatus(child));
+            totalVariance += calculateScheduleVariance(child.percent || 0, child.start, child.end);
+            taskCount++;
+          });
+        }
+      }catch(e){
+        console.warn('[PROJECT_STATUS] Error processing swimlane:', e.message);
+      }
+    });
+
+    // Calculate overall status based on average schedule variance
+    const avgVariance = taskCount > 0 ? totalVariance / taskCount : 0;
+
+    if(avgVariance >= -10) return 'On Track';
+    if(avgVariance >= -20) return 'At Risk';
+    return 'Off Track';
+  }catch(e){
+    console.warn('[PROJECT_STATUS] Error:', e.message);
+    return 'On Track';
   }
-
-  let statuses = [];
-  let totalVariance = 0;
-  let taskCount = 0;
-
-  projectData.swimlanes.forEach(swimlane => {
-    if(swimlane.phase){
-      statuses.push(calculateTaskStatus(swimlane.phase));
-      totalVariance += calculateScheduleVariance(swimlane.phase.percent || 0, swimlane.phase.start, swimlane.phase.end);
-      taskCount++;
-    }
-
-    if(swimlane.children && swimlane.children.length > 0){
-      swimlane.children.forEach(child => {
-        statuses.push(calculateTaskStatus(child));
-        totalVariance += calculateScheduleVariance(child.percent || 0, child.start, child.end);
-        taskCount++;
-      });
-    }
-  });
-
-  // Calculate overall status based on average schedule variance
-  const avgVariance = taskCount > 0 ? totalVariance / taskCount : 0;
-
-  if(avgVariance >= -10) return 'On Track';
-  if(avgVariance >= -20) return 'At Risk';
-  return 'Off Track';
 }
 
 async function openProject(projectId){
