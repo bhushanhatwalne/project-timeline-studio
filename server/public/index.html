@@ -3329,7 +3329,22 @@ function renderTimeline(){
     const left = pctOf(s), right = pctOf(e);
     const width = Math.max(right-left, 0.6);
     const isPhase = row.type==="phase";
-    const meta = STATUS_META[row.status] || STATUS_META["not-started"];
+
+    // Calculate status dynamically instead of using stored value
+    let statusKey = "not-started";
+    if(!isPhase){
+      const calculatedStatus = calculateTaskStatus(row);
+      const statusMap = {
+        'Complete': 'complete',
+        'On Track': 'in-progress',
+        'At Risk': 'at-risk',
+        'Off Track': 'behind-schedule',
+        'Not Started': 'not-started'
+      };
+      statusKey = statusMap[calculatedStatus] || 'not-started';
+    }
+
+    const meta = STATUS_META[statusKey] || STATUS_META["not-started"];
     const barColor = isPhase ? "var(--phase)" : meta.bar;
     const trackColor = isPhase ? "var(--phase-track)" : meta.track;
     const fillPct = Math.max(0, Math.min(100, row.percent||0));
