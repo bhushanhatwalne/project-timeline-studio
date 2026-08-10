@@ -936,6 +936,36 @@ async function deleteProject(projectId, projectTitle){
   }
 }
 
+function calculatePlannedProgress(start, end){
+  if(!start || !end) return 0;
+  const startDate = new Date(start);
+  const endDate = new Date(end);
+  const today = new Date();
+
+  if(today <= startDate) return 0;
+  if(today >= endDate) return 100;
+
+  const totalDays = (endDate - startDate) / (1000 * 60 * 60 * 24);
+  const elapsedDays = (today - startDate) / (1000 * 60 * 60 * 24);
+  return Math.round((elapsedDays / totalDays) * 100);
+}
+
+function calculateScheduleVariance(actual, start, end){
+  const planned = calculatePlannedProgress(start, end);
+  return actual - planned;
+}
+
+function calculateTaskStatus(task){
+  const actual = task.percent || 0;
+  const variance = calculateScheduleVariance(actual, task.start, task.end);
+
+  if(actual === 100) return 'Complete';
+  if(actual === 0 && new Date(task.start) > new Date()) return 'Not Started';
+  if(variance >= -10) return 'On Track';
+  if(variance >= -20) return 'At Risk';
+  return 'Off Track';
+}
+
 function calculateProjectProgress(projectData){
   if(!projectData || !projectData.swimlanes || projectData.swimlanes.length === 0){
     console.log('[PROGRESS] No swimlanes found');
@@ -965,6 +995,39 @@ function calculateProjectProgress(projectData){
   const progress = taskCount > 0 ? Math.round(totalPercent / taskCount) : 0;
   console.log('[PROGRESS] Calculated progress:', progress, '| Tasks:', taskCount, '| Total %:', totalPercent);
   return progress;
+}
+
+function calculateProjectStatus(projectData){
+  if(!projectData || !projectData.swimlanes || projectData.swimlanes.length === 0){
+    return 'Not Started';
+  }
+
+  let statuses = [];
+  let totalVariance = 0;
+  let taskCount = 0;
+
+  projectData.swimlanes.forEach(swimlane => {
+    if(swimlane.phase){
+      statuses.push(calculateTaskStatus(swimlane.phase));
+      totalVariance += calculateScheduleVariance(swimlane.phase.percent || 0, swimlane.phase.start, swimlane.phase.end);
+      taskCount++;
+    }
+
+    if(swimlane.children && swimlane.children.length > 0){
+      swimlane.children.forEach(child => {
+        statuses.push(calculateTaskStatus(child));
+        totalVariance += calculateScheduleVariance(child.percent || 0, child.start, child.end);
+        taskCount++;
+      });
+    }
+  });
+
+  // Calculate overall status based on average schedule variance
+  const avgVariance = taskCount > 0 ? totalVariance / taskCount : 0;
+
+  if(avgVariance >= -10) return 'On Track';
+  if(avgVariance >= -20) return 'At Risk';
+  return 'Off Track';
 }
 
 async function openProject(projectId){
@@ -1756,20 +1819,19 @@ async function renderDashboard(){
 
   const app = document.getElementById("app");
 
-  // Calculate stats based on actual project progress
+  // Calculate stats based on schedule variance, not simple progress
   const totalProjects = myProjects.length;
   let onTrackCount = 0;
   let atRiskCount = 0;
-  let completedCount = 0;
+  let offTrackCount = 0;
 
   myProjects.forEach(proj => {
-    const progress = projectDataCache[proj.id] ? calculateProjectProgress(projectDataCache[proj.id]) : 0;
-    if(progress >= 100){
-      completedCount++;
-    } else if(progress >= 50){
-      onTrackCount++;
-    } else {
-      atRiskCount++;
+    const projectData = projectDataCache[proj.id];
+    if(projectData){
+      const status = calculateProjectStatus(projectData);
+      if(status === 'On Track') onTrackCount++;
+      else if(status === 'At Risk') atRiskCount++;
+      else if(status === 'Off Track') offTrackCount++;
     }
   });
 
@@ -1861,9 +1923,9 @@ async function renderDashboard(){
               <div class="dashboard-stat-meta">${totalProjects > 0 ? Math.round((atRiskCount/totalProjects)*100) : 0}% of projects</div>
             </div>
             <div class="dashboard-stat-card">
-              <div class="dashboard-stat-label">Completed</div>
-              <div class="dashboard-stat-value">${completedCount}</div>
-              <div class="dashboard-stat-meta">0% of projects</div>
+              <div class="dashboard-stat-label">Off Track</div>
+              <div class="dashboard-stat-value">${offTrackCount}</div>
+              <div class="dashboard-stat-meta">${totalProjects > 0 ? Math.round((offTrackCount/totalProjects)*100) : 0}% of projects</div>
             </div>
           </div>
 
@@ -1894,26 +1956,26 @@ async function renderDashboard(){
               const time = updated.toLocaleTimeString('en-US', { hour: '2-digit', minute:'2-digit' });
               const updatedStr = `${month} ${day}, ${updated.getFullYear()} ${time}`;
 
-              // Calculate progress from cached project data or default to 0
+              // Calculate progress and status from cached project data
               let progress = 0;
+              let status = 'Not Started';
+              let statusClass = 'at-risk';
+
               if(projectDataCache[proj.id]){
                 const cachedData = projectDataCache[proj.id];
-                console.log('[DASHBOARD_ROW]', proj.title, '| Swimlanes:', cachedData.swimlanes?.length, '| Has phase:', !!cachedData.swimlanes?.[0]?.phase);
                 progress = calculateProjectProgress(cachedData);
-                console.log('[DASHBOARD_ROW]', proj.title, '| Progress:', progress);
+                status = calculateProjectStatus(cachedData);
+
+                // Map status to CSS class
+                if(status === 'Complete') statusClass = 'completed';
+                else if(status === 'On Track') statusClass = 'on-track';
+                else if(status === 'At Risk') statusClass = 'at-risk';
+                else if(status === 'Off Track') statusClass = 'at-risk';
+                else statusClass = 'at-risk';
+
+                console.log('[DASHBOARD_ROW]', proj.title, '| Progress:', progress + '%', '| Status:', status);
               } else {
                 console.log('[DASHBOARD_ROW] No cached data for project:', proj.id, proj.title);
-              }
-
-              // Determine status based on progress
-              let status = 'At Risk';
-              let statusClass = 'at-risk';
-              if(progress >= 100){
-                status = 'Completed';
-                statusClass = 'completed';
-              } else if(progress >= 50){
-                status = 'On Track';
-                statusClass = 'on-track';
               }
 
               return `
