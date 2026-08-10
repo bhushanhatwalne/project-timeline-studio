@@ -1085,22 +1085,32 @@ function calculateProjectStatus(projectData){
     }
 
     let taskVariances = [];
+    let hasStartedTask = false;
+    const today = new Date();
 
     projectData.swimlanes.forEach(swimlane => {
       try{
         if(swimlane.phase){
-          const variance = calculateScheduleVariance(swimlane.phase.percent || 0, swimlane.phase.start, swimlane.phase.end);
+          const startDate = new Date(swimlane.phase.start);
+          const percent = swimlane.phase.percent || 0;
+          // Check if this task has started
+          if(percent > 0 || startDate <= today) hasStartedTask = true;
+          const variance = calculateScheduleVariance(percent, swimlane.phase.start, swimlane.phase.end);
           // Only consider if not complete
-          if((swimlane.phase.percent || 0) < 100){
+          if(percent < 100){
             taskVariances.push(variance);
           }
         }
 
         if(swimlane.children && swimlane.children.length > 0){
           swimlane.children.forEach(child => {
-            const variance = calculateScheduleVariance(child.percent || 0, child.start, child.end);
+            const startDate = new Date(child.start);
+            const percent = child.percent || 0;
+            // Check if this task has started
+            if(percent > 0 || startDate <= today) hasStartedTask = true;
+            const variance = calculateScheduleVariance(percent, child.start, child.end);
             // Only consider if not complete
-            if((child.percent || 0) < 100){
+            if(percent < 100){
               taskVariances.push(variance);
             }
           });
@@ -1110,6 +1120,11 @@ function calculateProjectStatus(projectData){
       }
     });
 
+    // If no task has started yet, return Not Started
+    if(!hasStartedTask){
+      return 'Not Started';
+    }
+
     // If no in-progress tasks, project is complete
     if(taskVariances.length === 0){
       return 'Complete';
@@ -1118,7 +1133,7 @@ function calculateProjectStatus(projectData){
     // Use worst (minimum) variance of in-progress tasks
     // This ensures that a significantly delayed task affects project status
     const worstVariance = Math.min(...taskVariances);
-    console.log('[PROJECT_STATUS] In-progress tasks:', taskVariances.length, '| Worst variance:', worstVariance + '%');
+    console.log('[PROJECT_STATUS] In-progress tasks:', taskVariances.length, '| Worst variance:', worstVariance + '%', '| Has started:', hasStartedTask);
 
     if(worstVariance >= -10) return 'On Track';
     if(worstVariance >= -20) return 'At Risk';
@@ -3124,7 +3139,52 @@ function renderData(){
   setTimeout(() => {
     loadColumnWidths();
     initColumnResizing();
+    enhanceDateInputs();
   }, 0);
+}
+
+function enhanceDateInputs(){
+  const dateInputs = document.querySelectorAll('input.date-in');
+  dateInputs.forEach(input => {
+    input.addEventListener('paste', (e) => {
+      e.preventDefault();
+      const pastedText = (e.clipboardData || window.clipboardData).getData('text').trim();
+
+      // Try to parse various date formats
+      let parsedDate = null;
+
+      // Format: YYYY-MM-DD
+      if(/^\d{4}-\d{2}-\d{2}$/.test(pastedText)){
+        parsedDate = pastedText;
+      }
+      // Format: MM/DD/YYYY
+      else if(/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(pastedText)){
+        const [m, d, y] = pastedText.split('/');
+        const month = String(m).padStart(2, '0');
+        const day = String(d).padStart(2, '0');
+        parsedDate = `${y}-${month}-${day}`;
+      }
+      // Format: M/D/YYYY
+      else if(/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(pastedText)){
+        const parts = pastedText.split('/');
+        const month = String(parts[0]).padStart(2, '0');
+        const day = String(parts[1]).padStart(2, '0');
+        parsedDate = `${parts[2]}-${month}-${day}`;
+      }
+      // Format: MMDDYYYY
+      else if(/^\d{8}$/.test(pastedText)){
+        const m = pastedText.substring(0, 2);
+        const d = pastedText.substring(2, 4);
+        const y = pastedText.substring(4, 8);
+        parsedDate = `${y}-${m}-${d}`;
+      }
+
+      if(parsedDate){
+        input.value = parsedDate;
+        input.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+    });
+  });
 }
 
 function typeIconSvg(type, color){
