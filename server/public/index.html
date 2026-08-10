@@ -70,10 +70,10 @@
 
   /* ===== DATA VIEW ===== */
   .view{flex:1;overflow:auto;}
-  .data-wrap{padding:0 24px 40px;}
+  .data-wrap{padding:0 12px 40px;}
   table.data{width:100%;border-collapse:collapse;font-size:13px;}
-  table.data thead th{text-align:left;font-size:10.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-soft);font-weight:700;padding:12px 10px;border-bottom:2px solid var(--line-strong);position:sticky;top:0;background:var(--paper);white-space:nowrap;}
-  table.data td{padding:7px 10px;border-bottom:1px solid var(--line);vertical-align:middle;}
+  table.data thead th{text-align:left;font-size:10.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-soft);font-weight:700;padding:8px 6px;border-bottom:2px solid var(--line-strong);position:sticky;top:0;background:var(--paper);white-space:nowrap;}
+  table.data td{padding:6px 6px;border-bottom:1px solid var(--line);vertical-align:middle;}
   tr.hidden-row{opacity:.45;}
   tr.hidden-row input, tr.hidden-row select{font-style:italic;}
   .title-in{border:none;background:transparent;font-size:13.5px;width:100%;color:var(--ink);font-family:var(--font-body);padding:4px 2px;border-radius:4px;}
@@ -82,14 +82,14 @@
   .type-icon{width:13px;height:13px;flex:0 0 auto;display:inline-block;}
   select.type-sel{border:1px solid var(--line);background:var(--surface);font-size:12px;border-radius:4px;padding:3px 4px;font-family:var(--font-body);color:var(--ink);}
   .dur{font-family:var(--font-mono);font-size:12px;color:var(--ink-soft);white-space:nowrap;}
-  input.date-in{border:1px solid var(--line);background:var(--surface);font-size:12px;border-radius:4px;padding:4px 6px;font-family:var(--font-mono);color:var(--ink);width:128px;}
+  input.date-in{border:1px solid var(--line);background:var(--surface);font-size:12px;border-radius:4px;padding:3px 4px;font-family:var(--font-mono);color:var(--ink);width:100px;}
   input.pct-in{border:1px solid var(--line);background:var(--surface);font-size:12px;border-radius:4px;padding:4px 6px;font-family:var(--font-mono);width:52px;color:var(--ink);}
   input.assign-in{border:1px solid var(--line);background:var(--surface);font-size:12px;border-radius:4px;padding:4px 6px;font-family:var(--font-body);width:110px;color:var(--ink);}
   select.status-sel{border:none;font-size:11.5px;font-weight:700;border-radius:20px;padding:4px 10px;font-family:var(--font-body);color:#fff;cursor:pointer;}
   .eye-btn,.icon-btn{border:none;background:transparent;cursor:pointer;color:var(--ink-faint);font-size:14px;padding:4px;border-radius:4px;}
   .eye-btn:hover,.icon-btn:hover{color:var(--ink);background:var(--paper);}
   .icon-btn.del:hover{color:var(--danger);}
-  .drag-cell{width:22px; padding:7px 0 7px 8px !important; cursor:grab;}
+  .drag-cell{width:22px; padding:6px 0 6px 4px !important; cursor:grab;}
   .drag-handle{display:inline-flex; align-items:center; justify-content:center; width:16px; height:22px; border-radius:4px; color:var(--ink-faint);}
   .drag-handle:hover{color:var(--ink-soft); background:var(--paper);}
   .drag-handle svg{display:block;}
@@ -2963,17 +2963,17 @@ function renderData(){
         <thead>
           <tr>
             <th class="drag-cell"></th>
-            <th style="width:26px"></th>
+            <th style="width:20px"></th>
             <th>Title</th>
-            <th style="width:150px">Type</th>
-            <th style="width:90px">Duration</th>
-            <th style="width:150px">Start</th>
-            <th style="width:150px">End</th>
-            <th style="width:60px">%</th>
-            <th style="width:130px">Assigned to</th>
-            <th style="width:140px">Status</th>
-            <th style="width:34px"></th>
-            <th style="width:34px"></th>
+            <th style="width:80px">Type</th>
+            <th style="width:70px">Duration</th>
+            <th style="width:110px">Start</th>
+            <th style="width:110px">End</th>
+            <th style="width:50px">%</th>
+            <th style="width:100px">Assigned to</th>
+            <th style="width:110px">Status</th>
+            <th style="width:28px"></th>
+            <th style="width:28px"></th>
           </tr>
         </thead>
         <tbody>${rowsHtml}</tbody>
