@@ -422,10 +422,12 @@
   .dashboard-table-row:last-child{border-bottom:none;}
   .dashboard-project-name{font-weight:600;color:#0a2540;font-size:13px;cursor:pointer;}
   .dashboard-project-desc{font-size:11px;color:#8a94a0;margin-top:2px;}
-  .dashboard-status{display:inline-block;padding:4px 8px;border-radius:4px;font-size:11px;font-weight:600;}
-  .dashboard-status.on-track{background:#d4f4dd;color:#1a6b3f;}
-  .dashboard-status.at-risk{background:#fde8d8;color:#8b4500;}
-  .dashboard-status.completed{background:#d4e4f7;color:#003d82;}
+  .dashboard-status{display:inline-block;padding:5px 10px;border-radius:20px;font-size:11px;font-weight:600;}
+  .dashboard-status.on-track{background:#D4E4F7;color:#0076BC;}
+  .dashboard-status.at-risk{background:#FDEBD8;color:#D98324;}
+  .dashboard-status.completed{background:#D4F4DD;color:#1B7A45;}
+  .dashboard-status.off-track{background:#F5C6C1;color:#C0392B;}
+  .dashboard-status.not-started{background:#E8E8E8;color:#999999;}
   .dashboard-progress{display:flex;align-items:center;gap:8px;}
   .dashboard-progress-bar{flex:1;height:6px;background:#e8eef7;border-radius:3px;overflow:hidden;}
   .dashboard-progress-fill{height:100%;background:#0076BC;border-radius:3px;}
@@ -2034,8 +2036,9 @@ async function renderDashboard(){
                 if(status === 'Complete') statusClass = 'completed';
                 else if(status === 'On Track') statusClass = 'on-track';
                 else if(status === 'At Risk') statusClass = 'at-risk';
-                else if(status === 'Off Track') statusClass = 'at-risk';
-                else statusClass = 'at-risk';
+                else if(status === 'Off Track') statusClass = 'off-track';
+                else if(status === 'Not Started') statusClass = 'not-started';
+                else statusClass = 'not-started';
 
                 console.log('[DASHBOARD_ROW]', proj.title, '| Progress:', progress + '%', '| Status:', status);
               } else {
