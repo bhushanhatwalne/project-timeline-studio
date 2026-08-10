@@ -392,8 +392,8 @@
   .dashboard-sidebar-header{display:flex;align-items:center;justify-content:space-between;padding:20px;border-bottom:1px solid rgba(255,255,255,.1);flex-shrink:0;}
   .dashboard-sidebar-content{flex:1;overflow-y:auto;padding:0;}
   .dashboard-sidebar-footer{flex-shrink:0;padding:16px;display:flex;justify-content:flex-end;border-top:1px solid rgba(255,255,255,.1);background:#0a2540;}
-  .dashboard-sidebar-toggle{background:#0076BC;border:2px solid #fff;color:#fff;width:36px;height:36px;border-radius:6px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:18px;transition:all 200ms;flex-shrink:0;font-weight:bold;}
-  .dashboard-sidebar-toggle:hover{background:#005a9d;transform:scale(1.05);}
+  .dashboard-sidebar-toggle{background:#fff;border:none;color:#0a2540;width:40px;height:40px;border-radius:6px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:18px;transition:all 200ms;flex-shrink:0;font-weight:bold;box-shadow:0 2px 8px rgba(0,0,0,.2);}
+  .dashboard-sidebar-toggle:hover{background:#f0f0f0;transform:scale(1.08);box-shadow:0 4px 12px rgba(0,0,0,.3);}
   .dashboard-sidebar.collapsed{width:70px;}
   .dashboard-sidebar.collapsed .dashboard-sidebar-header{padding:20px 10px;}
   .dashboard-sidebar.collapsed .dashboard-sidebar-logo{display:none;}
@@ -1975,7 +1975,7 @@ async function renderDashboard(){
         </div>
 
         <div class="dashboard-sidebar-footer">
-          <button class="dashboard-sidebar-toggle" onclick="toggleDashboardSidebar()" style="background:#0076BC !important;border:2px solid white !important;color:white !important;width:40px !important;height:40px !important;display:flex !important;align-items:center !important;justify-content:center !important;font-size:20px !important;">←</button>
+          <button class="dashboard-sidebar-toggle" onclick="toggleDashboardSidebar()" style="background:#fff !important;border:none !important;color:#0a2540 !important;width:40px !important;height:40px !important;display:flex !important;align-items:center !important;justify-content:center !important;font-size:20px !important;box-shadow:0 2px 8px rgba(0,0,0,.2) !important;">←</button>
         </div>
       </div>
 
