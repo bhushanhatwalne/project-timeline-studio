@@ -392,7 +392,7 @@
   .dashboard-logo{display:flex;align-items:center;gap:12px;font-size:18px;font-weight:700;color:#0a2540;}
   .dashboard-logo img{height:32px;}
   .dashboard-topbar-right{display:flex;align-items:center;gap:16px;}
-  .dashboard-search{flex:1;max-width:300px;display:flex;align-items:center;gap:8px;padding:8px 12px;background:#f0f3f9;border-radius:6px;border:1px solid #e0e6f2;}
+  .dashboard-search{flex:1;max-width:500px;display:flex;align-items:center;gap:8px;padding:8px 12px;background:#f0f3f9;border-radius:6px;border:1px solid #e0e6f2;}
   .dashboard-search input{flex:1;background:none;border:none;outline:none;font-size:13px;color:#333;}
   .dashboard-user{display:flex;align-items:center;gap:8px;cursor:pointer;}
   .dashboard-avatar{width:36px;height:36px;border-radius:50%;background:#0076BC;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:14px;}
@@ -1733,11 +1733,22 @@ async function renderDashboard(){
 
   const app = document.getElementById("app");
 
-  // Calculate stats
+  // Calculate stats based on actual project progress
   const totalProjects = myProjects.length;
-  const onTrackCount = Math.floor(totalProjects * 0.67);
-  const atRiskCount = Math.floor(totalProjects * 0.33);
-  const completedCount = 0;
+  let onTrackCount = 0;
+  let atRiskCount = 0;
+  let completedCount = 0;
+
+  myProjects.forEach(proj => {
+    const progress = projectDataCache[proj.id] ? calculateProjectProgress(projectDataCache[proj.id]) : 0;
+    if(progress >= 100){
+      completedCount++;
+    } else if(progress < 50){
+      atRiskCount++;
+    } else {
+      onTrackCount++;
+    }
+  });
 
   const initials = (authUser?.displayName || authUser?.email || 'U')
     .split(' ')
@@ -1860,16 +1871,26 @@ async function renderDashboard(){
               const time = updated.toLocaleTimeString('en-US', { hour: '2-digit', minute:'2-digit' });
               const updatedStr = `${month} ${day}, ${updated.getFullYear()} ${time}`;
 
-              const statuses = ['On Track', 'At Risk', 'On Track'];
-              const status = statuses[idx % statuses.length];
-              const statusClass = status === 'On Track' ? 'on-track' : 'at-risk';
-
               // Calculate progress from cached project data or default to 0
               let progress = 0;
               if(projectDataCache[proj.id]){
-                progress = calculateProjectProgress(projectDataCache[proj.id]);
+                const cachedData = projectDataCache[proj.id];
+                console.log('[DASHBOARD_ROW]', proj.title, '| Swimlanes:', cachedData.swimlanes?.length, '| Has phase:', !!cachedData.swimlanes?.[0]?.phase);
+                progress = calculateProjectProgress(cachedData);
+                console.log('[DASHBOARD_ROW]', proj.title, '| Progress:', progress);
               } else {
-                console.log('[DASHBOARD_ROW] No cached data for project:', proj.id);
+                console.log('[DASHBOARD_ROW] No cached data for project:', proj.id, proj.title);
+              }
+
+              // Determine status based on progress
+              let status = 'On Track';
+              let statusClass = 'on-track';
+              if(progress >= 100){
+                status = 'Completed';
+                statusClass = 'completed';
+              } else if(progress < 50){
+                status = 'At Risk';
+                statusClass = 'at-risk';
               }
 
               return `
