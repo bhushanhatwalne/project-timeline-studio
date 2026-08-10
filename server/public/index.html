@@ -388,7 +388,15 @@
 
   /* Dashboard styles */
   .dashboard-container{display:flex;height:100vh;background:#f5f7fa;}
-  .dashboard-sidebar{width:240px;background:#0a2540;color:#fff;padding:20px;overflow-y:auto;box-shadow:2px 0 8px rgba(0,0,0,.1);}
+  .dashboard-sidebar{width:240px;background:#0a2540;color:#fff;padding:20px;overflow-y:auto;box-shadow:2px 0 8px rgba(0,0,0,.1);transition:width 200ms ease-in-out;position:relative;}
+  .dashboard-sidebar.collapsed{width:70px;padding:20px 10px;}
+  .dashboard-sidebar.collapsed .dashboard-sidebar-logo img{display:none;}
+  .dashboard-sidebar.collapsed .dashboard-sidebar-label{display:none;}
+  .dashboard-sidebar.collapsed .dashboard-sidebar-item span{display:none;}
+  .dashboard-sidebar.collapsed .dashboard-sidebar-item{justify-content:center;padding:10px;}
+  .dashboard-sidebar.collapsed .dashboard-sidebar-item::before{content:attr(data-emoji);margin-right:0;}
+  .dashboard-sidebar-toggle{position:absolute;top:20px;right:10px;background:rgba(255,255,255,.2);border:none;color:#fff;width:32px;height:32px;border-radius:6px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;transition:background 200ms;z-index:10;}
+  .dashboard-sidebar-toggle:hover{background:rgba(255,255,255,.3);}
   .dashboard-header{flex:1;display:flex;flex-direction:column;}
   .dashboard-topbar{display:flex;align-items:center;justify-content:space-between;padding:16px 24px;background:#fff;border-bottom:1px solid #e8eef7;box-shadow:0 2px 4px rgba(0,0,0,.05);}
   .dashboard-logo{display:flex;align-items:center;gap:12px;font-size:18px;font-weight:700;color:#0a2540;}
@@ -402,7 +410,8 @@
   .dashboard-sidebar-logo{margin-bottom:24px;padding-bottom:16px;border-bottom:1px solid rgba(255,255,255,.1);}
   .dashboard-sidebar-logo img{height:28px;margin-bottom:8px;}
   .dashboard-sidebar-menu{display:flex;flex-direction:column;gap:8px;}
-  .dashboard-sidebar-item{padding:10px 12px;border-radius:6px;cursor:pointer;font-size:13px;transition:all 200ms;color:rgba(255,255,255,.7);}
+  .dashboard-sidebar-item{display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:6px;cursor:pointer;font-size:13px;transition:all 200ms;color:rgba(255,255,255,.7);}
+  .dashboard-sidebar-item span{display:inline;}
   .dashboard-sidebar-item:hover{background:rgba(255,255,255,.1);color:#fff;}
   .dashboard-sidebar-item.active{background:#0076BC;color:#fff;}
   .dashboard-sidebar-section{margin-top:24px;}
@@ -1731,6 +1740,19 @@ function toggleUserMenu(event){
   }
 }
 
+function toggleDashboardSidebar(){
+  const sidebar = document.getElementById("dashboardSidebar");
+  if(!sidebar) return;
+
+  const isCollapsed = sidebar.classList.toggle("collapsed");
+  localStorage.setItem("dashboardSidebarCollapsed", isCollapsed ? "true" : "false");
+
+  const toggle = sidebar.querySelector(".dashboard-sidebar-toggle");
+  if(toggle){
+    toggle.textContent = isCollapsed ? "»" : "«";
+  }
+}
+
 window.addEventListener('click', function(){
   const dropdown = document.getElementById("userMenuDropdown");
   if(dropdown && dropdown.classList.contains("active")){
@@ -1914,33 +1936,35 @@ async function renderDashboard(){
 
   app.innerHTML = `
     <div class="dashboard-container">
-      <div class="dashboard-sidebar">
+      <div class="dashboard-sidebar" id="dashboardSidebar">
+        <button class="dashboard-sidebar-toggle" onclick="toggleDashboardSidebar()">«</button>
+
         <div class="dashboard-sidebar-logo">
           <img src="/logo-icon.png" alt="Timeline Studio" style="height:24px;">
         </div>
 
         <div class="dashboard-sidebar-menu">
-          <div class="dashboard-sidebar-item active" onclick="alert('Dashboard')">📊 Dashboard</div>
-          <div class="dashboard-sidebar-item" onclick="renderProjectPicker()">📁 All Projects</div>
-          <div class="dashboard-sidebar-item" onclick="alert('My Projects')">👤 My Projects</div>
-          <div class="dashboard-sidebar-item" onclick="alert('Shared')">👥 Shared With Me</div>
-          <div class="dashboard-sidebar-item" onclick="alert('Archived')">📦 Archived</div>
+          <div class="dashboard-sidebar-item active" data-emoji="📊" onclick="alert('Dashboard')"><span>📊 Dashboard</span></div>
+          <div class="dashboard-sidebar-item" data-emoji="📁" onclick="renderProjectPicker()"><span>📁 All Projects</span></div>
+          <div class="dashboard-sidebar-item" data-emoji="👤" onclick="alert('My Projects')"><span>👤 My Projects</span></div>
+          <div class="dashboard-sidebar-item" data-emoji="👥" onclick="alert('Shared')"><span>👥 Shared With Me</span></div>
+          <div class="dashboard-sidebar-item" data-emoji="📦" onclick="alert('Archived')"><span>📦 Archived</span></div>
         </div>
 
         <div class="dashboard-sidebar-section">
           <div class="dashboard-sidebar-label">Resources</div>
           <div class="dashboard-sidebar-menu">
-            <div class="dashboard-sidebar-item" onclick="alert('Templates')">📋 Templates</div>
-            <div class="dashboard-sidebar-item" onclick="alert('Reports')">📈 Reports</div>
+            <div class="dashboard-sidebar-item" data-emoji="📋" onclick="alert('Templates')"><span>📋 Templates</span></div>
+            <div class="dashboard-sidebar-item" data-emoji="📈" onclick="alert('Reports')"><span>📈 Reports</span></div>
           </div>
         </div>
 
         <div class="dashboard-sidebar-section">
           <div class="dashboard-sidebar-label">Settings</div>
           <div class="dashboard-sidebar-menu">
-            <div class="dashboard-sidebar-item" onclick="alert('Team')">👥 Team</div>
-            <div class="dashboard-sidebar-item" onclick="alert('Integrations')">🔗 Integrations</div>
-            <div class="dashboard-sidebar-item" onclick="alert('Settings')">⚙️ Settings</div>
+            <div class="dashboard-sidebar-item" data-emoji="👥" onclick="alert('Team')"><span>👥 Team</span></div>
+            <div class="dashboard-sidebar-item" data-emoji="🔗" onclick="alert('Integrations')"><span>🔗 Integrations</span></div>
+            <div class="dashboard-sidebar-item" data-emoji="⚙️" onclick="alert('Settings')"><span>⚙️ Settings</span></div>
           </div>
         </div>
       </div>
@@ -2118,6 +2142,19 @@ async function renderDashboard(){
       </div>
     </div>
   `;
+
+  // Restore sidebar collapsed state
+  const sidebarCollapsed = localStorage.getItem("dashboardSidebarCollapsed") === "true";
+  if(sidebarCollapsed){
+    const sidebar = document.getElementById("dashboardSidebar");
+    if(sidebar){
+      sidebar.classList.add("collapsed");
+      const toggle = sidebar.querySelector(".dashboard-sidebar-toggle");
+      if(toggle){
+        toggle.textContent = "»";
+      }
+    }
+  }
 }
 
 function setProjectViewMode(mode){
