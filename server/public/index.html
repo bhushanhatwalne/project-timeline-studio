@@ -3013,8 +3013,23 @@ function typeSelect(row, slId, rowId, isPhase){
   </select>`;
 }
 function statusSelect(row, slId, rowId, isPhase){
-  return `<select class="status-sel" style="background:${STATUS_META[row.status]?.color || 'var(--st-notstarted)'}" onchange="onStatusChange(${slId}, ${rowId}, ${isPhase}, this.value)">
-    ${Object.entries(STATUS_META).map(([k,m])=>`<option value="${k}" ${row.status===k?"selected":""}>${m.label}</option>`).join("")}
+  // Calculate status instead of using stored value
+  const calculatedStatus = calculateTaskStatus(row);
+
+  // Map calculated status to STATUS_META keys
+  const statusMap = {
+    'Complete': 'complete',
+    'On Track': 'in-progress',
+    'At Risk': 'at-risk',
+    'Off Track': 'behind-schedule',
+    'Not Started': 'not-started'
+  };
+
+  const statusKey = statusMap[calculatedStatus] || 'not-started';
+  const color = STATUS_META[statusKey]?.color || 'var(--st-notstarted)';
+
+  return `<select class="status-sel" style="background:${color}" onchange="onStatusChange(${slId}, ${rowId}, ${isPhase}, this.value)" title="Auto-calculated based on progress">
+    ${Object.entries(STATUS_META).map(([k,m])=>`<option value="${k}" ${statusKey===k?"selected":""}>${m.label}</option>`).join("")}
   </select>`;
 }
 
