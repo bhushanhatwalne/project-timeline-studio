@@ -478,6 +478,17 @@
   .dashboard-pagination-btn:hover:not(:disabled){border-color:#0076BC;color:#0076BC;}
   .dashboard-pagination-btn.active{background:#0076BC;color:#fff;border-color:#0076BC;}
   .dashboard-pagination-btn:disabled{opacity:0.5;cursor:not-allowed;}
+
+  /* Custom modal/popup */
+  .custom-modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:10000;}
+  .custom-modal{background:#fff;border-radius:10px;padding:32px;max-width:500px;box-shadow:0 10px 40px rgba(0,0,0,0.2);animation:slideUp 300ms ease-out;}
+  @keyframes slideUp{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}
+  .custom-modal-title{font-size:18px;font-weight:700;color:#0a2540;margin-bottom:12px;}
+  .custom-modal-message{font-size:14px;color:#5a6472;line-height:1.5;margin-bottom:24px;}
+  .custom-modal-buttons{display:flex;gap:12px;justify-content:flex-end;}
+  .custom-modal-btn{padding:10px 20px;border:1px solid #e0e6f2;background:#fff;border-radius:6px;font-size:14px;cursor:pointer;font-weight:600;}
+  .custom-modal-btn.primary{background:#0076BC;color:#fff;border-color:#0076BC;}
+  .custom-modal-btn:hover{opacity:0.8;}
   .dashboard-user-menu{position:relative;}
   .dashboard-user-dropdown{position:absolute;top:100%;right:0;margin-top:8px;background:#fff;border:1px solid #e0e6f2;border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.12);min-width:200px;display:none;z-index:100;}
   .dashboard-user-dropdown.active{display:block;}
@@ -940,6 +951,24 @@ function goToDashboardPage(pageNum){
   }
 }
 
+function showModal(message, title='Message', onClose=null){
+  const overlay = document.createElement('div');
+  overlay.className = 'custom-modal-overlay';
+  overlay.innerHTML = `
+    <div class="custom-modal">
+      ${title ? `<div class="custom-modal-title">${escapeHtml(title)}</div>` : ''}
+      <div class="custom-modal-message">${escapeHtml(message)}</div>
+      <div class="custom-modal-buttons">
+        <button class="custom-modal-btn primary" onclick="this.closest('.custom-modal-overlay').remove(); ${onClose ? onClose + '()' : ''}">OK</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+  overlay.addEventListener('click', (e) => {
+    if(e.target === overlay) overlay.remove();
+  });
+}
+
 function matchesSearchQuery(projectName, statusText, progress, query){
   if(!query) return true;
 
@@ -1091,7 +1120,7 @@ function reRenderDashboardTable(){
           <div class="dashboard-project-dropdown" id="menu-${proj.id}">
             <div class="dashboard-project-dropdown-item" onclick="openEditProjectModal(event, '${escapeAttr(proj.id)}', '${escapeAttr(proj.title)}')">✏️ Rename</div>
             <div class="dashboard-project-dropdown-item" onclick="event.stopPropagation(); duplicateProject('${escapeAttr(proj.id)}', '${escapeAttr(proj.title)}')">📋 Duplicate</div>
-            <div class="dashboard-project-dropdown-item" onclick="event.stopPropagation(); alert('Download - Coming soon')">⬇️ Download</div>
+            <div class="dashboard-project-dropdown-item" onclick="event.stopPropagation(); showModal('Download - Coming soon')">⬇️ Download</div>
             <div class="dashboard-project-dropdown-item" onclick="event.stopPropagation(); deleteProject('${escapeAttr(proj.id)}', '${escapeAttr(proj.title)}')" style="color:#d32f2f;">🗑️ Delete</div>
           </div>
         </div>
@@ -1131,7 +1160,7 @@ async function duplicateProject(projectId, projectTitle){
     // Fetch the source project
     const srcRes = await apiFetch(`/api/v1/projects/${projectId}`);
     if(!srcRes || !srcRes.ok){
-      alert('Failed to load project data. Please try again.');
+      showModal('Failed to load project data. Please try again.');
       return;
     }
 
@@ -1156,11 +1185,11 @@ async function duplicateProject(projectId, projectTitle){
       await renderDashboard();
     } else {
       console.error('[DUPLICATE_PROJECT] Failed to create duplicate:', createRes?.status);
-      alert('Failed to duplicate project. Please try again.');
+      showModal('Failed to duplicate project. Please try again.');
     }
   } catch(err){
     console.error('[DUPLICATE_PROJECT] Error duplicating project:', err);
-    alert('Error duplicating project: ' + err.message);
+    showModal('Error duplicating project: ' + err.message);
   }
 }
 
@@ -1180,11 +1209,11 @@ async function deleteProject(projectId, projectTitle){
       await renderDashboard();
     } else {
       console.error('[DELETE_PROJECT] Failed to delete project:', res?.status);
-      alert('Failed to delete project. Please try again.');
+      showModal('Failed to delete project. Please try again.');
     }
   } catch(err){
     console.error('[DELETE_PROJECT] Error deleting project:', err);
-    alert('Error deleting project: ' + err.message);
+    showModal('Error deleting project: ' + err.message);
   }
 }
 
@@ -1658,7 +1687,7 @@ function renderAuthScreen(){
           } else {
             console.error('Failed to create first project:', createRes?.status);
             hideAuthSpinner();
-            alert('Account created but could not create first project. Please try again.');
+            showModal('Account created but could not create first project. Please try again.');
             return;
           }
         }
@@ -1666,16 +1695,16 @@ function renderAuthScreen(){
         renderDashboard();
       } else if(res?.status === 409){
         hideAuthSpinner();
-        alert('Email already registered.');
+        showModal('Email already registered.');
       } else {
         hideAuthSpinner();
         const errData = res ? await res.json() : {};
-        alert('Registration failed: ' + (errData.detail || 'Unknown error'));
+        showModal('Registration failed: ' + (errData.detail || 'Unknown error'));
       }
     } catch(err){
       hideAuthSpinner();
       console.error('Registration error:', err);
-      alert('Registration error: ' + err.message);
+      showModal('Registration error: ' + err.message);
     }
   };
 
@@ -1698,12 +1727,12 @@ function renderAuthScreen(){
         renderDashboard();
       } else {
         hideAuthSpinner();
-        alert('Login failed. Please check your email/password.');
+        showModal('Login failed. Please check your email/password.');
       }
     } catch(err){
       hideAuthSpinner();
       console.error('Login error:', err);
-      alert('Login error: ' + err.message);
+      showModal('Login error: ' + err.message);
     }
   };
 
@@ -1992,11 +2021,11 @@ async function handleLogout(){
       authUser = null;
       renderAuthScreen();
     } else {
-      alert('Logout failed');
+      showModal('Logout failed');
     }
   } catch(err){
     console.error('Logout error:', err);
-    alert('Logout error: ' + err.message);
+    showModal('Logout error: ' + err.message);
   }
 }
 
@@ -2065,7 +2094,7 @@ async function saveProjectChanges(){
   console.log('[SAVE] Starting save for project:', projectId, 'Name:', projectName);
 
   if(!projectName.trim()){
-    alert('Project name is required');
+    showModal('Project name is required');
     return;
   }
 
@@ -2105,11 +2134,11 @@ async function saveProjectChanges(){
       closeEditProjectModal();
 
       // Show success message
-      alert('✓ Project updated successfully!');
+      showModal('✓ Project updated successfully!');
     } else {
       const errorData = res ? await res.json() : {};
       console.error('[SAVE] API Error:', errorData);
-      alert('Failed to update project: ' + (errorData.detail || 'Unknown error'));
+      showModal('Failed to update project: ' + (errorData.detail || 'Unknown error'));
       if(saveBtn){
         saveBtn.disabled = false;
         saveBtn.textContent = 'Save Changes';
@@ -2117,7 +2146,7 @@ async function saveProjectChanges(){
     }
   } catch(err){
     console.error('[SAVE] Exception:', err);
-    alert('Error: ' + err.message);
+    showModal('Error: ' + err.message);
     if(saveBtn){
       saveBtn.disabled = false;
       saveBtn.textContent = 'Save Changes';
@@ -2185,27 +2214,27 @@ async function renderDashboard(){
 
         <div class="dashboard-sidebar-content">
         <div class="dashboard-sidebar-menu">
-          <div class="dashboard-sidebar-item active" data-emoji="📊" onclick="alert('Dashboard')"><span>📊 Dashboard</span></div>
+          <div class="dashboard-sidebar-item active" data-emoji="📊" onclick="showModal('Dashboard')"><span>📊 Dashboard</span></div>
           <div class="dashboard-sidebar-item" data-emoji="📁" onclick="renderProjectPicker()"><span>📁 All Projects</span></div>
-          <div class="dashboard-sidebar-item" data-emoji="👤" onclick="alert('My Projects')"><span>👤 My Projects</span></div>
-          <div class="dashboard-sidebar-item" data-emoji="👥" onclick="alert('Shared')"><span>👥 Shared With Me</span></div>
-          <div class="dashboard-sidebar-item" data-emoji="📦" onclick="alert('Archived')"><span>📦 Archived</span></div>
+          <div class="dashboard-sidebar-item" data-emoji="👤" onclick="showModal('My Projects')"><span>👤 My Projects</span></div>
+          <div class="dashboard-sidebar-item" data-emoji="👥" onclick="showModal('Shared')"><span>👥 Shared With Me</span></div>
+          <div class="dashboard-sidebar-item" data-emoji="📦" onclick="showModal('Archived')"><span>📦 Archived</span></div>
         </div>
 
         <div class="dashboard-sidebar-section">
           <div class="dashboard-sidebar-label">Resources</div>
           <div class="dashboard-sidebar-menu">
-            <div class="dashboard-sidebar-item" data-emoji="📋" onclick="alert('Templates')"><span>📋 Templates</span></div>
-            <div class="dashboard-sidebar-item" data-emoji="📈" onclick="alert('Reports')"><span>📈 Reports</span></div>
+            <div class="dashboard-sidebar-item" data-emoji="📋" onclick="showModal('Templates')"><span>📋 Templates</span></div>
+            <div class="dashboard-sidebar-item" data-emoji="📈" onclick="showModal('Reports')"><span>📈 Reports</span></div>
           </div>
         </div>
 
         <div class="dashboard-sidebar-section">
           <div class="dashboard-sidebar-label">Settings</div>
           <div class="dashboard-sidebar-menu">
-            <div class="dashboard-sidebar-item" data-emoji="👥" onclick="alert('Team')"><span>👥 Team</span></div>
-            <div class="dashboard-sidebar-item" data-emoji="🔗" onclick="alert('Integrations')"><span>🔗 Integrations</span></div>
-            <div class="dashboard-sidebar-item" data-emoji="⚙️" onclick="alert('Settings')"><span>⚙️ Settings</span></div>
+            <div class="dashboard-sidebar-item" data-emoji="👥" onclick="showModal('Team')"><span>👥 Team</span></div>
+            <div class="dashboard-sidebar-item" data-emoji="🔗" onclick="showModal('Integrations')"><span>🔗 Integrations</span></div>
+            <div class="dashboard-sidebar-item" data-emoji="⚙️" onclick="showModal('Settings')"><span>⚙️ Settings</span></div>
           </div>
         </div>
         </div>
@@ -2234,9 +2263,9 @@ async function renderDashboard(){
                 </div>
               </div>
               <div class="dashboard-user-dropdown" id="userMenuDropdown">
-                <div class="dashboard-user-dropdown-item" onclick="alert('My Account - Coming soon')">👤 My Account</div>
-                <div class="dashboard-user-dropdown-item" onclick="alert('Settings - Coming soon')">⚙️ User Settings</div>
-                <div class="dashboard-user-dropdown-item" onclick="alert('Help - Coming soon')">❓ Help</div>
+                <div class="dashboard-user-dropdown-item" onclick="showModal('My Account - Coming soon')">👤 My Account</div>
+                <div class="dashboard-user-dropdown-item" onclick="showModal('Settings - Coming soon')">⚙️ User Settings</div>
+                <div class="dashboard-user-dropdown-item" onclick="showModal('Help - Coming soon')">❓ Help</div>
                 <div class="dashboard-user-dropdown-item logout" onclick="handleLogout()">🚪 Log Out</div>
               </div>
             </div>
@@ -2349,7 +2378,7 @@ async function renderDashboard(){
                     <div class="dashboard-project-dropdown" id="menu-${proj.id}">
                       <div class="dashboard-project-dropdown-item" onclick="openEditProjectModal(event, '${escapeAttr(proj.id)}', '${escapeAttr(proj.title)}')">✏️ Rename</div>
                       <div class="dashboard-project-dropdown-item" onclick="event.stopPropagation(); duplicateProject('${escapeAttr(proj.id)}', '${escapeAttr(proj.title)}')">📋 Duplicate</div>
-                      <div class="dashboard-project-dropdown-item" onclick="event.stopPropagation(); alert('Download - Coming soon')">⬇️ Download</div>
+                      <div class="dashboard-project-dropdown-item" onclick="event.stopPropagation(); showModal('Download - Coming soon')">⬇️ Download</div>
                       <div class="dashboard-project-dropdown-item" onclick="event.stopPropagation(); deleteProject('${escapeAttr(proj.id)}', '${escapeAttr(proj.title)}')" style="color:#d32f2f;">🗑️ Delete</div>
                     </div>
                   </div>
