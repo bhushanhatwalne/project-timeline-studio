@@ -475,8 +475,9 @@
   .dashboard-pagination-text{font-size:12px;color:#5a6472;}
   .dashboard-pagination-controls{display:flex;gap:8px;align-items:center;}
   .dashboard-pagination-btn{width:32px;height:32px;border:1px solid #e0e6f2;background:#fff;border-radius:4px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:12px;transition:all 200ms;}
-  .dashboard-pagination-btn:hover{border-color:#0076BC;color:#0076BC;}
+  .dashboard-pagination-btn:hover:not(:disabled){border-color:#0076BC;color:#0076BC;}
   .dashboard-pagination-btn.active{background:#0076BC;color:#fff;border-color:#0076BC;}
+  .dashboard-pagination-btn:disabled{opacity:0.5;cursor:not-allowed;}
   .dashboard-user-menu{position:relative;}
   .dashboard-user-dropdown{position:absolute;top:100%;right:0;margin-top:8px;background:#fff;border:1px solid #e0e6f2;border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.12);min-width:200px;display:none;z-index:100;}
   .dashboard-user-dropdown.active{display:block;}
@@ -527,6 +528,8 @@ let currentProjectId = null; // currently open project
 let projectDataCache = {}; // cache for project swimlanes data
 let dashboardSortField = 'updated'; // current sort field
 let dashboardSortAsc = false; // sort ascending
+let dashboardCurrentPage = 1; // current page for pagination
+const PROJECTS_PER_PAGE = 5; // projects per page
 
 /* API wrapper with auth */
 async function apiFetch(path, opts={}, attemptCount=0){
@@ -925,7 +928,16 @@ async function loadProjectList(){
 function goToDashboard(){
   currentProjectId = null;
   projectDataCache = {}; // Clear cache to force reload of project data
+  dashboardCurrentPage = 1; // Reset to first page
   renderDashboard();
+}
+
+function goToDashboardPage(pageNum){
+  const totalPages = Math.ceil(myProjects.length / PROJECTS_PER_PAGE);
+  if(pageNum >= 1 && pageNum <= totalPages){
+    dashboardCurrentPage = pageNum;
+    renderDashboard();
+  }
 }
 
 function matchesSearchQuery(projectName, statusText, progress, query){
@@ -2275,7 +2287,11 @@ async function renderDashboard(){
                 <p>No projects yet. Create your first project to get started!</p>
                 <button onclick="addNewProject()" style="margin-top:16px;padding:8px 16px;background:#0076BC;color:white;border:none;border-radius:6px;cursor:pointer;">Create Project</button>
               </div>
-            ` : myProjects.map((proj, idx) => {
+            ` : (() => {
+              const startIdx = (dashboardCurrentPage - 1) * PROJECTS_PER_PAGE;
+              const endIdx = startIdx + PROJECTS_PER_PAGE;
+              const paginatedProjects = myProjects.slice(startIdx, endIdx);
+              return paginatedProjects.map((proj, idx) => {
               const updated = new Date(proj.updatedAt);
               const month = updated.toLocaleString('default', { month: 'short' });
               const day = updated.getDate();
@@ -2339,19 +2355,29 @@ async function renderDashboard(){
                   </div>
                 </div>
               `;
-            }).join('')}
+            }).join('');
+            })()}
           </div>
 
-          ${myProjects.length > 0 ? `
+          ${myProjects.length > 0 ? (() => {
+            const totalPages = Math.ceil(myProjects.length / PROJECTS_PER_PAGE);
+            const startIdx = (dashboardCurrentPage - 1) * PROJECTS_PER_PAGE + 1;
+            const endIdx = Math.min(dashboardCurrentPage * PROJECTS_PER_PAGE, myProjects.length);
+            let pageButtons = '';
+            for(let i = 1; i <= totalPages; i++){
+              pageButtons += `<button class="dashboard-pagination-btn ${i === dashboardCurrentPage ? 'active' : ''}" onclick="goToDashboardPage(${i})">${i}</button>`;
+            }
+            return `
             <div class="dashboard-pagination">
-              <div class="dashboard-pagination-text">Showing 1 to ${myProjects.length} of ${myProjects.length} projects</div>
+              <div class="dashboard-pagination-text">Showing ${startIdx} to ${endIdx} of ${myProjects.length} projects</div>
               <div class="dashboard-pagination-controls">
-                <button class="dashboard-pagination-btn">←</button>
-                <button class="dashboard-pagination-btn active">1</button>
-                <button class="dashboard-pagination-btn">→</button>
+                <button class="dashboard-pagination-btn" onclick="goToDashboardPage(${dashboardCurrentPage - 1})" ${dashboardCurrentPage === 1 ? 'disabled' : ''}>←</button>
+                ${pageButtons}
+                <button class="dashboard-pagination-btn" onclick="goToDashboardPage(${dashboardCurrentPage + 1})" ${dashboardCurrentPage === Math.ceil(myProjects.length / PROJECTS_PER_PAGE) ? 'disabled' : ''}>→</button>
               </div>
             </div>
-          ` : ''}
+            `;
+          })() : ''}
         </div>
       </div>
     </div>
