@@ -877,8 +877,46 @@ function onFieldChange(slId, rowId, isPhase, field, val){
   const row = findRow(slId, rowId, isPhase);
   console.log('[FIELD_CHANGE] Row found:', !!row);
   if(row){
+    // Validate date fields
+    if(field === 'start' || field === 'end'){
+      const startDate = field === 'start' ? val : row.start;
+      const endDate = field === 'end' ? val : row.end;
+
+      if(startDate && endDate){
+        const start = new Date(startDate + 'T00:00:00');
+        const end = new Date(endDate + 'T00:00:00');
+
+        // For milestones: end date must equal start date
+        if(row.type === 'milestone' || row.type === 'major'){
+          if(field === 'start'){
+            val = startDate; // Keep the value
+            row[field] = val;
+            // Auto-sync end date to start date for milestones
+            row.end = startDate;
+            console.log('[FIELD_CHANGE] Milestone: auto-synced end date to start date');
+          } else if(field === 'end'){
+            // Force end date to match start date for milestones
+            val = row.start;
+            row[field] = val;
+            console.log('[FIELD_CHANGE] Milestone: corrected end date to match start date');
+          }
+        } else {
+          // For tasks: end date must be >= start date
+          if(end < start){
+            alert('End date must be on or after the start date');
+            console.log('[FIELD_CHANGE] Invalid: end date before start date');
+            return;
+          }
+          row[field] = val;
+        }
+      } else {
+        row[field] = val;
+      }
+    } else {
+      row[field] = val;
+    }
+
     pushHistory();
-    row[field] = val;
     console.log('[FIELD_CHANGE] Updated row, calling saveFlash');
     saveFlash();
     render();
