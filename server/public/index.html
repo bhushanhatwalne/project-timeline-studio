@@ -3827,10 +3827,12 @@ function swimlaneHeaderRow(sl, p){
     : 0;
   // Calculate swimlane status from children
   const childStatuses = sl.children.map(c => calculateTaskStatus(c));
-  const calculatedStatus = childStatuses.includes('Off Track') ? 'Off Track'
+  // Status priority: worst status wins (unless ALL are complete)
+  const allComplete = childStatuses.every(s => s === 'Complete');
+  const calculatedStatus = allComplete ? 'Complete'
+    : childStatuses.includes('Off Track') ? 'Off Track'
     : childStatuses.includes('At Risk') ? 'At Risk'
-    : childStatuses.includes('In Progress') ? 'In Progress'
-    : childStatuses.includes('Complete') ? 'Complete'
+    : childStatuses.includes('On Track') ? 'On Track'
     : 'Not Started';
 
   return `<tr class="swimlane-header ${p.visible? "":"hidden-row"}"
@@ -4014,11 +4016,14 @@ function renderTimeline(){
 
     const statuses = childRows.map(child => calculateTaskStatus(child));
 
-    // Priority: worst status wins
+    // Only complete if ALL children are complete
+    const allComplete = statuses.every(s => s === 'Complete');
+    if(allComplete) return 'complete';
+
+    // Otherwise: worst status wins
     if(statuses.includes('Off Track')) return 'off-track';
     if(statuses.includes('At Risk')) return 'at-risk';
     if(statuses.includes('On Track')) return 'on-track';
-    if(statuses.includes('Complete')) return 'complete';
     return 'not-started';
   }
 
