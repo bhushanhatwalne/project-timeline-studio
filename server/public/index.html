@@ -951,34 +951,30 @@ async function loadProjectList(){
   myProjects = res && res.ok ? (await res.json()) : [];
 }
 
-async function goToDashboard(){
+function goToDashboard(){
   console.log('[DASHBOARD] Going to dashboard, currentProjectId:', currentProjectId);
 
-  // Flush any pending saves before leaving the project
+  // Flush any pending saves in background (don't wait for it)
   if(autosaveTimer && currentProjectId){
     clearTimeout(autosaveTimer);
-    console.log('[DASHBOARD] Flushing pending save before leaving project');
+    const projId = currentProjectId;
     const payload = { swimlanes, projectTitle };
-    try {
-      const res = await apiFetch(`/api/v1/projects/${currentProjectId}`, {
-        method:'PUT', body: JSON.stringify(payload)
-      });
+    console.log('[DASHBOARD] Flushing pending save in background');
+    apiFetch(`/api/v1/projects/${projId}`, {
+      method:'PUT', body: JSON.stringify(payload)
+    }).then(res => {
       console.log('[DASHBOARD] Pending save completed, response:', res?.status);
-    } catch(e) {
+    }).catch(e => {
       console.error('[DASHBOARD] Error flushing save:', e);
-    }
+    });
   }
 
-  try {
-    currentProjectId = null;
-    projectDataCache = {}; // Clear cache to force reload of project data
-    dashboardCurrentPage = 1; // Reset to first page
-    console.log('[DASHBOARD] Calling render()');
-    render();
-    console.log('[DASHBOARD] Render complete');
-  } catch(e) {
-    console.error('[DASHBOARD] Error during render:', e);
-  }
+  // Switch to dashboard immediately
+  currentProjectId = null;
+  projectDataCache = {}; // Clear cache to force reload of project data
+  dashboardCurrentPage = 1; // Reset to first page
+  console.log('[DASHBOARD] Switching to dashboard view');
+  render();
 }
 
 function goToDashboardPage(pageNum){
