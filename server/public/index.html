@@ -3963,7 +3963,7 @@ function renderTimeline(){
   // task/phase rows (non milestone)
   const barRows = barRowsForWidth;
 
-  // Helper to calculate swimlane status based on child tasks
+  // Helper to calculate swimlane status and completion % based on child tasks
   function getSwimlaneDerivedStatus(phaseRow){
     const childRows = phaseRow.children || [];
     if(childRows.length === 0) return 'not-started';
@@ -3983,6 +3983,14 @@ function renderTimeline(){
     if(statuses.includes('In Progress')) return 'on-track';
     if(statuses.includes('Complete')) return 'complete';
     return 'not-started';
+  }
+
+  function getSwimlaneDerivedCompletion(phaseRow){
+    const childRows = phaseRow.children || [];
+    if(childRows.length === 0) return 0;
+
+    const totalCompletion = childRows.reduce((sum, child) => sum + (child.percent || 0), 0);
+    return Math.max(0, Math.min(100, totalCompletion / childRows.length));
   }
 
   const rowsHtml = barRows.map(r=>{
@@ -4012,7 +4020,8 @@ function renderTimeline(){
     const meta = STATUS_META[statusKey] || STATUS_META["not-started"];
     const barColor = isPhase ? meta.bar : meta.bar;
     const trackColor = isPhase ? meta.track : meta.track;
-    const fillPct = Math.max(0, Math.min(100, row.percent||0));
+    // For swimlanes, use derived completion %; for tasks, use stored %
+    const fillPct = isPhase ? getSwimlaneDerivedCompletion(r) : Math.max(0, Math.min(100, row.percent||0));
 
     // Add indentation for tasks (not phases)
     const labelIndentPx = isPhase ? 0 : 16;
