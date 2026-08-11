@@ -2823,17 +2823,42 @@ function deselectAllVersions(){
   render();
 }
 
-async function deleteBulkVersions(){
+function deleteBulkVersions(){
   if(selectedVersions.size === 0){
-    alert("No versions selected");
+    showModal("No versions selected");
     return;
   }
 
   const totalToDelete = selectedVersions.size;
-  if(!confirm(`Delete ${totalToDelete} version${totalToDelete === 1 ? '' : 's'}? This cannot be undone.`)){
-    return;
-  }
+  showDeleteBulkVersionsModal(totalToDelete);
+}
 
+function showDeleteBulkVersionsModal(totalToDelete){
+  const overlay = document.createElement('div');
+  overlay.id = 'modal-overlay';
+  overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:10000;';
+
+  overlay.innerHTML = `
+    <div style="background:#fff;border-radius:12px;padding:24px;max-width:420px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+      <h2 style="margin:0 0 8px 0;font-size:16px;font-weight:700;color:var(--ink);">Delete ${totalToDelete} snapshot${totalToDelete === 1 ? '' : 's'}?</h2>
+      <p style="margin:0 0 16px 0;font-size:13px;color:var(--ink-soft);line-height:1.5;">
+        This action cannot be undone. All selected snapshots will be permanently deleted.
+      </p>
+      <div style="display:flex;gap:8px;justify-content:flex-end;">
+        <button class="btn" onclick="document.getElementById('modal-overlay').remove();" style="padding:8px 16px;">Cancel</button>
+        <button class="btn danger" onclick="confirmDeleteBulkVersions(); document.getElementById('modal-overlay').remove();" style="padding:8px 16px;">Delete</button>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(overlay);
+  overlay.addEventListener('click', (e) => {
+    if(e.target === overlay) overlay.remove();
+  });
+}
+
+async function confirmDeleteBulkVersions(){
+  const totalToDelete = selectedVersions.size;
   let deleted = 0;
   for(const versionId of selectedVersions){
     try {
@@ -2855,7 +2880,7 @@ async function deleteBulkVersions(){
 
   selectedVersions.clear();
   await loadVersions();
-  showModal(`Deleted ${deleted}/${totalToDelete} version${deleted === 1 ? '' : 's'}`);
+  showModal(`Deleted ${deleted}/${totalToDelete} snapshot${deleted === 1 ? '' : 's'}`);
   render();
 }
 
