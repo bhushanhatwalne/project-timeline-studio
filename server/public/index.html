@@ -969,28 +969,32 @@ function showModal(message, title='Message', onClose=null){
   });
 }
 
-// Override confirm to use custom modal
-const _originalConfirm = window.confirm;
-window.confirm = function(message){
+// Custom confirm modal with callback
+function showConfirmModal(message, onConfirm, onCancel){
   const overlay = document.createElement('div');
   overlay.className = 'custom-modal-overlay';
   overlay.innerHTML = `
     <div class="custom-modal">
       <div class="custom-modal-message">${escapeHtml(message)}</div>
       <div class="custom-modal-buttons">
-        <button class="custom-modal-btn" onclick="window._confirmResult = false; this.closest('.custom-modal-overlay').remove();">Cancel</button>
-        <button class="custom-modal-btn primary" onclick="window._confirmResult = true; this.closest('.custom-modal-overlay').remove();">OK</button>
+        <button class="custom-modal-btn" onclick="this.closest('.custom-modal-overlay').remove(); window._modalCallback?.cancel?.();">Cancel</button>
+        <button class="custom-modal-btn primary" onclick="this.closest('.custom-modal-overlay').remove(); window._modalCallback?.confirm?.();">OK</button>
       </div>
     </div>
   `;
   document.body.appendChild(overlay);
+
+  window._modalCallback = {
+    confirm: onConfirm,
+    cancel: onCancel
+  };
+
   overlay.addEventListener('click', (e) => {
     if(e.target === overlay) {
-      window._confirmResult = false;
       overlay.remove();
+      onCancel?.();
     }
   });
-  return true;
 };
 
 function matchesSearchQuery(projectName, statusText, progress, query){
@@ -1217,28 +1221,29 @@ async function duplicateProject(projectId, projectTitle){
   }
 }
 
-async function deleteProject(projectId, projectTitle){
-  if(!confirm(`Are you sure you want to delete "${projectTitle}"? This cannot be undone.`)){
-    return;
-  }
+function deleteProject(projectId, projectTitle){
+  showConfirmModal(
+    `Are you sure you want to delete "${projectTitle}"? This cannot be undone.`,
+    async () => {
+      try{
+        console.log('[DELETE_PROJECT] Deleting project:', projectId, projectTitle);
+        const res = await apiFetch(`/api/v1/projects/${projectId}`, { method: 'DELETE' });
 
-  try{
-    console.log('[DELETE_PROJECT] Deleting project:', projectId, projectTitle);
-    const res = await apiFetch(`/api/v1/projects/${projectId}`, { method: 'DELETE' });
-
-    if(res && res.ok){
-      console.log('[DELETE_PROJECT] Project deleted successfully');
-      showModal(`Project "${projectTitle}" has been deleted.`);
-      await loadProjectList();
-      await renderDashboard();
-    } else {
-      console.error('[DELETE_PROJECT] Failed to delete project:', res?.status);
-      showModal('Failed to delete project. Please try again.');
+        if(res && res.ok){
+          console.log('[DELETE_PROJECT] Project deleted successfully');
+          showModal(`Project "${projectTitle}" has been deleted.`);
+          await loadProjectList();
+          await renderDashboard();
+        } else {
+          console.error('[DELETE_PROJECT] Failed to delete project:', res?.status);
+          showModal('Failed to delete project. Please try again.');
+        }
+      } catch(err){
+        console.error('[DELETE_PROJECT] Error deleting project:', err);
+        showModal('Error deleting project: ' + err.message);
+      }
     }
-  } catch(err){
-    console.error('[DELETE_PROJECT] Error deleting project:', err);
-    showModal('Error deleting project: ' + err.message);
-  }
+  );
 }
 
 function calculatePlannedProgress(start, end){
@@ -2859,16 +2864,20 @@ async function updateVersionWithCurrent(id){
   if(res && res.ok) await loadVersions();
   render();
 }
-async function deleteVersion(id){
+function deleteVersion(id){
   const v = versions.find(x=>x.id===id);
   if(!v) return;
-  if(!confirm(`Delete "${v.name}"? This can't be undone.`)) return;
-  const res = await apiFetch(`/api/v1/projects/${currentProjectId}/versions/${id}`, {
-    method: 'DELETE'
-  });
-  versionMenuKey = null;
-  if(res && res.status === 204) await loadVersions();
-  render();
+  showConfirmModal(
+    `Delete "${v.name}"? This can't be undone.`,
+    async () => {
+      const res = await apiFetch(`/api/v1/projects/${currentProjectId}/versions/${id}`, {
+        method: 'DELETE'
+      });
+      versionMenuKey = null;
+      if(res && res.status === 204) await loadVersions();
+      render();
+    }
+  );
 }
 
 /* ---------------- account settings tab ---------------- */
