@@ -3825,15 +3825,29 @@ function swimlaneHeaderRow(sl, p){
   const childPercent = sl.children.length > 0
     ? Math.round(sl.children.reduce((sum, c) => sum + (c.percent || 0), 0) / sl.children.length)
     : 0;
-  // Calculate swimlane status from children
-  const childStatuses = sl.children.map(c => calculateTaskStatus(c));
-  // Status priority: worst status wins (unless ALL are complete)
-  const allComplete = childStatuses.every(s => s === 'Complete');
-  const calculatedStatus = allComplete ? 'Complete'
-    : childStatuses.includes('Off Track') ? 'Off Track'
-    : childStatuses.includes('At Risk') ? 'At Risk'
-    : childStatuses.includes('On Track') ? 'On Track'
-    : 'Not Started';
+  // Calculate swimlane status using same logic as tasks (percent vs planned progress)
+  const actual = childPercent;
+  const planned = calculatePlannedProgress(p.start, p.end);
+
+  let calculatedStatus = 'Not Started';
+  if(actual === 100) {
+    calculatedStatus = 'Complete';
+  } else if(actual === 0){
+    const startDate = new Date(p.start);
+    if(!isNaN(startDate.getTime()) && startDate > new Date()) {
+      calculatedStatus = 'Not Started';
+    } else {
+      // Started but at 0% - apply variance logic
+      if(actual >= planned - 10) calculatedStatus = 'On Track';
+      else if(actual >= planned - 20) calculatedStatus = 'At Risk';
+      else calculatedStatus = 'Off Track';
+    }
+  } else {
+    // Between 0-100%: apply variance logic
+    if(actual >= planned - 10) calculatedStatus = 'On Track';
+    else if(actual >= planned - 20) calculatedStatus = 'At Risk';
+    else calculatedStatus = 'Off Track';
+  }
 
   return `<tr class="swimlane-header ${p.visible? "":"hidden-row"}"
       ondragover="onRowDragOver(event, ${slId}, ${rowId}, true)"
@@ -4009,22 +4023,27 @@ function renderTimeline(){
   // task/phase rows (non milestone)
   const barRows = barRowsForWidth;
 
-  // Helper to calculate swimlane status and completion % based on child tasks
+  // Helper to calculate swimlane status based on child task completion % vs planned progress
   function getSwimlaneDerivedStatus(phaseRow){
     const childRows = phaseRow.children || [];
     if(childRows.length === 0) return 'not-started';
 
-    const statuses = childRows.map(child => calculateTaskStatus(child));
+    // Calculate swimlane actual % from children
+    const actual = childRows.length > 0
+      ? Math.round(childRows.reduce((sum, c) => sum + (c.percent || 0), 0) / childRows.length)
+      : 0;
+    const planned = calculatePlannedProgress(phaseRow.start, phaseRow.end);
 
-    // Only complete if ALL children are complete
-    const allComplete = statuses.every(s => s === 'Complete');
-    if(allComplete) return 'complete';
+    if(actual === 100) return 'complete';
 
-    // Otherwise: worst status wins
-    if(statuses.includes('Off Track')) return 'off-track';
-    if(statuses.includes('At Risk')) return 'at-risk';
-    if(statuses.includes('On Track')) return 'on-track';
-    return 'not-started';
+    if(actual === 0){
+      const startDate = new Date(phaseRow.start);
+      if(!isNaN(startDate.getTime()) && startDate > new Date()) return 'not-started';
+    }
+
+    if(actual >= planned - 10) return 'on-track';
+    if(actual >= planned - 20) return 'at-risk';
+    return 'off-track';
   }
 
   function getSwimlaneDerivedCompletion(phaseRow){
