@@ -3962,6 +3962,29 @@ function renderTimeline(){
 
   // task/phase rows (non milestone)
   const barRows = barRowsForWidth;
+
+  // Helper to calculate swimlane status based on child tasks
+  function getSwimlaneDerivedStatus(phaseRow){
+    const childRows = phaseRow.children || [];
+    if(childRows.length === 0) return 'not-started';
+
+    const statuses = childRows.map(child => calculateTaskStatus(child));
+    const statusMap = {
+      'Complete': 'complete',
+      'On Track': 'on-track',
+      'At Risk': 'at-risk',
+      'Off Track': 'off-track',
+      'Not Started': 'not-started'
+    };
+
+    // Priority: worst status wins
+    if(statuses.includes('Off Track')) return 'off-track';
+    if(statuses.includes('At Risk')) return 'at-risk';
+    if(statuses.includes('In Progress')) return 'on-track';
+    if(statuses.includes('Complete')) return 'complete';
+    return 'not-started';
+  }
+
   const rowsHtml = barRows.map(r=>{
     const row=r.row;
     const s=parseD(row.start), e=parseD(row.end);
@@ -3971,7 +3994,10 @@ function renderTimeline(){
 
     // Calculate status dynamically instead of using stored value
     let statusKey = "not-started";
-    if(!isPhase){
+    if(isPhase){
+      const derivedStatus = getSwimlaneDerivedStatus(r);
+      statusKey = derivedStatus;
+    } else {
       const calculatedStatus = calculateTaskStatus(row);
       const statusMap = {
         'Complete': 'complete',
@@ -3984,11 +4010,15 @@ function renderTimeline(){
     }
 
     const meta = STATUS_META[statusKey] || STATUS_META["not-started"];
-    const barColor = isPhase ? "var(--phase)" : meta.bar;
-    const trackColor = isPhase ? "var(--phase-track)" : meta.track;
+    const barColor = isPhase ? meta.bar : meta.bar;
+    const trackColor = isPhase ? meta.track : meta.track;
     const fillPct = Math.max(0, Math.min(100, row.percent||0));
+
+    // Add indentation for tasks (not phases)
+    const labelIndentPx = isPhase ? 0 : 16;
+
     return `<div class="tl-row">
-      <div class="tl-row-label ${isPhase?"phase-lbl":""}" style="width:${labelColPx}px; flex:0 0 ${labelColPx}px;">
+      <div class="tl-row-label ${isPhase?"phase-lbl":""}" style="width:${labelColPx}px; flex:0 0 ${labelColPx}px; padding-left:${labelIndentPx}px;">
         <span class="lbl-text">${escapeAttr(row.title)}</span><span class="lbl-fill"></span>
       </div>
       <div class="tl-row-track">
@@ -3996,7 +4026,6 @@ function renderTimeline(){
         <div class="tl-bar-wrap ${isPhase?"phase":""}" style="left:${left}%; width:${width}%;">
           <div class="tl-bar-track" style="background:${trackColor};"></div>
           <div class="tl-bar-fill" style="width:${fillPct}%; background:${barColor};"></div>
-          ${isPhase ? `<div class="tl-bar-label-inside" style="color:#333; overflow:hidden; text-overflow:ellipsis;">${escapeAttr(row.title)}</div>` : ""}
           <div class="tl-bar-caption left">${durationLabel(row.start,row.end)}</div>
           <div class="tl-bar-caption right">${fmtShort(s)} – ${fmtShort(e)}</div>
         </div>
