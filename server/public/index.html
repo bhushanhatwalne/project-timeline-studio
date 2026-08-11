@@ -952,25 +952,33 @@ async function loadProjectList(){
 }
 
 async function goToDashboard(){
+  console.log('[DASHBOARD] Going to dashboard, currentProjectId:', currentProjectId);
+
   // Flush any pending saves before leaving the project
   if(autosaveTimer && currentProjectId){
     clearTimeout(autosaveTimer);
     console.log('[DASHBOARD] Flushing pending save before leaving project');
     const payload = { swimlanes, projectTitle };
     try {
-      await apiFetch(`/api/v1/projects/${currentProjectId}`, {
+      const res = await apiFetch(`/api/v1/projects/${currentProjectId}`, {
         method:'PUT', body: JSON.stringify(payload)
       });
-      console.log('[DASHBOARD] Pending save completed');
+      console.log('[DASHBOARD] Pending save completed, response:', res?.status);
     } catch(e) {
       console.error('[DASHBOARD] Error flushing save:', e);
     }
   }
 
-  currentProjectId = null;
-  projectDataCache = {}; // Clear cache to force reload of project data
-  dashboardCurrentPage = 1; // Reset to first page
-  render();
+  try {
+    currentProjectId = null;
+    projectDataCache = {}; // Clear cache to force reload of project data
+    dashboardCurrentPage = 1; // Reset to first page
+    console.log('[DASHBOARD] Calling render()');
+    render();
+    console.log('[DASHBOARD] Render complete');
+  } catch(e) {
+    console.error('[DASHBOARD] Error during render:', e);
+  }
 }
 
 function goToDashboardPage(pageNum){
