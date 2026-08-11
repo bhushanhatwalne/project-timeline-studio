@@ -951,11 +951,26 @@ async function loadProjectList(){
   myProjects = res && res.ok ? (await res.json()) : [];
 }
 
-function goToDashboard(){
+async function goToDashboard(){
+  // Flush any pending saves before leaving the project
+  if(autosaveTimer && currentProjectId){
+    clearTimeout(autosaveTimer);
+    console.log('[DASHBOARD] Flushing pending save before leaving project');
+    const payload = { swimlanes, projectTitle };
+    try {
+      await apiFetch(`/api/v1/projects/${currentProjectId}`, {
+        method:'PUT', body: JSON.stringify(payload)
+      });
+      console.log('[DASHBOARD] Pending save completed');
+    } catch(e) {
+      console.error('[DASHBOARD] Error flushing save:', e);
+    }
+  }
+
   currentProjectId = null;
   projectDataCache = {}; // Clear cache to force reload of project data
   dashboardCurrentPage = 1; // Reset to first page
-  renderDashboard();
+  render();
 }
 
 function goToDashboardPage(pageNum){
@@ -2554,6 +2569,17 @@ async function logout(){
 }
 
 async function boot(){
+  // Add beforeunload handler to flush pending saves on page close/refresh
+  window.addEventListener("beforeunload", (e)=>{
+    if(autosaveTimer && currentProjectId){
+      console.log('[UNLOAD] Flushing pending save on page unload');
+      clearTimeout(autosaveTimer);
+      // Use sendBeacon for best-effort save on unload
+      const payload = JSON.stringify({ swimlanes, projectTitle });
+      navigator.sendBeacon(`/api/v1/projects/${currentProjectId}`, payload);
+    }
+  });
+
   const me = await apiFetch('/api/v1/auth/me');
   if(me && me.ok){
     authUser = await me.json();
