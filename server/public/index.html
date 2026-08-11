@@ -3808,6 +3808,18 @@ function moveRow(src, target, after){
 
 function swimlaneHeaderRow(sl, p){
   const slId = sl.id, rowId = p.id;
+  // Calculate swimlane percent from children
+  const childPercent = sl.children.length > 0
+    ? Math.round(sl.children.reduce((sum, c) => sum + (c.percent || 0), 0) / sl.children.length)
+    : 0;
+  // Calculate swimlane status from children
+  const childStatuses = sl.children.map(c => calculateTaskStatus(c));
+  const calculatedStatus = childStatuses.includes('Off Track') ? 'Off Track'
+    : childStatuses.includes('At Risk') ? 'At Risk'
+    : childStatuses.includes('In Progress') ? 'In Progress'
+    : childStatuses.includes('Complete') ? 'Complete'
+    : 'Not Started';
+
   return `<tr class="swimlane-header ${p.visible? "":"hidden-row"}"
       ondragover="onRowDragOver(event, ${slId}, ${rowId}, true)"
       ondrop="onRowDrop(event, ${slId}, ${rowId}, true)">
@@ -3818,9 +3830,9 @@ function swimlaneHeaderRow(sl, p){
     <td class="dur">${durationLabel(p.start,p.end)}</td>
     <td><input type="date" class="date-in" value="${p.start}" onchange="onFieldChange(${slId}, ${rowId}, true, 'start', this.value)" /></td>
     <td><input type="date" class="date-in" value="${p.end}" onchange="onFieldChange(${slId}, ${rowId}, true, 'end', this.value)" /></td>
-    <td><input type="number" class="pct-in" min="0" max="100" value="${p.percent}" onchange="onFieldChange(${slId}, ${rowId}, true, 'percent', parseInt(this.value)||0)" /></td>
+    <td><span class="pct-display" style="font-weight:600; color:var(--ink);">${childPercent}%</span></td>
     <td><input class="assign-in" value="${escapeAttr(p.assignedTo)}" onchange="onFieldChange(${slId}, ${rowId}, true, 'assignedTo', this.value)" /></td>
-    <td>${statusSelect(p, slId, rowId, true)}</td>
+    <td><span class="status-display" style="font-weight:600; color:var(--ink);">${calculatedStatus}</span></td>
     <td><button class="icon-btn del" onclick="deleteRow(${slId}, ${rowId}, true)" title="Delete swimlane">🗑</button></td>
     ${menuCell(slId, rowId, true, p)}
   </tr>`;
