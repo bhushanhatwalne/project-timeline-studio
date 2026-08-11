@@ -250,7 +250,13 @@ function loadTimeline(){
   }catch(e){ return null; }
 }
 function persistTimeline(){
-  try{ localStorage.setItem(TIMELINE_STORAGE_KEY, JSON.stringify({ swimlanes, projectTitle })); }catch(e){ /* storage unavailable */ }
+  try{
+    const data = JSON.stringify({ swimlanes, projectTitle });
+    localStorage.setItem(TIMELINE_STORAGE_KEY, data);
+    console.log("Timeline saved to localStorage:", { swimlanes: swimlanes.length, projectTitle });
+  }catch(e){
+    console.error("Failed to save timeline:", e);
+  }
 }
 
 /* ---------------- undo / redo history ---------------- */
@@ -321,8 +327,10 @@ const DEFAULT_SWIMLANES = [
   }
 ];
 const savedTimeline = loadTimeline();
+console.log("Loaded timeline from storage:", savedTimeline ? "Yes" : "No");
 let swimlanes = savedTimeline ? savedTimeline.swimlanes : DEFAULT_SWIMLANES;
 if(savedTimeline) projectTitle = savedTimeline.projectTitle;
+console.log("Initial state - swimlanes count:", swimlanes.length, "projectTitle:", projectTitle);
 
 /* ---------------- helpers ---------------- */
 function parseD(s){ return new Date(s + "T00:00:00"); }
@@ -347,6 +355,7 @@ function todayISO(){
   return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
 }
 function saveFlash(){
+  console.log("saveFlash called");
   persistTimeline();
   const dot = document.querySelector(".save-dot");
   const lbl = document.querySelector(".save-lbl");
