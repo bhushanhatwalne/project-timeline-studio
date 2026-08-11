@@ -4067,21 +4067,27 @@ function renderTimeline(){
   // task/phase rows (non milestone)
   const barRows = barRowsForWidth;
 
+  // Helper to get swimlane's children from the swimlanes array
+  function getSwimlanChildren(swimlaneId){
+    const sl = swimlanes.find(s => s.id === swimlaneId);
+    return sl ? (sl.children || []) : [];
+  }
+
   // Helper to calculate swimlane status based on child task completion % vs planned progress
-  function getSwimlaneDerivedStatus(phaseRow){
-    const childRows = phaseRow.children || [];
+  function getSwimlaneDerivedStatus(rowObj){
+    const childRows = getSwimlanChildren(rowObj.swimlaneId);
     if(childRows.length === 0) return 'not-started';
 
     // Calculate swimlane actual % from children
     const actual = childRows.length > 0
       ? Math.round(childRows.reduce((sum, c) => sum + (c.percent || 0), 0) / childRows.length)
       : 0;
-    const planned = calculatePlannedProgress(phaseRow.start, phaseRow.end);
+    const planned = calculatePlannedProgress(rowObj.row.start, rowObj.row.end);
 
     if(actual === 100) return 'complete';
 
     if(actual === 0){
-      const startDate = new Date(phaseRow.start);
+      const startDate = new Date(rowObj.row.start);
       if(!isNaN(startDate.getTime()) && startDate > new Date()) return 'not-started';
     }
 
@@ -4090,8 +4096,8 @@ function renderTimeline(){
     return 'off-track';
   }
 
-  function getSwimlaneDerivedCompletion(phaseRow){
-    const childRows = phaseRow.children || [];
+  function getSwimlaneDerivedCompletion(rowObj){
+    const childRows = getSwimlanChildren(rowObj.swimlaneId);
     if(childRows.length === 0) return 0;
 
     const totalCompletion = childRows.reduce((sum, child) => sum + (child.percent || 0), 0);
