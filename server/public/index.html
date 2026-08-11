@@ -1409,6 +1409,25 @@ function calculateProjectStatus(projectData){
 
 async function openProject(projectId){
   console.log('[OPEN_PROJECT] Opening project:', projectId);
+
+  // Wait for any pending saves to complete before switching projects
+  if(autosaveTimer){
+    clearTimeout(autosaveTimer);
+    console.log('[OPEN_PROJECT] Flushing pending save...');
+    // Perform save immediately without delay
+    if(currentProjectId){
+      const payload = { swimlanes, projectTitle };
+      try {
+        await apiFetch(`/api/v1/projects/${currentProjectId}`, {
+          method:'PUT', body: JSON.stringify(payload)
+        });
+        console.log('[OPEN_PROJECT] Pending save completed');
+      } catch(e) {
+        console.error('[OPEN_PROJECT] Error flushing save:', e);
+      }
+    }
+  }
+
   currentProjectId = projectId;
   const res = await apiFetch(`/api/v1/projects/${projectId}`);
   if(res && res.ok){
