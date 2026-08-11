@@ -481,7 +481,7 @@
 
   /* Custom modal/popup */
   .custom-modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:10000;}
-  .custom-modal{background:#fff;border-radius:10px;padding:32px;max-width:500px;box-shadow:0 10px 40px rgba(0,0,0,0.2);animation:slideUp 300ms ease-out;}
+  .custom-modal{background:#ffffff !important;border-radius:10px;padding:32px;max-width:500px;box-shadow:0 10px 40px rgba(0,0,0,0.2);animation:slideUp 300ms ease-out;}
   @keyframes slideUp{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}
   .custom-modal-title{font-size:18px;font-weight:700;color:#0a2540;margin-bottom:12px;}
   .custom-modal-message{font-size:14px;color:#5a6472;line-height:1.5;margin-bottom:24px;}
@@ -1204,7 +1204,7 @@ async function duplicateProject(projectId, projectTitle){
 
     if(createRes && createRes.ok){
       console.log('[DUPLICATE_PROJECT] Project duplicated successfully');
-      alert(`Project "${newTitle}" has been created.`);
+      showModal(`Project "${newTitle}" has been created.`);
       await loadProjectList();
       await renderDashboard();
     } else {
@@ -1228,7 +1228,7 @@ async function deleteProject(projectId, projectTitle){
 
     if(res && res.ok){
       console.log('[DELETE_PROJECT] Project deleted successfully');
-      alert(`Project "${projectTitle}" has been deleted.`);
+      showModal(`Project "${projectTitle}" has been deleted.`);
       await loadProjectList();
       await renderDashboard();
     } else {
@@ -2800,7 +2800,7 @@ async function deleteBulkVersions(){
 
   selectedVersions.clear();
   await loadVersions();
-  alert(`Deleted ${deleted}/${totalToDelete} version${deleted === 1 ? '' : 's'}`);
+  showModal(`Deleted ${deleted}/${totalToDelete} version${deleted === 1 ? '' : 's'}`);
   render();
 }
 
@@ -3253,7 +3253,7 @@ async function confirmMoveVersion(){
     if(res && res.ok) {
       await loadVersions();
       const targetProj = myProjects.find(p=>p.id===modalTargetProject)?.title || "the target project";
-      alert(`Moved "${version?.name || 'Untitled'}" to ${targetProj}`);
+      showModal(`Moved "${version?.name || 'Untitled'}" to ${targetProj}`);
     } else {
       const err = res ? await res.json() : {};
       alert("Failed to move version: " + (err.detail || "Unknown error"));
