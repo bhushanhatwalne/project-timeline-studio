@@ -225,6 +225,7 @@ let compactMode = false; // when true, halves the vertical spacing between timel
 
 /* ---------------- saved versions (by business group) ---------------- */
 const VER_STORAGE_KEY = "tlStudio.versions.v1";
+const TIMELINE_STORAGE_KEY = "tlStudio.timeline.v1";
 let versions = loadVersions();
 let collapsedGroups = new Set();
 let versionMenuKey = null; // id of version whose card menu is open
@@ -241,6 +242,15 @@ function loadVersions(){
 }
 function persistVersions(){
   try{ localStorage.setItem(VER_STORAGE_KEY, JSON.stringify(versions)); }catch(e){ /* storage unavailable */ }
+}
+function loadTimeline(){
+  try{
+    const raw = localStorage.getItem(TIMELINE_STORAGE_KEY);
+    return raw ? JSON.parse(raw) : null;
+  }catch(e){ return null; }
+}
+function persistTimeline(){
+  try{ localStorage.setItem(TIMELINE_STORAGE_KEY, JSON.stringify({ swimlanes, projectTitle })); }catch(e){ /* storage unavailable */ }
 }
 
 /* ---------------- undo / redo history ---------------- */
@@ -288,7 +298,7 @@ document.addEventListener("click", (e)=>{
   render();
 });
 
-let swimlanes = [
+const DEFAULT_SWIMLANES = [
   {
     id: 1, name: "Credit Services Phase 1",
     phase: null,
@@ -310,6 +320,9 @@ let swimlanes = [
     ]
   }
 ];
+const savedTimeline = loadTimeline();
+let swimlanes = savedTimeline ? savedTimeline.swimlanes : DEFAULT_SWIMLANES;
+if(savedTimeline) projectTitle = savedTimeline.projectTitle;
 
 /* ---------------- helpers ---------------- */
 function parseD(s){ return new Date(s + "T00:00:00"); }
@@ -334,6 +347,7 @@ function todayISO(){
   return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
 }
 function saveFlash(){
+  persistTimeline();
   const dot = document.querySelector(".save-dot");
   const lbl = document.querySelector(".save-lbl");
   if(!dot) return;
