@@ -1455,7 +1455,10 @@ function calculateProjectStatus(projectData){
           // Only consider if not complete AND end date hasn't passed
           if(percent < 100 && endDate > today){
             const variance = calculateScheduleVariance(percent, swimlane.phase.start, swimlane.phase.end);
+            console.log('[PROJECT_STATUS] Phase included:', swimlane.phase.title, '| Actual:', percent + '%', '| Variance:', variance + '%', '| End:', swimlane.phase.end);
             taskVariances.push(variance);
+          } else {
+            console.log('[PROJECT_STATUS] Phase excluded:', swimlane.phase.title, '| Actual:', percent + '%', '| Complete:', percent === 100, '| End passed:', endDate <= today);
           }
         }
 
@@ -1469,7 +1472,10 @@ function calculateProjectStatus(projectData){
             // Only consider if not complete AND end date hasn't passed
             if(percent < 100 && endDate > today){
               const variance = calculateScheduleVariance(percent, child.start, child.end);
+              console.log('[PROJECT_STATUS] Task included:', child.title, '| Actual:', percent + '%', '| Variance:', variance + '%', '| End:', child.end);
               taskVariances.push(variance);
+            } else {
+              console.log('[PROJECT_STATUS] Task excluded:', child.title, '| Actual:', percent + '%', '| Complete:', percent === 100, '| End passed:', endDate <= today);
             }
           });
         }
@@ -1491,6 +1497,7 @@ function calculateProjectStatus(projectData){
     // Use worst (minimum) variance of in-progress tasks
     // This ensures that a significantly delayed task affects project status
     const worstVariance = Math.min(...taskVariances);
+    console.log('[PROJECT_STATUS] Total task variances:', taskVariances);
     console.log('[PROJECT_STATUS] In-progress tasks:', taskVariances.length, '| Worst variance:', worstVariance + '%', '| Has started:', hasStartedTask);
 
     if(worstVariance >= -10) return 'On Track';
