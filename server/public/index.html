@@ -1448,12 +1448,13 @@ function calculateProjectStatus(projectData){
       try{
         if(swimlane.phase){
           const startDate = new Date(swimlane.phase.start);
+          const endDate = new Date(swimlane.phase.end);
           const percent = swimlane.phase.percent || 0;
           // Check if this task has started
           if(percent > 0 || startDate <= today) hasStartedTask = true;
-          const variance = calculateScheduleVariance(percent, swimlane.phase.start, swimlane.phase.end);
-          // Only consider if not complete
-          if(percent < 100){
+          // Only consider if not complete AND end date hasn't passed
+          if(percent < 100 && endDate > today){
+            const variance = calculateScheduleVariance(percent, swimlane.phase.start, swimlane.phase.end);
             taskVariances.push(variance);
           }
         }
@@ -1461,12 +1462,13 @@ function calculateProjectStatus(projectData){
         if(swimlane.children && swimlane.children.length > 0){
           swimlane.children.forEach(child => {
             const startDate = new Date(child.start);
+            const endDate = new Date(child.end);
             const percent = child.percent || 0;
             // Check if this task has started
             if(percent > 0 || startDate <= today) hasStartedTask = true;
-            const variance = calculateScheduleVariance(percent, child.start, child.end);
-            // Only consider if not complete
-            if(percent < 100){
+            // Only consider if not complete AND end date hasn't passed
+            if(percent < 100 && endDate > today){
+              const variance = calculateScheduleVariance(percent, child.start, child.end);
               taskVariances.push(variance);
             }
           });
