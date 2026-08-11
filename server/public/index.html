@@ -969,6 +969,30 @@ function showModal(message, title='Message', onClose=null){
   });
 }
 
+// Override confirm to use custom modal
+const _originalConfirm = window.confirm;
+window.confirm = function(message){
+  const overlay = document.createElement('div');
+  overlay.className = 'custom-modal-overlay';
+  overlay.innerHTML = `
+    <div class="custom-modal">
+      <div class="custom-modal-message">${escapeHtml(message)}</div>
+      <div class="custom-modal-buttons">
+        <button class="custom-modal-btn" onclick="window._confirmResult = false; this.closest('.custom-modal-overlay').remove();">Cancel</button>
+        <button class="custom-modal-btn primary" onclick="window._confirmResult = true; this.closest('.custom-modal-overlay').remove();">OK</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+  overlay.addEventListener('click', (e) => {
+    if(e.target === overlay) {
+      window._confirmResult = false;
+      overlay.remove();
+    }
+  });
+  return true;
+};
+
 function matchesSearchQuery(projectName, statusText, progress, query){
   if(!query) return true;
 
