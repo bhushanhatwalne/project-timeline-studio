@@ -3218,15 +3218,15 @@ async function confirmModal(){
       });
       if(res && res.ok) {
         await loadVersions();
-        alert("Version saved successfully!");
+        showModal("Version saved successfully!");
       } else {
         const err = res ? await res.json() : {};
-        alert("Failed to save version: " + (err.detail || "Unknown error"));
+        showModal("Failed to save version: " + (err.detail || "Unknown error"));
         console.error("Save version error:", err);
       }
     } catch(err) {
       console.error("Save version error:", err);
-      alert("Error saving version: " + err.message);
+      showModal("Error saving version: " + err.message);
     }
   } else if(modalMode==="edit" && modalEditId!=null){
     try {
