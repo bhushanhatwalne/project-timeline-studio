@@ -951,7 +951,7 @@ async function loadProjectList(){
   myProjects = res && res.ok ? (await res.json()) : [];
 }
 
-function goToDashboard(){
+async function goToDashboard(){
   console.log('[DASHBOARD] goToDashboard() called, currentProjectId:', currentProjectId);
 
   // Flush any pending saves in background (don't wait for it)
@@ -971,16 +971,15 @@ function goToDashboard(){
     console.log('[DASHBOARD] No pending saves to flush');
   }
 
-  // Switch to dashboard immediately
+  // Switch to dashboard view
   try {
     console.log('[DASHBOARD] Clearing project state');
     currentProjectId = null;
     projectDataCache = {};
     dashboardCurrentPage = 1;
-    activeTab = 'projects'; // explicitly set to projects tab
-    console.log('[DASHBOARD] About to call render()');
-    render();
-    console.log('[DASHBOARD] render() completed successfully');
+    console.log('[DASHBOARD] About to call renderDashboard()');
+    await renderDashboard();
+    console.log('[DASHBOARD] renderDashboard() completed successfully');
   } catch(e) {
     console.error('[DASHBOARD] Error in goToDashboard:', e);
     console.error('[DASHBOARD] Stack:', e.stack);
