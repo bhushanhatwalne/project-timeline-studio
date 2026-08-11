@@ -88,6 +88,12 @@
   table.data thead th:not(:last-child)::after{content:'';position:absolute;right:0;top:0;bottom:0;width:4px;cursor:col-resize;background:transparent;z-index:10;}
   table.data thead th:not(:last-child):hover::after{background:rgba(0,0,0,0.1);}
   table.data td{padding:5px 12px;border-bottom:1px solid var(--line);vertical-align:middle;overflow:visible;word-wrap:break-word;}
+  .data-wrap.compact table.data{font-size:12px;}
+  .data-wrap.compact table.data thead th{font-size:9px;padding:5px 8px;}
+  .data-wrap.compact table.data thead th:nth-child(1),.data-wrap.compact table.data thead th:nth-child(2){padding:5px 2px;}
+  .data-wrap.compact table.data thead th:nth-child(11),.data-wrap.compact table.data thead th:nth-child(12){padding:5px 2px;}
+  .data-wrap.compact table.data td{padding:3px 8px;}
+  .data-wrap.compact .title-in,.data-wrap.compact input.date-in,.data-wrap.compact input.pct-in,.data-wrap.compact input.assign-in,.data-wrap.compact select.type-sel,.data-wrap.compact select.status-sel{font-size:12px;}
   tr.hidden-row{opacity:.45;}
   tr.hidden-row input, tr.hidden-row select{font-style:italic;}
   tr.swimlane-header{background:rgba(0,118,188,0.05);font-size:16px;font-weight:700;color:var(--accent);}
@@ -3630,7 +3636,7 @@ function renderData(){
   });
 
   view.innerHTML = `
-    <div class="data-wrap">
+    <div class="data-wrap ${compactMode ? 'compact' : ''}">
       <table class="data">
         <thead>
           <tr>
