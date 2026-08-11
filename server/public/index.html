@@ -2874,7 +2874,36 @@ function versionMenuHtml(v){
 async function loadVersion(id){
   const v = versions.find(x=>x.id===id);
   if(!v) return;
-  if(!confirm(`Open "${v.name}"? Any unsaved changes to the current timeline will be replaced (use Undo to recover).`)) return;
+
+  showLoadVersionModal(id, v.name);
+}
+
+function showLoadVersionModal(versionId, versionName){
+  const overlay = document.createElement('div');
+  overlay.id = 'modal-overlay';
+  overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:10000;';
+
+  overlay.innerHTML = `
+    <div style="background:#fff;border-radius:12px;padding:24px;max-width:420px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+      <h2 style="margin:0 0 8px 0;font-size:16px;font-weight:700;color:var(--ink);">Load Snapshot?</h2>
+      <p style="margin:0 0 16px 0;font-size:13px;color:var(--ink-soft);line-height:1.5;">
+        Opening <strong>"${escapeHtml(versionName)}"</strong> will replace your current timeline.
+      </p>
+      <div style="display:flex;gap:8px;justify-content:flex-end;">
+        <button class="btn" onclick="document.getElementById('modal-overlay').remove();" style="padding:8px 16px;">Cancel</button>
+        <button class="btn" onclick="loadVersionDirect('${escapeAttr(versionId)}'); document.getElementById('modal-overlay').remove();" style="padding:8px 16px; background:var(--line); color:var(--ink);">Load without saving</button>
+        <button class="btn primary" onclick="saveAndLoadVersion('${escapeAttr(versionId)}'); document.getElementById('modal-overlay').remove();" style="padding:8px 16px;">Save & Load</button>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(overlay);
+  overlay.addEventListener('click', (e) => {
+    if(e.target === overlay) overlay.remove();
+  });
+}
+
+async function loadVersionDirect(id){
   const res = await apiFetch(`/api/v1/projects/${currentProjectId}/versions/${id}/restore`, {
     method: 'POST'
   });
@@ -2886,7 +2915,14 @@ async function loadVersion(id){
     versionMenuKey = null;
     activeTab = "data";
     render();
+  } else {
+    showModal("Failed to load snapshot");
   }
+}
+
+async function saveAndLoadVersion(id){
+  await quickSaveSnapshot();
+  await loadVersionDirect(id);
 }
 async function duplicateVersion(id){
   const v = versions.find(x=>x.id===id);
