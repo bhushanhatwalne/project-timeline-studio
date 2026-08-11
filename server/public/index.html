@@ -4378,7 +4378,7 @@ async function exportPptx(){
     pres.layout = "TL_WIDE";
 
     /* ---- single Gantt slide — every row scaled to fit on one slide ---- */
-    const chartX = 2.9, chartW = 9.9, chartTop = 1.05, headerH = 0.3;
+    const chartX = 3.1, chartW = 9.7, chartTop = 1.05, headerH = 0.3;
     const bottomMargin = 0.25;
     const availH = 7.5 - chartTop - headerH - bottomMargin;
     // PPTX export always uses the compact (halved) row spacing, regardless of the
@@ -4413,8 +4413,11 @@ async function exportPptx(){
       const isPhase = row.type==="phase";
       const s = parseD(row.start), e = parseD(row.end);
       const labelSize = Math.max(5, (isPhase ? 11 : 10)*fontScale);
-      slide.addText(escapeAttrText(row.title), {
-        x:0.35, y:y, w:chartX-0.5, h:rowH, fontSize:labelSize, bold:isPhase, color:PPTX_HEX.ink, valign:"middle", fontFace:"Segoe UI"
+      // Truncate long titles to avoid overflow into timeline
+      const maxChars = Math.max(15, Math.floor(40 * (chartX-0.7) / 2.4));
+      const displayTitle = row.title.length > maxChars ? row.title.substring(0, maxChars) + "…" : row.title;
+      slide.addText(escapeAttr(displayTitle), {
+        x:0.35, y:y, w:chartX-0.7, h:rowH, fontSize:labelSize, bold:isPhase, color:PPTX_HEX.ink, valign:"middle", fontFace:"Segoe UI", wrap:false
       });
 
       if(row.type==="phase" || row.type==="task"){
