@@ -718,8 +718,13 @@ function saveFlash(){
   lbl.textContent = "Saving…";
   dot.style.opacity = .3;
   clearTimeout(autosaveTimer);
+  console.log('[SAVE] Scheduled save in 800ms for project:', currentProjectId);
   autosaveTimer = setTimeout(async ()=>{
-    if(!currentProjectId) return;
+    console.log('[SAVE] Timeout fired, attempting save...');
+    if(!currentProjectId){
+      console.error('[SAVE] ✗ No currentProjectId set');
+      return;
+    }
 
     console.log('[SAVE] Current swimlanes count:', swimlanes.length);
     swimlanes.forEach((sl, i) => {
@@ -735,24 +740,32 @@ function saveFlash(){
     console.log('[SAVE] Payload size:', JSON.stringify(payload).length, 'bytes');
     console.log('[SAVE] Sending to server for project:', currentProjectId);
 
-    const res = await apiFetch(`/api/v1/projects/${currentProjectId}`, {
-      method:'PUT', body: JSON.stringify(payload)
-    });
-    console.log('[SAVE] Response:', res?.status, res?.ok);
-    if(res?.ok){
-      console.log('[SAVE] ✓ Data saved successfully');
-      projectDataCache[currentProjectId] = null; // Invalidate cache for this project
-    } else {
-      console.error('[SAVE] ✗ Save failed with status:', res?.status);
-    }
+    try {
+      const res = await apiFetch(`/api/v1/projects/${currentProjectId}`, {
+        method:'PUT', body: JSON.stringify(payload)
+      });
+      console.log('[SAVE] Response:', res?.status, res?.ok);
+      if(res?.ok){
+        console.log('[SAVE] ✓ Data saved successfully');
+        projectDataCache[currentProjectId] = null; // Invalidate cache for this project
+      } else {
+        console.error('[SAVE] ✗ Save failed with status:', res?.status);
+      }
 
-    if(dot){
-      lbl.textContent = (res && res.ok) ? "Saved" : "Save failed — retrying";
-      dot.style.opacity = 1;
-    }
-    if(!res || !res.ok){
-      console.warn('[SAVE] Save failed, retrying in 3 seconds');
-      autosaveTimer = setTimeout(()=>saveFlash(), 3000);
+      if(dot){
+        lbl.textContent = (res && res.ok) ? "Saved" : "Save failed — retrying";
+        dot.style.opacity = 1;
+      }
+      if(!res || !res.ok){
+        console.warn('[SAVE] Save failed, retrying in 3 seconds');
+        autosaveTimer = setTimeout(()=>saveFlash(), 3000);
+      }
+    } catch(err) {
+      console.error('[SAVE] Exception:', err);
+      if(dot){
+        lbl.textContent = "Save error";
+        dot.style.opacity = 1;
+      }
     }
   }, 800);
 }
