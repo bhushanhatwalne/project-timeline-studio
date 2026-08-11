@@ -2723,7 +2723,7 @@ function renderToolbar(){
                   <button class="btn" onclick="addSwimlane()">+ Swimlane</button>
                   <span class="toolbar-sep"></span>
                   <button class="btn" onclick="openSaveModal()">💾 Save version</button>
-                  <button class="btn" id="pptxBtn" onclick="exportPptx()">⬇ Export</button>
+                  <button class="btn" id="exportBtn" onclick="openExportModal()">⬇ Export</button>
                   <span class="toolbar-sep"></span>
                   <div style="display:flex;align-items:center;gap:6px;">
                     <span class="save-dot" style="width:8px;height:8px;border-radius:50%;background:var(--accent);opacity:1;transition:opacity 0.2s;"></span>
@@ -3429,6 +3429,15 @@ function openEditModal(id){
   render();
   setTimeout(()=>{ const el=document.getElementById("modalNameInput"); if(el){ el.focus(); el.select(); } }, 0);
 }
+function openExportModal(){
+  modalMode = "export";
+  render();
+}
+function doExport(format){
+  closeModal();
+  if(format === 'excel') exportExcel();
+  else if(format === 'pptx') exportPptx();
+}
 function closeModal(){ modalMode = null; modalEditId = null; modalMoveVersionId = null; render(); }
 function openMoveVersionModal(id){
   const v = versions.find(x=>x.id===id);
@@ -3516,6 +3525,24 @@ function renderModal(){
   const dl = existingGroups().map(g=>`<option value="${escapeAttr(g)}"></option>`).join("");
   const isEdit = modalMode==="edit";
   const isMove = modalMode==="move-version";
+  const isExport = modalMode==="export";
+
+  if(isExport){
+    return `
+      <div class="modal-overlay" onclick="if(event.target===this) closeModal()">
+        <div class="modal-card">
+          <p class="modal-title">Export timeline</p>
+          <p class="modal-sub">Choose a format to export your project timeline and tasks.</p>
+          <div class="modal-actions" style="justify-content:center;gap:16px;">
+            <button class="btn primary" onclick="doExport('excel')" style="flex:1;">📊 Export to Excel</button>
+            <button class="btn primary" onclick="doExport('pptx')" style="flex:1;">📑 Export to PowerPoint</button>
+          </div>
+          <div class="modal-actions">
+            <button class="btn" onclick="closeModal()">Cancel</button>
+          </div>
+        </div>
+      </div>`;
+  }
 
   if(isMove){
     const currentVersion = versions.find(x=>x.id===modalMoveVersionId);
@@ -4200,6 +4227,96 @@ function renderTimeline(){
       </div>
     </div>
   `;
+}
+
+/* ---------------- EXCEL export ---------------- */
+async function exportExcel(){
+  const rows = allRows().filter(r=>r.row.visible);
+  if(rows.length===0){
+    alert("There's nothing visible to export. Toggle the eye icon on the Data tab to show items first.");
+    return;
+  }
+
+  const btn = document.getElementById("exportBtn");
+  if(btn){ btn.disabled = true; btn.textContent = "Exporting…"; }
+
+  try {
+    // Prepare data for CSV/Excel
+    const csvRows = [];
+
+    // Add title
+    csvRows.push([projectTitle]);
+    csvRows.push([]);
+
+    // Add headers
+    csvRows.push(["Swimlane / Task", "Type", "Start Date", "End Date", "Duration", "Progress %", "Status", "Assigned To", "Notes"]);
+
+    // Add data
+    swimlanes.forEach(sl => {
+      if(sl.phase && sl.phase.visible){
+        const p = sl.phase;
+        const childPercent = sl.children.length > 0
+          ? Math.round(sl.children.reduce((sum, c) => sum + (c.percent || 0), 0) / sl.children.length)
+          : 0;
+        csvRows.push([
+          p.title,
+          p.type,
+          p.start,
+          p.end,
+          durationLabel(p.start, p.end),
+          childPercent + "%",
+          p.status || "not-started",
+          p.assignedTo || "",
+          p.note || ""
+        ]);
+      }
+
+      sl.children.forEach(c => {
+        if(c.visible){
+          csvRows.push([
+            "  " + c.title,  // Indented to show it's a child
+            c.type,
+            c.start,
+            c.end,
+            durationLabel(c.start, c.end),
+            c.percent + "%",
+            c.status || "not-started",
+            c.assignedTo || "",
+            c.note || ""
+          ]);
+        }
+      });
+    });
+
+    // Convert to CSV
+    const csv = csvRows.map(row =>
+      row.map(cell => {
+        const str = String(cell || "");
+        // Escape quotes and wrap in quotes if contains comma
+        if(str.includes(",") || str.includes('"') || str.includes("\n")){
+          return '"' + str.replace(/"/g, '""') + '"';
+        }
+        return str;
+      }).join(",")
+    ).join("\n");
+
+    // Create blob and download
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", pptxFileSafeName(projectTitle) + ".csv");
+    link.style.visibility = "hidden";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+  } catch(err){
+    console.error('Export error:', err);
+    alert("Export failed: " + err.message);
+  } finally {
+    if(btn){ btn.disabled = false; btn.textContent = "⬇ Export"; }
+  }
 }
 
 /* ---------------- PPTX export ---------------- */
