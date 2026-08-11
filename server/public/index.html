@@ -1452,8 +1452,8 @@ function calculateProjectStatus(projectData){
           const percent = swimlane.phase.percent || 0;
           // Check if this task has started
           if(percent > 0 || startDate <= today) hasStartedTask = true;
-          // Only consider if not complete AND end date hasn't passed
-          if(percent < 100 && endDate > today){
+          // Only consider if task has started AND not complete AND end date hasn't passed
+          if(percent > 0 && percent < 100 && endDate > today){
             const variance = calculateScheduleVariance(percent, swimlane.phase.start, swimlane.phase.end);
             console.log('[PROJECT_STATUS] Phase included:', swimlane.phase.title, '| Actual:', percent + '%', '| Variance:', variance + '%', '| End:', swimlane.phase.end);
             taskVariances.push(variance);
@@ -1469,8 +1469,8 @@ function calculateProjectStatus(projectData){
             const percent = child.percent || 0;
             // Check if this task has started
             if(percent > 0 || startDate <= today) hasStartedTask = true;
-            // Only consider if not complete AND end date hasn't passed
-            if(percent < 100 && endDate > today){
+            // Only consider if task has started AND not complete AND end date hasn't passed
+            if(percent > 0 && percent < 100 && endDate > today){
               const variance = calculateScheduleVariance(percent, child.start, child.end);
               console.log('[PROJECT_STATUS] Task included:', child.title, '| Actual:', percent + '%', '| Variance:', variance + '%', '| End:', child.end);
               taskVariances.push(variance);
