@@ -602,6 +602,8 @@ let versions = [];
 let collapsedGroups = new Set();
 let versionMenuKey = null; // id of version whose card menu is open
 let selectedVersions = new Set(); // ids of selected versions for bulk operations
+let versionsViewMode = localStorage.getItem('versionsViewMode') || 'tile'; // 'tile' or 'list'
+let versionsSortBy = localStorage.getItem('versionsSortBy') || 'date'; // 'date', 'name', 'swimlanes'
 let projectViewMode = "list"; // "card" or "list"
 let modalMode = null; // null | "save" | "edit" | "move-version"
 let modalEditId = null; // version id being edited, when modalMode === "edit"
@@ -2599,6 +2601,17 @@ function render(){
       });
     });
 
+    // List item listeners
+    document.querySelectorAll(".version-list-item").forEach(item => {
+      item.addEventListener("click", (e) => {
+        if(e.target.closest(".version-checkbox") || e.target.closest(".menu-trigger")){
+          return;
+        }
+        const versionId = item.dataset.versionId; // Keep as string (UUID)
+        loadVersion(versionId);
+      });
+    });
+
     // Project selector listeners
     document.querySelectorAll(".project-selector").forEach(item => {
       item.addEventListener("click", () => {
@@ -2673,51 +2686,61 @@ function renderVersions(){
     </div>
   `).join("");
 
-  // Build versions HTML for current project
-  const groups = {};
-  versions.forEach(v=>{
-    const g = v.group && v.group.trim() ? v.group.trim() : "Ungrouped";
-    (groups[g] = groups[g] || []).push(v);
-  });
-  const groupNames = Object.keys(groups).sort((a,b)=> a==="Ungrouped"?1: b==="Ungrouped"?-1: a.localeCompare(b));
+  // Sort versions based on user preference
+  let sortedVersions = versions.slice();
+  if(versionsSortBy === 'date'){
+    sortedVersions.sort((a,b) => b.savedAt.localeCompare(a.savedAt));
+  } else if(versionsSortBy === 'name'){
+    sortedVersions.sort((a,b) => a.name.localeCompare(b.name));
+  } else if(versionsSortBy === 'swimlanes'){
+    sortedVersions.sort((a,b) => {
+      const aStats = versionStats(a.data);
+      const bStats = versionStats(b.data);
+      return bStats.phases - aStats.phases;
+    });
+  }
 
-  let groupsHtml = "";
-  groupNames.forEach(g=>{
-    const list = groups[g].slice().sort((a,b)=> b.savedAt.localeCompare(a.savedAt));
-    const collapsed = collapsedGroups.has(g);
-    const color = groupColor(g);
-    groupsHtml += `
-      <div class="ver-group">
-        <div class="ver-group-head" onclick="toggleGroupCollapse('${escapeAttr(g)}')">
-          <span class="ver-group-dot" style="background:${color}"></span>
-          <span class="ver-group-name">${escapeHtml(g)}</span>
-          <span class="ver-group-count">(${list.length})</span>
-          <span class="ver-group-line"></span>
-          <span class="ver-group-caret ${collapsed?'collapsed':''}">▾</span>
-        </div>
-        ${collapsed ? "" : `<div class="ver-grid">${list.map(v=>versionCardHtml(v)).join("")}</div>`}
-      </div>`;
-  });
+  // Render versions as tile or list
+  let versionsHtml = "";
+  if(versionsViewMode === 'tile'){
+    versionsHtml = `<div class="ver-grid">${sortedVersions.map(v=>versionCardHtml(v)).join("")}</div>`;
+  } else {
+    versionsHtml = `<div style="display:flex; flex-direction:column; gap:8px;">
+      ${sortedVersions.map(v=>versionListItemHtml(v)).join("")}
+    </div>`;
+  }
 
   view.innerHTML = `
     <div style="padding:20px; overflow:visible;">
-      <!-- Versions content -->
+      <!-- View controls -->
+      <div style="display:flex; align-items:center; gap:12px; margin-bottom:20px; padding-bottom:16px; border-bottom:1px solid var(--line);">
+        <span style="color:var(--ink-soft); font-size:13px;">View:</span>
+        <button class="btn ${versionsViewMode === 'tile' ? 'active' : ''}" onclick="setVersionsViewMode('tile')" style="padding:6px 12px; ${versionsViewMode === 'tile' ? 'background:var(--accent); color:#fff;' : ''}">⬚ Tile</button>
+        <button class="btn ${versionsViewMode === 'list' ? 'active' : ''}" onclick="setVersionsViewMode('list')" style="padding:6px 12px; ${versionsViewMode === 'list' ? 'background:var(--accent); color:#fff;' : ''}">☰ List</button>
 
-        ${selectedVersions.size > 0 ? `
-          <div style="background:var(--accent-soft); border:1px solid var(--accent); border-radius:8px; padding:15px; margin-bottom:20px; display:flex; align-items:center; gap:10px;">
-            <span style="flex:1; color:var(--ink);">
-              <strong>${selectedVersions.size} version${selectedVersions.size === 1 ? '' : 's'} selected</strong>
-            </span>
-            <button class="btn" onclick="deselectAllVersions()">Deselect all</button>
-            <button class="btn danger" onclick="deleteBulkVersions()">🗑 Delete selected</button>
-          </div>
-        ` : `
-          <div style="color:var(--ink-soft); font-size:12px; margin-bottom:15px; padding:0 10px;">
-            <strong>Tip:</strong> Click the checkbox on any version to select it for bulk delete
-          </div>
-        `}
+        <span style="color:var(--ink-soft); font-size:13px; margin-left:20px;">Sort by:</span>
+        <select onchange="setVersionsSortBy(this.value)" style="padding:6px 10px; border:1px solid var(--line); border-radius:4px; background:var(--surface); color:var(--ink); font-size:13px;">
+          <option value="date" ${versionsSortBy === 'date' ? 'selected' : ''}>Recent first</option>
+          <option value="name" ${versionsSortBy === 'name' ? 'selected' : ''}>Name (A-Z)</option>
+          <option value="swimlanes" ${versionsSortBy === 'swimlanes' ? 'selected' : ''}>Complexity</option>
+        </select>
+      </div>
 
-      ${versions.length===0 ? `<div class="ver-empty">No saved versions yet. Save the current timeline to start building a library by business group.</div>` : groupsHtml}
+      ${selectedVersions.size > 0 ? `
+        <div style="background:var(--accent-soft); border:1px solid var(--accent); border-radius:8px; padding:15px; margin-bottom:20px; display:flex; align-items:center; gap:10px;">
+          <span style="flex:1; color:var(--ink);">
+            <strong>${selectedVersions.size} version${selectedVersions.size === 1 ? '' : 's'} selected</strong>
+          </span>
+          <button class="btn" onclick="deselectAllVersions()">Deselect all</button>
+          <button class="btn danger" onclick="deleteBulkVersions()">🗑 Delete selected</button>
+        </div>
+      ` : `
+        <div style="color:var(--ink-soft); font-size:12px; margin-bottom:15px; padding:0 10px;">
+          <strong>Tip:</strong> Click the checkbox on any version to select it for bulk delete
+        </div>
+      `}
+
+      ${versions.length===0 ? `<div class="ver-empty">No saved versions yet. Click "Save Snapshot" to create your first snapshot.</div>` : versionsHtml}
     </div>
   `;
 }
@@ -2751,6 +2774,40 @@ function versionCardHtml(v){
       </div>
     </div>`;
 }
+
+function versionListItemHtml(v){
+  const stats = versionStats(v.data);
+  const color = groupColor(v.group);
+  const isSelected = selectedVersions.has(v.id);
+  return `
+    <div style="display:flex; align-items:center; gap:12px; padding:12px; border:1px solid var(--line); border-radius:6px; background:${isSelected ? 'var(--accent-soft)' : 'var(--surface)'}; cursor:pointer; transition:all .12s;" class="version-list-item" data-version-id="${v.id}" style="cursor:pointer;" title="Open this version">
+      <div style="width:4px; height:40px; background:${color}; border-radius:2px; flex-shrink:0;"></div>
+      <div style="flex:1;">
+        <div style="font-weight:600; color:var(--ink); margin-bottom:4px;">${escapeHtml(v.name)}</div>
+        <div style="font-size:12px; color:var(--ink-soft); display:flex; gap:16px;">
+          <span>Saved ${fmtSavedAt(v.savedAt)}</span>
+          <span>🧭 ${stats.phases} swimlane${stats.phases===1?"":"s"}</span>
+          <span>📌 ${stats.milestones}</span>
+          <span>▤ ${stats.tasks}</span>
+        </div>
+      </div>
+      <div class="version-checkbox" data-version-id="${v.id}" style="width:22px;height:22px;border:2px solid ${isSelected ? 'var(--accent)' : 'var(--line-strong)'};background:${isSelected ? 'var(--accent)' : 'var(--surface)'};border-radius:4px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:14px;line-height:1;color:#fff;font-weight:700;">${isSelected ? '✓' : ''}</div>
+      <button class="menu-trigger ver-menu-trigger version-menu-btn" data-version-id="${v.id}" title="More" style="flex-shrink:0;">⋯</button>
+      ${versionMenuKey===v.id ? versionMenuHtml(v) : ""}
+    </div>`;
+}
+function setVersionsViewMode(mode){
+  versionsViewMode = mode;
+  localStorage.setItem('versionsViewMode', mode);
+  render();
+}
+
+function setVersionsSortBy(sortBy){
+  versionsSortBy = sortBy;
+  localStorage.setItem('versionsSortBy', sortBy);
+  render();
+}
+
 function toggleVersionSelection(versionId){
   console.log(`[TOGGLE] versionId=${versionId}, currently selected=${selectedVersions.has(versionId)}`);
   if(selectedVersions.has(versionId)){
