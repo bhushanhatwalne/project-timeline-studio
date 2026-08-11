@@ -3189,9 +3189,10 @@ function generateSnapshotName(){
 async function quickSaveSnapshot(){
   try {
     const name = generateSnapshotName();
+    const payload = { name };
     const res = await apiFetch(`/api/v1/projects/${currentProjectId}/versions`, {
       method: 'POST',
-      body: JSON.stringify({ name, group: null })
+      body: JSON.stringify(payload)
     });
     if(res && res.ok) {
       await loadVersions();
