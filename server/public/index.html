@@ -952,29 +952,39 @@ async function loadProjectList(){
 }
 
 function goToDashboard(){
-  console.log('[DASHBOARD] Going to dashboard, currentProjectId:', currentProjectId);
+  console.log('[DASHBOARD] goToDashboard() called, currentProjectId:', currentProjectId);
 
   // Flush any pending saves in background (don't wait for it)
   if(autosaveTimer && currentProjectId){
     clearTimeout(autosaveTimer);
     const projId = currentProjectId;
     const payload = { swimlanes, projectTitle };
-    console.log('[DASHBOARD] Flushing pending save in background');
+    console.log('[DASHBOARD] Flushing pending save in background for project:', projId);
     apiFetch(`/api/v1/projects/${projId}`, {
       method:'PUT', body: JSON.stringify(payload)
     }).then(res => {
-      console.log('[DASHBOARD] Pending save completed, response:', res?.status);
+      console.log('[DASHBOARD] Background save completed, response:', res?.status, res?.ok);
     }).catch(e => {
-      console.error('[DASHBOARD] Error flushing save:', e);
+      console.error('[DASHBOARD] Background save error:', e.message);
     });
+  } else {
+    console.log('[DASHBOARD] No pending saves to flush');
   }
 
   // Switch to dashboard immediately
-  currentProjectId = null;
-  projectDataCache = {}; // Clear cache to force reload of project data
-  dashboardCurrentPage = 1; // Reset to first page
-  console.log('[DASHBOARD] Switching to dashboard view');
-  render();
+  try {
+    console.log('[DASHBOARD] Clearing project state');
+    currentProjectId = null;
+    projectDataCache = {};
+    dashboardCurrentPage = 1;
+    activeTab = 'projects'; // explicitly set to projects tab
+    console.log('[DASHBOARD] About to call render()');
+    render();
+    console.log('[DASHBOARD] render() completed successfully');
+  } catch(e) {
+    console.error('[DASHBOARD] Error in goToDashboard:', e);
+    console.error('[DASHBOARD] Stack:', e.stack);
+  }
 }
 
 function goToDashboardPage(pageNum){
