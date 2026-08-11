@@ -2613,7 +2613,7 @@ function toggleCompact(){ compactMode = !compactMode; render(); }
 function renderToolbar(){
   const tb = document.getElementById("toolbar");
   if(activeTab==="versions"){
-    tb.innerHTML = `<button class="btn primary" onclick="openSaveModal()">💾 Save current as version</button>`;
+    tb.innerHTML = `<button class="btn primary" onclick="quickSaveSnapshot()">💾 Save Snapshot</button>`;
     return;
   }
   if(activeTab==="account"){
@@ -3174,6 +3174,39 @@ function existingGroups(){
   const set = new Set(versions.map(v=> v.group && v.group.trim() ? v.group.trim() : "Ungrouped"));
   return Array.from(set).sort();
 }
+
+function generateSnapshotName(){
+  const now = new Date();
+  const mm = String(now.getMonth() + 1).padStart(2, '0');
+  const dd = String(now.getDate()).padStart(2, '0');
+  const yy = String(now.getFullYear()).slice(-2);
+  const hh = String(now.getHours()).padStart(2, '0');
+  const min = String(now.getMinutes()).padStart(2, '0');
+  const ss = String(now.getSeconds()).padStart(2, '0');
+  return `${projectTitle} v${mm}${dd}${yy}${hh}${min}${ss}`;
+}
+
+async function quickSaveSnapshot(){
+  try {
+    const name = generateSnapshotName();
+    const res = await apiFetch(`/api/v1/projects/${currentProjectId}/versions`, {
+      method: 'POST',
+      body: JSON.stringify({ name, group: null })
+    });
+    if(res && res.ok) {
+      await loadVersions();
+      showModal("Snapshot saved successfully!");
+      render();
+    } else {
+      const err = res ? await res.json() : {};
+      showModal("Failed to save snapshot: " + (err.detail || "Unknown error"));
+    }
+  } catch(err) {
+    console.error("Save snapshot error:", err);
+    showModal("Error saving snapshot: " + err.message);
+  }
+}
+
 function openSaveModal(){
   modalMode = "save";
   modalEditId = null;
