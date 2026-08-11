@@ -2692,12 +2692,6 @@ function renderVersions(){
     sortedVersions.sort((a,b) => b.savedAt.localeCompare(a.savedAt));
   } else if(versionsSortBy === 'name'){
     sortedVersions.sort((a,b) => a.name.localeCompare(b.name));
-  } else if(versionsSortBy === 'swimlanes'){
-    sortedVersions.sort((a,b) => {
-      const aStats = versionStats(a.data);
-      const bStats = versionStats(b.data);
-      return bStats.phases - aStats.phases;
-    });
   }
 
   // Render versions as tile or list
@@ -2722,7 +2716,6 @@ function renderVersions(){
         <select onchange="setVersionsSortBy(this.value)" style="padding:6px 10px; border:1px solid var(--line); border-radius:4px; background:var(--surface); color:var(--ink); font-size:13px;">
           <option value="date" ${versionsSortBy === 'date' ? 'selected' : ''}>Recent first</option>
           <option value="name" ${versionsSortBy === 'name' ? 'selected' : ''}>Name (A-Z)</option>
-          <option value="swimlanes" ${versionsSortBy === 'swimlanes' ? 'selected' : ''}>Complexity</option>
         </select>
       </div>
 
