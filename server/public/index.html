@@ -4000,18 +4000,11 @@ function renderTimeline(){
     if(childRows.length === 0) return 'not-started';
 
     const statuses = childRows.map(child => calculateTaskStatus(child));
-    const statusMap = {
-      'Complete': 'complete',
-      'On Track': 'on-track',
-      'At Risk': 'at-risk',
-      'Off Track': 'off-track',
-      'Not Started': 'not-started'
-    };
 
     // Priority: worst status wins
     if(statuses.includes('Off Track')) return 'off-track';
     if(statuses.includes('At Risk')) return 'at-risk';
-    if(statuses.includes('In Progress')) return 'on-track';
+    if(statuses.includes('On Track')) return 'on-track';
     if(statuses.includes('Complete')) return 'complete';
     return 'not-started';
   }
