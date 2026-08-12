@@ -1531,6 +1531,7 @@ function calculateProjectStatus(projectData){
 
     let taskVariances = [];
     let hasStartedTask = false;
+    let hasIncompleteWithinSchedule = false;
     const today = new Date();
 
     projectData.swimlanes.forEach(swimlane => {
@@ -1541,7 +1542,12 @@ function calculateProjectStatus(projectData){
           const percent = swimlane.phase.percent || 0;
           // Check if this task has started
           if(percent > 0 || startDate <= today) hasStartedTask = true;
-          // Only consider if task has started AND not complete AND end date hasn't passed
+          // Check if incomplete and still within schedule
+          if(percent < 100 && endDate > today){
+            hasIncompleteWithinSchedule = true;
+            console.log('[PROJECT_STATUS] Phase incomplete and within schedule:', swimlane.phase.title, '| Actual:', percent + '%', '| End:', swimlane.phase.end);
+          }
+          // Only consider for variance if task has started AND not complete AND end date hasn't passed
           if(percent > 0 && percent < 100 && endDate > today){
             const variance = calculateScheduleVariance(percent, swimlane.phase.start, swimlane.phase.end);
             console.log('[PROJECT_STATUS] Phase included:', swimlane.phase.title, '| Actual:', percent + '%', '| Variance:', variance + '%', '| End:', swimlane.phase.end);
@@ -1558,7 +1564,12 @@ function calculateProjectStatus(projectData){
             const percent = child.percent || 0;
             // Check if this task has started
             if(percent > 0 || startDate <= today) hasStartedTask = true;
-            // Only consider if task has started AND not complete AND end date hasn't passed
+            // Check if incomplete and still within schedule
+            if(percent < 100 && endDate > today){
+              hasIncompleteWithinSchedule = true;
+              console.log('[PROJECT_STATUS] Task incomplete and within schedule:', child.title, '| Actual:', percent + '%', '| End:', child.end);
+            }
+            // Only consider for variance if task has started AND not complete AND end date hasn't passed
             if(percent > 0 && percent < 100 && endDate > today){
               const variance = calculateScheduleVariance(percent, child.start, child.end);
               console.log('[PROJECT_STATUS] Task included:', child.title, '| Actual:', percent + '%', '| Variance:', variance + '%', '| End:', child.end);
@@ -1578,20 +1589,24 @@ function calculateProjectStatus(projectData){
       return 'Not Started';
     }
 
-    // If no in-progress tasks, project is complete
-    if(taskVariances.length === 0){
-      return 'Complete';
+    // If any task is incomplete but still within schedule, project cannot be Complete
+    if(hasIncompleteWithinSchedule){
+      // Use variance logic for incomplete tasks still on schedule
+      if(taskVariances.length === 0){
+        // All incomplete tasks have not yet started (0% complete)
+        return 'On Track';
+      }
+      const worstVariance = Math.min(...taskVariances);
+      console.log('[PROJECT_STATUS] Total task variances:', taskVariances);
+      console.log('[PROJECT_STATUS] In-progress tasks:', taskVariances.length, '| Worst variance:', worstVariance + '%', '| Has started:', hasStartedTask);
+
+      if(worstVariance >= -10) return 'On Track';
+      if(worstVariance >= -20) return 'At Risk';
+      return 'Off Track';
     }
 
-    // Use worst (minimum) variance of in-progress tasks
-    // This ensures that a significantly delayed task affects project status
-    const worstVariance = Math.min(...taskVariances);
-    console.log('[PROJECT_STATUS] Total task variances:', taskVariances);
-    console.log('[PROJECT_STATUS] In-progress tasks:', taskVariances.length, '| Worst variance:', worstVariance + '%', '| Has started:', hasStartedTask);
-
-    if(worstVariance >= -10) return 'On Track';
-    if(worstVariance >= -20) return 'At Risk';
-    return 'Off Track';
+    // If no incomplete tasks within schedule, all tasks are either complete or past deadline
+    return 'Complete';
   }catch(e){
     console.warn('[PROJECT_STATUS] Error:', e.message);
     return 'On Track';
