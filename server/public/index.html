@@ -2261,13 +2261,15 @@ function updateThemeToggleButton(){
   const themeIcon = document.getElementById("themeIcon");
   const themeText = document.getElementById("themeText");
   if(themeIcon && themeText){
-    themeIcon.className = isDarkMode ? "fa-solid fa-sun" : "fa-solid fa-moon";
+    themeIcon.textContent = isDarkMode ? "☀️" : "🌙";
     themeText.textContent = isDarkMode ? "Light" : "Dark";
   }
   // Update app page theme toggle
   const appThemeIcon = document.getElementById("appThemeIcon");
-  if(appThemeIcon){
-    appThemeIcon.className = isDarkMode ? "fa-solid fa-sun" : "fa-solid fa-moon";
+  const appThemeText = document.getElementById("appThemeText");
+  if(appThemeIcon && appThemeText){
+    appThemeIcon.textContent = isDarkMode ? "☀️" : "🌙";
+    appThemeText.textContent = isDarkMode ? "Light" : "Dark";
   }
 }
 
@@ -2527,7 +2529,7 @@ async function renderDashboard(){
           </div>
           <div class="dashboard-topbar-right">
             <button class="dashboard-theme-toggle" id="themeToggleBtn" onclick="toggleDarkMode()">
-              <i id="themeIcon" class="fa-solid fa-moon"></i>
+              <span id="themeIcon">🌙</span>
               <span id="themeText">Dark</span>
             </button>
             <div class="dashboard-user-menu">
@@ -2809,7 +2811,7 @@ function render(){
           <button class="hist-btn" title="Undo (Ctrl+Z)" onclick="undo()" ${history.length===0?"disabled":""}>↶</button>
           <button class="hist-btn" title="Redo (Ctrl+Shift+Z)" onclick="redo()" ${future.length===0?"disabled":""}>↷</button>
         </div>
-        <button class="btn app-theme-toggle" style="background:transparent;color:#fff;border-color:rgba(255,255,255,.2);font-size:16px;" onclick="toggleDarkMode()" title="Toggle Dark Mode"><i id="appThemeIcon" class="fa-solid fa-moon"></i></button>
+        <button class="btn app-theme-toggle" style="background:transparent;color:#fff;border-color:rgba(255,255,255,.2);" onclick="toggleDarkMode()" title="Toggle Dark Mode"><span id="appThemeIcon">🌙</span> <span id="appThemeText">Dark</span></button>
         <button class="btn" style="background:transparent;color:#fff;border-color:rgba(255,255,255,.2);" onclick="setTab('account')" title="Account Settings">⚙</button>
         <button class="btn" style="background:transparent;color:#fff;border-color:rgba(255,255,255,.2);" onclick="logout()">Log Out</button>
       </div>
