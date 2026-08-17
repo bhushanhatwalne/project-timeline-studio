@@ -459,11 +459,12 @@
   .dashboard-sidebar.collapsed{width:80px;}
   .dashboard-sidebar.collapsed .dashboard-sidebar-header{padding:28px 15px;}
   .dashboard-sidebar.collapsed .dashboard-sidebar-logo{display:none;}
+  .dashboard-sidebar.collapsed .dashboard-sidebar-section{margin:0;}
   .dashboard-sidebar.collapsed .dashboard-sidebar-label{display:none;}
   .dashboard-sidebar.collapsed .dashboard-sidebar-item span{display:none;}
-  .dashboard-sidebar.collapsed .dashboard-sidebar-item{justify-content:center;padding:14px 8px;}
-  .dashboard-sidebar.collapsed .dashboard-sidebar-item i{display:none;}
-  .dashboard-sidebar.collapsed .dashboard-sidebar-item::before{content:attr(data-emoji);margin:0;}
+  .dashboard-sidebar.collapsed .dashboard-sidebar-item{justify-content:center;padding:14px 8px;position:relative;}
+  .dashboard-sidebar.collapsed .dashboard-sidebar-item:hover::after{content:attr(data-tooltip);position:absolute;left:100%;top:50%;transform:translateY(-50%);background:rgba(0,0,0,.9);color:#fff;padding:8px 12px;border-radius:4px;font-size:12px;white-space:nowrap;margin-left:8px;z-index:1000;}
+  .dashboard-sidebar.collapsed .dashboard-sidebar-item::before{content:'';display:none;}
   .dashboard-header{flex:1;display:flex;flex-direction:column;}
   .dashboard-topbar{display:flex;align-items:center;justify-content:space-between;padding:20px 32px;background:#fff;border-bottom:1px solid #e2e8f0;box-shadow:0 1px 2px rgba(0,0,0,.04);transition:all 300ms ease;}
   html.dark-mode .dashboard-topbar{background:#161e2e;border-bottom-color:#334155;box-shadow:0 1px 2px rgba(0,0,0,.3);}
@@ -2503,27 +2504,27 @@ async function renderDashboard(){
 
         <div class="dashboard-sidebar-content">
         <div class="dashboard-sidebar-menu">
-          <div class="dashboard-sidebar-item active" data-emoji="📊" onclick="showModal('Dashboard')"><i class="fa-solid fa-grid-2"></i><span>Dashboard</span></div>
-          <div class="dashboard-sidebar-item" data-emoji="📁" onclick="renderProjectPicker()"><i class="fa-solid fa-folder-open"></i><span>All Projects</span></div>
-          <div class="dashboard-sidebar-item" data-emoji="👤" onclick="showModal('My Projects')"><i class="fa-solid fa-user-gear"></i><span>My Projects</span></div>
-          <div class="dashboard-sidebar-item" data-emoji="👥" onclick="showModal('Shared')"><i class="fa-solid fa-users-viewfinder"></i><span>Shared With Me</span></div>
-          <div class="dashboard-sidebar-item" data-emoji="📦" onclick="showModal('Archived')"><i class="fa-solid fa-box-archive"></i><span>Archived</span></div>
+          <div class="dashboard-sidebar-item active" data-emoji="📊" data-tooltip="Dashboard" onclick="showModal('Dashboard')"><i class="fa-solid fa-grid-2"></i><span>Dashboard</span></div>
+          <div class="dashboard-sidebar-item" data-emoji="📁" data-tooltip="All Projects" onclick="renderProjectPicker()"><i class="fa-solid fa-folder-open"></i><span>All Projects</span></div>
+          <div class="dashboard-sidebar-item" data-emoji="👤" data-tooltip="My Projects" onclick="showModal('My Projects')"><i class="fa-solid fa-user-gear"></i><span>My Projects</span></div>
+          <div class="dashboard-sidebar-item" data-emoji="👥" data-tooltip="Shared With Me" onclick="showModal('Shared')"><i class="fa-solid fa-users-viewfinder"></i><span>Shared With Me</span></div>
+          <div class="dashboard-sidebar-item" data-emoji="📦" data-tooltip="Archived" onclick="showModal('Archived')"><i class="fa-solid fa-box-archive"></i><span>Archived</span></div>
         </div>
 
         <div class="dashboard-sidebar-section">
           <div class="dashboard-sidebar-label">Resources</div>
           <div class="dashboard-sidebar-menu">
-            <div class="dashboard-sidebar-item" data-emoji="📋" onclick="showModal('Templates')"><i class="fa-solid fa-layer-group"></i><span>Templates</span></div>
-            <div class="dashboard-sidebar-item" data-emoji="📈" onclick="showModal('Reports')"><i class="fa-solid fa-chart-pie"></i><span>Reports</span></div>
+            <div class="dashboard-sidebar-item" data-emoji="📋" data-tooltip="Templates" onclick="showModal('Templates')"><i class="fa-solid fa-layer-group"></i><span>Templates</span></div>
+            <div class="dashboard-sidebar-item" data-emoji="📈" data-tooltip="Reports" onclick="showModal('Reports')"><i class="fa-solid fa-chart-pie"></i><span>Reports</span></div>
           </div>
         </div>
 
         <div class="dashboard-sidebar-section">
           <div class="dashboard-sidebar-label">Settings</div>
           <div class="dashboard-sidebar-menu">
-            <div class="dashboard-sidebar-item" data-emoji="👥" onclick="showModal('Team')"><i class="fa-solid fa-people-group"></i><span>Team</span></div>
-            <div class="dashboard-sidebar-item" data-emoji="🔗" onclick="showModal('Integrations')"><i class="fa-solid fa-link"></i><span>Integrations</span></div>
-            <div class="dashboard-sidebar-item" data-emoji="⚙️" onclick="showModal('Settings')"><i class="fa-solid fa-gear"></i><span>Settings</span></div>
+            <div class="dashboard-sidebar-item" data-emoji="👥" data-tooltip="Team" onclick="showModal('Team')"><i class="fa-solid fa-people-group"></i><span>Team</span></div>
+            <div class="dashboard-sidebar-item" data-emoji="🔗" data-tooltip="Integrations" onclick="showModal('Integrations')"><i class="fa-solid fa-link"></i><span>Integrations</span></div>
+            <div class="dashboard-sidebar-item" data-emoji="⚙️" data-tooltip="Settings" onclick="showModal('Settings')"><i class="fa-solid fa-gear"></i><span>Settings</span></div>
           </div>
         </div>
         </div>
