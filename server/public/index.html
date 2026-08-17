@@ -488,7 +488,7 @@
   .dashboard-sidebar-logo img{height:28px;display:block;}
   .dashboard-sidebar-menu{display:flex;flex-direction:column;gap:6px;padding:12px 8px;}
   .dashboard-sidebar-item{display:flex;align-items:center;gap:12px;padding:12px 14px;margin:2px 0;border-radius:8px;cursor:pointer;font-size:14px;transition:all 200ms cubic-bezier(.4,.0,.2,1);color:rgba(255,255,255,.7);font-weight:500;}
-  .dashboard-sidebar-item i{width:16px;text-align:center;font-size:16px;}
+  .dashboard-sidebar-item i{width:16px;text-align:center;font-size:16px;color:rgba(255,255,255,.7);}
   .dashboard-sidebar-item span{display:inline;}
   .dashboard-sidebar-item:hover{background:rgba(255,255,255,.12);color:#fff;}
   .dashboard-sidebar-item:hover i{color:#fff;}
@@ -2503,27 +2503,27 @@ async function renderDashboard(){
 
         <div class="dashboard-sidebar-content">
         <div class="dashboard-sidebar-menu">
-          <div class="dashboard-sidebar-item active" data-emoji="📊" onclick="showModal('Dashboard')"><i class="fa-regular fa-grid-2"></i><span>Dashboard</span></div>
-          <div class="dashboard-sidebar-item" data-emoji="📁" onclick="renderProjectPicker()"><i class="fa-regular fa-folder-open"></i><span>All Projects</span></div>
-          <div class="dashboard-sidebar-item" data-emoji="👤" onclick="showModal('My Projects')"><i class="fa-regular fa-user-gear"></i><span>My Projects</span></div>
-          <div class="dashboard-sidebar-item" data-emoji="👥" onclick="showModal('Shared')"><i class="fa-regular fa-users-viewfinder"></i><span>Shared With Me</span></div>
-          <div class="dashboard-sidebar-item" data-emoji="📦" onclick="showModal('Archived')"><i class="fa-regular fa-box-archive"></i><span>Archived</span></div>
+          <div class="dashboard-sidebar-item active" data-emoji="📊" onclick="showModal('Dashboard')"><i class="fa-solid fa-grid-2"></i><span>Dashboard</span></div>
+          <div class="dashboard-sidebar-item" data-emoji="📁" onclick="renderProjectPicker()"><i class="fa-solid fa-folder-open"></i><span>All Projects</span></div>
+          <div class="dashboard-sidebar-item" data-emoji="👤" onclick="showModal('My Projects')"><i class="fa-solid fa-user-gear"></i><span>My Projects</span></div>
+          <div class="dashboard-sidebar-item" data-emoji="👥" onclick="showModal('Shared')"><i class="fa-solid fa-users-viewfinder"></i><span>Shared With Me</span></div>
+          <div class="dashboard-sidebar-item" data-emoji="📦" onclick="showModal('Archived')"><i class="fa-solid fa-box-archive"></i><span>Archived</span></div>
         </div>
 
         <div class="dashboard-sidebar-section">
           <div class="dashboard-sidebar-label">Resources</div>
           <div class="dashboard-sidebar-menu">
-            <div class="dashboard-sidebar-item" data-emoji="📋" onclick="showModal('Templates')"><i class="fa-regular fa-layer-group"></i><span>Templates</span></div>
-            <div class="dashboard-sidebar-item" data-emoji="📈" onclick="showModal('Reports')"><i class="fa-regular fa-chart-pie"></i><span>Reports</span></div>
+            <div class="dashboard-sidebar-item" data-emoji="📋" onclick="showModal('Templates')"><i class="fa-solid fa-layer-group"></i><span>Templates</span></div>
+            <div class="dashboard-sidebar-item" data-emoji="📈" onclick="showModal('Reports')"><i class="fa-solid fa-chart-pie"></i><span>Reports</span></div>
           </div>
         </div>
 
         <div class="dashboard-sidebar-section">
           <div class="dashboard-sidebar-label">Settings</div>
           <div class="dashboard-sidebar-menu">
-            <div class="dashboard-sidebar-item" data-emoji="👥" onclick="showModal('Team')"><i class="fa-regular fa-people-group"></i><span>Team</span></div>
-            <div class="dashboard-sidebar-item" data-emoji="🔗" onclick="showModal('Integrations')"><i class="fa-regular fa-link"></i><span>Integrations</span></div>
-            <div class="dashboard-sidebar-item" data-emoji="⚙️" onclick="showModal('Settings')"><i class="fa-regular fa-gear"></i><span>Settings</span></div>
+            <div class="dashboard-sidebar-item" data-emoji="👥" onclick="showModal('Team')"><i class="fa-solid fa-people-group"></i><span>Team</span></div>
+            <div class="dashboard-sidebar-item" data-emoji="🔗" onclick="showModal('Integrations')"><i class="fa-solid fa-link"></i><span>Integrations</span></div>
+            <div class="dashboard-sidebar-item" data-emoji="⚙️" onclick="showModal('Settings')"><i class="fa-solid fa-gear"></i><span>Settings</span></div>
           </div>
         </div>
         </div>
