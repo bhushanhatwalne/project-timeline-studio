@@ -940,7 +940,7 @@ function addBottomRow(type){
     swimlanes.push({
       id, name:"New Phase",
       phase:{ id: ++uid, title:"New Phase", type:"phase", start, end, percent:0, assignedTo:"", status:"not-started", visible:true, note:"" },
-      children:[]
+      children:[blankChild(type, start)]
     });
   } else {
     const sl = swimlanes[swimlanes.length-1];
