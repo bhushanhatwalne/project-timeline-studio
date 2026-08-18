@@ -1533,54 +1533,39 @@ function calculateProjectStatus(projectData){
       return 'Not Started';
     }
 
-    let taskVariances = [];
     let hasStartedTask = false;
-    let hasIncompleteWithinSchedule = false;
+    let hasOffTrackTask = false;
+    let hasAtRiskTask = false;
+    let hasIncompleteTask = false;
     const today = new Date();
 
     projectData.swimlanes.forEach(swimlane => {
       try{
+        // Check phase status
         if(swimlane.phase){
-          const startDate = new Date(swimlane.phase.start);
-          const endDate = new Date(swimlane.phase.end);
+          const taskStatus = calculateTaskStatus(swimlane.phase);
+          console.log('[PROJECT_STATUS] Phase:', swimlane.phase.title, '| Status:', taskStatus);
+
+          if(taskStatus === 'Off Track') hasOffTrackTask = true;
+          if(taskStatus === 'At Risk') hasAtRiskTask = true;
+          if(taskStatus !== 'Complete' && taskStatus !== 'Not Started') hasIncompleteTask = true;
+
           const percent = swimlane.phase.percent || 0;
-          // Check if this task has started
-          if(percent > 0 || startDate <= today) hasStartedTask = true;
-          // Check if incomplete and still within schedule
-          if(percent < 100 && endDate > today){
-            hasIncompleteWithinSchedule = true;
-            console.log('[PROJECT_STATUS] Phase incomplete and within schedule:', swimlane.phase.title, '| Actual:', percent + '%', '| End:', swimlane.phase.end);
-          }
-          // Only consider for variance if task has started AND not complete AND end date hasn't passed
-          if(percent > 0 && percent < 100 && endDate > today){
-            const variance = calculateScheduleVariance(percent, swimlane.phase.start, swimlane.phase.end);
-            console.log('[PROJECT_STATUS] Phase included:', swimlane.phase.title, '| Actual:', percent + '%', '| Variance:', variance + '%', '| End:', swimlane.phase.end);
-            taskVariances.push(variance);
-          } else {
-            console.log('[PROJECT_STATUS] Phase excluded:', swimlane.phase.title, '| Actual:', percent + '%', '| Complete:', percent === 100, '| End passed:', endDate <= today);
-          }
+          if(percent > 0 || new Date(swimlane.phase.start) <= today) hasStartedTask = true;
         }
 
+        // Check children task statuses
         if(swimlane.children && swimlane.children.length > 0){
           swimlane.children.forEach(child => {
-            const startDate = new Date(child.start);
-            const endDate = new Date(child.end);
+            const taskStatus = calculateTaskStatus(child);
+            console.log('[PROJECT_STATUS] Task:', child.title, '| Status:', taskStatus);
+
+            if(taskStatus === 'Off Track') hasOffTrackTask = true;
+            if(taskStatus === 'At Risk') hasAtRiskTask = true;
+            if(taskStatus !== 'Complete' && taskStatus !== 'Not Started') hasIncompleteTask = true;
+
             const percent = child.percent || 0;
-            // Check if this task has started
-            if(percent > 0 || startDate <= today) hasStartedTask = true;
-            // Check if incomplete and still within schedule
-            if(percent < 100 && endDate > today){
-              hasIncompleteWithinSchedule = true;
-              console.log('[PROJECT_STATUS] Task incomplete and within schedule:', child.title, '| Actual:', percent + '%', '| End:', child.end);
-            }
-            // Only consider for variance if task has started AND not complete AND end date hasn't passed
-            if(percent > 0 && percent < 100 && endDate > today){
-              const variance = calculateScheduleVariance(percent, child.start, child.end);
-              console.log('[PROJECT_STATUS] Task included:', child.title, '| Actual:', percent + '%', '| Variance:', variance + '%', '| End:', child.end);
-              taskVariances.push(variance);
-            } else {
-              console.log('[PROJECT_STATUS] Task excluded:', child.title, '| Actual:', percent + '%', '| Complete:', percent === 100, '| End passed:', endDate <= today);
-            }
+            if(percent > 0 || new Date(child.start) <= today) hasStartedTask = true;
           });
         }
       }catch(e){
@@ -1593,23 +1578,22 @@ function calculateProjectStatus(projectData){
       return 'Not Started';
     }
 
-    // If any task is incomplete but still within schedule, project cannot be Complete
-    if(hasIncompleteWithinSchedule){
-      // Use variance logic for incomplete tasks still on schedule
-      if(taskVariances.length === 0){
-        // All incomplete tasks have not yet started (0% complete)
-        return 'On Track';
-      }
-      const worstVariance = Math.min(...taskVariances);
-      console.log('[PROJECT_STATUS] Total task variances:', taskVariances);
-      console.log('[PROJECT_STATUS] In-progress tasks:', taskVariances.length, '| Worst variance:', worstVariance + '%', '| Has started:', hasStartedTask);
-
-      if(worstVariance >= -10) return 'On Track';
-      if(worstVariance >= -20) return 'At Risk';
+    // If any task is Off Track, project is Off Track
+    if(hasOffTrackTask){
       return 'Off Track';
     }
 
-    // If no incomplete tasks within schedule, all tasks are either complete or past deadline
+    // If any task is At Risk, project is At Risk
+    if(hasAtRiskTask){
+      return 'At Risk';
+    }
+
+    // If there are incomplete tasks, project is On Track
+    if(hasIncompleteTask){
+      return 'On Track';
+    }
+
+    // All tasks are complete
     return 'Complete';
   }catch(e){
     console.warn('[PROJECT_STATUS] Error:', e.message);
