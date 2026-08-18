@@ -1541,20 +1541,7 @@ function calculateProjectStatus(projectData){
 
     projectData.swimlanes.forEach(swimlane => {
       try{
-        // Check phase status
-        if(swimlane.phase){
-          const taskStatus = calculateTaskStatus(swimlane.phase);
-          console.log('[PROJECT_STATUS] Phase:', swimlane.phase.title, '| Status:', taskStatus);
-
-          if(taskStatus === 'Off Track') hasOffTrackTask = true;
-          if(taskStatus === 'At Risk') hasAtRiskTask = true;
-          if(taskStatus !== 'Complete' && taskStatus !== 'Not Started') hasIncompleteTask = true;
-
-          const percent = swimlane.phase.percent || 0;
-          if(percent > 0 || new Date(swimlane.phase.start) <= today) hasStartedTask = true;
-        }
-
-        // Check children task statuses
+        // Check only child tasks (not swimlane phases)
         if(swimlane.children && swimlane.children.length > 0){
           swimlane.children.forEach(child => {
             const taskStatus = calculateTaskStatus(child);
