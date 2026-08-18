@@ -933,19 +933,11 @@ function addBottomRow(type){
   pushHistory();
   type = type || "task";
   if(swimlanes.length===0){
-    const id = ++uid;
-    const start = todayISO();
-    const e = new Date(); e.setDate(e.getDate()+28);
-    const end = e.getFullYear()+"-"+String(e.getMonth()+1).padStart(2,"0")+"-"+String(e.getDate()).padStart(2,"0");
-    swimlanes.push({
-      id, name:"New Phase",
-      phase:{ id: ++uid, title:"New Phase", type:"phase", start, end, percent:0, assignedTo:"", status:"not-started", visible:true, note:"" },
-      children:[blankChild(type, start)]
-    });
-  } else {
-    const sl = swimlanes[swimlanes.length-1];
-    sl.children.push(blankChild(type, swimlaneBaseStart(sl)));
+    showModal("Please add a swimlane/phase first. Click '+ Swimlane' to create one.");
+    return;
   }
+  const sl = swimlanes[swimlanes.length-1];
+  sl.children.push(blankChild(type, swimlaneBaseStart(sl)));
   saveFlash(); render();
 }
 function deleteRow(swimlaneId, rowId, isPhase){
