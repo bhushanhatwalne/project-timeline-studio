@@ -131,6 +131,8 @@
   tr.swimlane-header .pct-display,tr.swimlane-header .status-display{color:var(--accent);font-size:13.5px;font-weight:700;}
   .title-in{border:none;background:transparent;font-size:12px;font-weight:600;width:100%;color:var(--ink);font-family:var(--font-body);padding:6px 8px;border-radius:4px;overflow:hidden;text-overflow:ellipsis;}
   .title-in:focus{background:var(--accent-soft);outline:none;}
+  .milestone-title{font-size:13.5px;font-weight:700;color:var(--milestone);}
+  .milestone-title:focus{background:var(--accent-soft);}
   .type-pick{display:flex;align-items:center;gap:6px;}
   .type-icon{width:13px;height:13px;flex:0 0 auto;display:inline-block;}
   select.type-sel{border:1px solid var(--line);background:var(--surface);font-size:12px;font-weight:600;border-radius:4px;padding:6px 8px;font-family:var(--font-body);color:var(--ink);width:100%;box-sizing:border-box;overflow:hidden;text-overflow:ellipsis;}
@@ -4120,12 +4122,14 @@ function swimlaneHeaderRow(sl, p){
 
 function childRow(sl, c){
   const slId = sl.id, rowId = c.id;
-  return `<tr class="child-row ${c.visible? "":"hidden-row"}"
+  const isMilestone = c.type==="milestone" || c.type==="major";
+  const rowClass = isMilestone ? "child-row milestone-row" : "child-row";
+  return `<tr class="${rowClass} ${c.visible? "":"hidden-row"}"
       ondragover="onRowDragOver(event, ${slId}, ${rowId}, false)"
       ondrop="onRowDrop(event, ${slId}, ${rowId}, false)">
     ${dragCell(slId, rowId, false)}
     <td><button class="eye-btn" onclick="toggleVisible(findRow(${slId}, ${rowId}, false))" title="Show/hide in timeline">${c.visible?"👁":"🚫"}</button></td>
-    <td class="title-cell"><input class="title-in" value="${escapeAttr(c.title)}" onchange="onFieldChange(${slId}, ${rowId}, false, 'title', this.value)" />${noteHtml(c)}</td>
+    <td class="title-cell"><input class="title-in ${isMilestone ? "milestone-title" : ""}" value="${escapeAttr(c.title)}" onchange="onFieldChange(${slId}, ${rowId}, false, 'title', this.value)" />${noteHtml(c)}</td>
     <td class="type-pick">${typeIconSvg(c.type, typeColor(c.type))}${typeSelect(c, slId, rowId, false)}</td>
     <td class="dur">${durationLabel(c.start,c.end)}</td>
     <td><input type="date" class="date-in" value="${c.start}" onchange="onFieldChange(${slId}, ${rowId}, false, 'start', this.value)" /></td>
