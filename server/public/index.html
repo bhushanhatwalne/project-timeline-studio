@@ -935,11 +935,9 @@ function addBottomRow(type){
   if(swimlanes.length===0){
     const id = ++uid;
     const start = todayISO();
-    const e = new Date(); e.setDate(e.getDate()+28);
-    const end = e.getFullYear()+"-"+String(e.getMonth()+1).padStart(2,"0")+"-"+String(e.getDate()).padStart(2,"0");
     swimlanes.push({
-      id, name:"New Phase",
-      phase:{ id: ++uid, title:"New Phase", type:"phase", start, end, percent:0, assignedTo:"", status:"not-started", visible:true, note:"" },
+      id, name:"",
+      phase: null,
       children:[blankChild(type, start)]
     });
   } else {
