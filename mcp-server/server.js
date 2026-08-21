@@ -12,33 +12,36 @@ const projectRoot = path.resolve(__dirname, '..');
 const localHtmlPath = path.join(projectRoot, 'project-timeline-studio.html');
 const storageDir = path.join(projectRoot, 'storage');
 
-const REMOTE_APP_URL = process.env.REMOTE_APP_URL || 'https://timeline-studio-nvjh.onrender.com';
-
 if (!fs.existsSync(storageDir)) {
   fs.mkdirSync(storageDir, { recursive: true });
 }
 
-// Helper to fetch HTML from remote deployment or fallback to local disk
-async function getHtmlContent() {
-  try {
-    const response = await fetch(`${REMOTE_APP_URL}/project-timeline-studio.html`);
-    if (response.ok) {
-      return await response.text();
-    }
-  } catch (err) {
-    console.warn('Could not fetch remote HTML, falling back to local disk:', err.message);
-  }
-
+// Read local HTML directly from disk
+function getHtmlContent() {
   if (fs.existsSync(localHtmlPath)) {
     return fs.readFileSync(localHtmlPath, 'utf-8');
   }
-
-  throw new Error('HTML source file could not be found remotely or locally.');
+  throw new Error('project-timeline-studio.html file not found in project root.');
 }
 
 const app = express();
 app.use(cors());
 
+// 1. Serve static files from the project root (docs, wireframe, screenshots, etc.)
+app.use(express.static(projectRoot));
+
+// 2. Serve the main app directly at https://timeline-studio-nvjh.onrender.com/
+app.get('/', (req, res) => {
+  try {
+    const html = getHtmlContent();
+    res.setHeader('Content-Type', 'text/html');
+    res.send(html);
+  } catch (err) {
+    res.status(500).send('Error loading Timeline Studio: ' + err.message);
+  }
+});
+
+// Initialize MCP Server
 const server = new Server({
   name: 'timeline-studio-mcp',
   version: '1.0.0',
@@ -48,7 +51,7 @@ const server = new Server({
   },
 });
 
-// Tools definition
+// Tools Definition
 const tools = [
   {
     name: 'read_html',
@@ -72,11 +75,11 @@ const tools = [
   },
   {
     name: 'get_storage_data',
-    description: 'Read localStorage data from a JSON file (for testing)',
+    description: 'Read localStorage data from a JSON file',
     inputSchema: {
       type: 'object',
       properties: {
-        key: { type: 'string', description: 'Storage key to read (e.g., tlStudio.versions.v1)' },
+        key: { type: 'string', description: 'Storage key to read' },
       },
       required: ['key'],
     },
@@ -111,35 +114,33 @@ const tools = [
   },
 ];
 
-server.setRequestHandler(ListToolsRequestSchema, async () => ({
-  tools,
-}));
+server.setRequestHandler(ListToolsRequestSchema, async () => ({ tools }));
 
 server.setRequestHandler(CallToolRequestSchema, async (request) => {
   const { name, arguments: args = {} } = request.params;
 
   try {
     if (name === 'read_html') {
-      const content = await getHtmlContent();
+      const content = getHtmlContent();
       return { content: [{ type: 'text', text: `HTML file size: ${content.length} bytes\n\nFirst 2000 chars:\n\n${content.substring(0, 2000)}...` }] };
     }
 
     if (name === 'extract_javascript') {
-      const content = await getHtmlContent();
+      const content = getHtmlContent();
       const scriptMatch = content.match(/<script[^>]*>([\s\S]*?)<\/script>/);
       if (!scriptMatch) return { content: [{ type: 'text', text: 'No script tag found' }] };
       return { content: [{ type: 'text', text: scriptMatch[1].substring(0, 5000) + '\n...[truncated]' }] };
     }
 
     if (name === 'extract_css') {
-      const content = await getHtmlContent();
+      const content = getHtmlContent();
       const styleMatch = content.match(/<style[^>]*>([\s\S]*?)<\/style>/);
       if (!styleMatch) return { content: [{ type: 'text', text: 'No style tag found' }] };
       return { content: [{ type: 'text', text: styleMatch[1].substring(0, 5000) + '\n...[truncated]' }] };
     }
 
     if (name === 'list_functions') {
-      const content = await getHtmlContent();
+      const content = getHtmlContent();
       const scriptMatch = content.match(/<script[^>]*>([\s\S]*?)<\/script>/);
       if (!scriptMatch) return { content: [{ type: 'text', text: 'No script tag found' }] };
 
@@ -185,13 +186,6 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           visible: 'boolean',
           note: 'string',
         },
-        version: {
-          id: 'string',
-          name: 'string',
-          group: 'string',
-          savedAt: 'ISO timestamp',
-          data: { swimlanes: ['swimlane'], projectTitle: 'string' },
-        },
       };
       return { content: [{ type: 'text', text: JSON.stringify(structure, null, 2) }] };
     }
@@ -227,13 +221,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         });
       }
 
-      const timeline = {
-        swimlanes,
-        projectTitle: 'Sample Project',
-        version: 1,
-      };
-
-      return { content: [{ type: 'text', text: JSON.stringify(timeline, null, 2) }] };
+      return { content: [{ type: 'text', text: JSON.stringify({ swimlanes, projectTitle: 'Sample Project' }, null, 2) }] };
     }
 
     return { content: [{ type: 'text', text: `Unknown tool: ${name}` }] };
@@ -242,6 +230,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
   }
 });
 
+// 3. MCP SSE Endpoints
 let transport;
 
 app.get('/sse', async (req, res) => {
@@ -259,5 +248,5 @@ app.post('/message', async (req, res) => {
 
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
-  console.log(`MCP Remote Server running on port ${PORT}`);
+  console.log(`Timeline Studio App & MCP Server running on port ${PORT}`);
 });
