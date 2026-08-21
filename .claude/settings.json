@@ -52,5 +52,11 @@
   ],
   "env": {
     "STORAGE_VERSION": "tlStudio.versions.v1"
+  },
+  "mcpServers": {
+    "timeline-studio": {
+      "command": "node",
+      "args": ["C:\\00-Bhushan\\Projects\\project-timeline-studio\\mcp-server\\server.js"]
+    }
   }
 }
