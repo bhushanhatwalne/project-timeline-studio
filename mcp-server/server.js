@@ -16,7 +16,7 @@ if (!fs.existsSync(storageDir)) {
   fs.mkdirSync(storageDir, { recursive: true });
 }
 
-// Read local HTML directly from disk
+// Read local HTML directly from disk for MCP tools
 function getHtmlContent() {
   if (fs.existsSync(localHtmlPath)) {
     return fs.readFileSync(localHtmlPath, 'utf-8');
@@ -27,17 +27,15 @@ function getHtmlContent() {
 const app = express();
 app.use(cors());
 
-// 1. Serve static files from the project root (docs, wireframe, screenshots, etc.)
+// Serve static assets from project root
 app.use(express.static(projectRoot));
 
-// 2. Serve the main app directly at https://timeline-studio-nvjh.onrender.com/
+// Serve restored app UI directly at root URL
 app.get('/', (req, res) => {
-  try {
-    const html = getHtmlContent();
-    res.setHeader('Content-Type', 'text/html');
-    res.send(html);
-  } catch (err) {
-    res.status(500).send('Error loading Timeline Studio: ' + err.message);
+  if (fs.existsSync(localHtmlPath)) {
+    res.sendFile(localHtmlPath);
+  } else {
+    res.status(404).send('project-timeline-studio.html not found');
   }
 });
 
@@ -230,7 +228,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
   }
 });
 
-// 3. MCP SSE Endpoints
+// MCP SSE Endpoints
 let transport;
 
 app.get('/sse', async (req, res) => {
