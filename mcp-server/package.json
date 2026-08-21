@@ -1,0 +1,15 @@
+{
+  "name": "timeline-studio-mcp",
+  "version": "1.0.0",
+  "description": "MCP server for Timeline Studio app",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "latest",
+    "cors": "^2.8.6",
+    "express": "^5.2.1"
+  }
+}
