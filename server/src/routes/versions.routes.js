@@ -9,6 +9,10 @@ const router = express.Router({ mergeParams: true });
 const CreateVersionSchema = z.object({
   name: z.string().min(1).max(255),
   group: z.string().max(255).optional(),
+  data: z.object({
+    swimlanes: z.array(z.any()).optional(),
+    projectTitle: z.string().optional(),
+  }).optional(),
 });
 
 const UpdateVersionSchema = z.object({
@@ -20,7 +24,7 @@ const UpdateVersionSchema = z.object({
 router.get('/', authMiddleware, ownershipMiddleware, async (req, res) => {
   try {
     const result = await pool.query(
-      'SELECT id, name, business_group, saved_at FROM versions WHERE project_id = $1 ORDER BY saved_at DESC',
+      'SELECT id, name, business_group, project_title, swimlanes, saved_at FROM versions WHERE project_id = $1 ORDER BY saved_at DESC',
       [req.projectId]
     );
 
@@ -30,6 +34,10 @@ router.get('/', authMiddleware, ownershipMiddleware, async (req, res) => {
         name: row.name,
         group: row.business_group,
         savedAt: row.saved_at,
+        data: {
+          projectTitle: row.project_title,
+          swimlanes: typeof row.swimlanes === 'string' ? JSON.parse(row.swimlanes) : row.swimlanes,
+        },
       }))
     );
   } catch (err) {
@@ -94,15 +102,24 @@ router.post('/', authMiddleware, ownershipMiddleware, async (req, res) => {
       });
     }
 
-    const { name, group } = parsed.data;
+    const { name, group, data } = parsed.data;
 
-    // Get current project state
-    const projectResult = await pool.query('SELECT title, swimlanes FROM projects WHERE id = $1', [req.projectId]);
-    const project = projectResult.rows[0];
+    let projectTitle, swimlanes;
+
+    // Use provided data (for imports) or current project state
+    if (data && (data.swimlanes || data.projectTitle)) {
+      projectTitle = data.projectTitle;
+      swimlanes = data.swimlanes || [];
+    } else {
+      const projectResult = await pool.query('SELECT title, swimlanes FROM projects WHERE id = $1', [req.projectId]);
+      const project = projectResult.rows[0];
+      projectTitle = project.title;
+      swimlanes = project.swimlanes;
+    }
 
     const result = await pool.query(
       'INSERT INTO versions (project_id, name, business_group, project_title, swimlanes) VALUES ($1, $2, $3, $4, $5) RETURNING id, name, business_group, saved_at',
-      [req.projectId, name, group || null, project.title, JSON.stringify(project.swimlanes)]
+      [req.projectId, name, group || null, projectTitle, JSON.stringify(swimlanes)]
     );
 
     const version = result.rows[0];
@@ -185,15 +202,19 @@ router.put('/:verId', authMiddleware, ownershipMiddleware, async (req, res) => {
 // DELETE /api/v1/projects/:projectId/versions/:verId
 router.delete('/:verId', authMiddleware, ownershipMiddleware, async (req, res) => {
   try {
-    await pool.query('DELETE FROM versions WHERE id = $1 AND project_id = $2', [req.params.verId, req.projectId]);
+    console.log(`[DELETE] Attempting to delete version ${req.params.verId} from project ${req.projectId}`);
+    const result = await pool.query('DELETE FROM versions WHERE id = $1 AND project_id = $2', [req.params.verId, req.projectId]);
+    console.log(`[DELETE] Success. Deleted ${result.rowCount} row(s)`);
     res.status(204).send();
   } catch (err) {
-    console.error('Error in DELETE /versions/:verId:', err);
+    console.error('[DELETE] Error in DELETE /versions/:verId:', err.message, err.code);
+    console.error('[DELETE] Stack:', err.stack);
     res.status(500).json({
       type: 'https://api.timeline.studio/errors#internal_error',
       title: 'Internal Server Error',
       status: 500,
       detail: 'An unexpected error occurred',
+      error: err.message,
     });
   }
 });
@@ -270,6 +291,73 @@ router.post('/:verId/overwrite-with-current', authMiddleware, ownershipMiddlewar
     });
   } catch (err) {
     console.error('Error in POST /versions/:verId/overwrite-with-current:', err);
+    res.status(500).json({
+      type: 'https://api.timeline.studio/errors#internal_error',
+      title: 'Internal Server Error',
+      status: 500,
+      detail: 'An unexpected error occurred',
+    });
+  }
+});
+
+// POST /api/v1/projects/:projectId/versions/:verId/move
+router.post('/:verId/move', authMiddleware, ownershipMiddleware, async (req, res) => {
+  try {
+    const { targetProjectId } = req.body;
+
+    if (!targetProjectId) {
+      return res.status(400).json({
+        type: 'https://api.timeline.studio/errors#validation_error',
+        title: 'Validation Error',
+        status: 400,
+        detail: 'targetProjectId is required',
+      });
+    }
+
+    // Verify version exists in current project
+    const versionResult = await pool.query(
+      'SELECT id, name, business_group, swimlanes, project_title FROM versions WHERE id = $1 AND project_id = $2',
+      [req.params.verId, req.projectId]
+    );
+
+    if (versionResult.rows.length === 0) {
+      return res.status(404).json({
+        type: 'https://api.timeline.studio/errors#not_found',
+        title: 'Not Found',
+        status: 404,
+        detail: 'Version not found',
+      });
+    }
+
+    const version = versionResult.rows[0];
+
+    // Verify target project is owned by user
+    const targetProjectResult = await pool.query(
+      'SELECT id FROM projects WHERE id = $1 AND user_id = $2',
+      [targetProjectId, req.user.id]
+    );
+
+    if (targetProjectResult.rows.length === 0) {
+      return res.status(403).json({
+        type: 'https://api.timeline.studio/errors#forbidden',
+        title: 'Forbidden',
+        status: 403,
+        detail: 'Target project not found or you do not have access',
+      });
+    }
+
+    // Update version to point to target project
+    await pool.query(
+      'UPDATE versions SET project_id = $1 WHERE id = $2',
+      [targetProjectId, req.params.verId]
+    );
+
+    res.json({
+      success: true,
+      message: `Version moved to target project`,
+    });
+  } catch (err) {
+    console.error('Error in POST /versions/:verId/move:', err);
     res.status(500).json({
       type: 'https://api.timeline.studio/errors#internal_error',
       title: 'Internal Server Error',
