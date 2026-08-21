@@ -2,7 +2,10 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Timeline Studio</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <style>
   :root{
     --tl-gutter:150px;
@@ -36,13 +39,41 @@
     --st-risk-track:#F7DAD5;
     --st-behind:#D98324;
     --st-behind-track:#F6E3CC;
+    --icon-teal:#1b6577;
     --font-display: Georgia, 'Iowan Old Style', 'Times New Roman', serif;
     --font-body: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
     --font-mono: ui-monospace, 'SFMono-Regular', 'IBM Plex Mono', Menlo, Consolas, monospace;
+    /* Dark mode variables */
+    --dm-paper:#0b0f17;
+    --dm-surface:#161e2e;
+    --dm-surface-alt:#1a2332;
+    --dm-ink:#e2e8f0;
+    --dm-ink-soft:#cbd5e1;
+    --dm-ink-faint:#94a3b8;
+    --dm-line:#334155;
+    --dm-line-strong:#475569;
+    --dm-header:#0a1628;
+    --dm-topbar:#0d1424;
+    --dm-st-notstarted-track:#334155;
+  }
+
+  html.dark-mode {
+    --paper: var(--dm-paper);
+    --surface: var(--dm-surface);
+    --ink: var(--dm-ink);
+    --ink-soft: var(--dm-ink-soft);
+    --ink-faint: var(--dm-ink-faint);
+    --line: var(--dm-line);
+    --line-strong: var(--dm-line-strong);
   }
   *{box-sizing:border-box;}
-  html,body{margin:0;padding:0;background:var(--paper);color:var(--ink);font-family:var(--font-body);}
-  .app{max-width:1500px;margin:0 auto;min-height:100vh;background:var(--paper);display:flex;flex-direction:column;}
+  html,body{margin:0;padding:0;background:var(--paper);color:var(--ink);font-family:'Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;}
+  /* Custom Scrollbar */
+  ::-webkit-scrollbar{width:6px;}
+  ::-webkit-scrollbar-track{background:transparent;}
+  ::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:4px;}
+  html.dark-mode ::-webkit-scrollbar-thumb{background:#1e293b;border-radius:4px;}
+  .app{width:100%;min-height:100vh;background:var(--paper);display:flex;flex-direction:column;}
 
   /* header bar */
   .topbar{background:var(--header);color:#fff;padding:16px 24px;display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap;}
@@ -68,26 +99,54 @@
 
   /* ===== DATA VIEW ===== */
   .view{flex:1;overflow:auto;}
-  .data-wrap{padding:0 24px 40px;}
-  table.data{width:100%;border-collapse:collapse;font-size:13px;}
-  table.data thead th{text-align:left;font-size:10.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-soft);font-weight:700;padding:12px 10px;border-bottom:2px solid var(--line-strong);position:sticky;top:0;background:var(--paper);white-space:nowrap;}
-  table.data td{padding:7px 10px;border-bottom:1px solid var(--line);vertical-align:middle;}
+  .data-wrap{padding:0 12px 40px;}
+  table.data{width:100%;border-collapse:collapse;font-size:13px;table-layout:auto;}
+  table.data thead th{text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--ink-soft);font-weight:700;padding:8px 12px;border-bottom:2px solid var(--line-strong);position:sticky;top:0;background:var(--paper);white-space:nowrap;position:relative;min-width:0;}
+  table.data thead th:nth-child(1){width:24px;padding:8px 4px;}
+  table.data thead th:nth-child(2){width:24px;padding:8px 4px;}
+  table.data thead th:nth-child(3){min-width:200px;flex:1;}
+  table.data thead th:nth-child(4){min-width:80px;}
+  table.data thead th:nth-child(5){min-width:85px;}
+  table.data thead th:nth-child(6){min-width:100px;}
+  table.data thead th:nth-child(7){min-width:100px;}
+  table.data thead th:nth-child(8){min-width:55px;}
+  table.data thead th:nth-child(9){min-width:120px;}
+  table.data thead th:nth-child(10){min-width:120px;}
+  table.data thead th:nth-child(11){width:28px;padding:8px 4px;}
+  table.data thead th:nth-child(12){width:28px;padding:8px 4px;}
+  table.data thead th:not(:last-child)::after{content:'';position:absolute;right:0;top:0;bottom:0;width:4px;cursor:col-resize;background:transparent;z-index:10;}
+  table.data thead th:not(:last-child):hover::after{background:rgba(0,0,0,0.1);}
+  table.data td{padding:5px 12px;border-bottom:1px solid var(--line);vertical-align:middle;overflow:visible;word-wrap:break-word;}
+  .data-wrap.compact table.data{font-size:12px;}
+  .data-wrap.compact table.data thead th{font-size:9px;padding:5px 8px;}
+  .data-wrap.compact table.data thead th:nth-child(1),.data-wrap.compact table.data thead th:nth-child(2){padding:5px 2px;}
+  .data-wrap.compact table.data thead th:nth-child(11),.data-wrap.compact table.data thead th:nth-child(12){padding:5px 2px;}
+  .data-wrap.compact table.data td{padding:3px 8px;}
+  .data-wrap.compact .title-in,.data-wrap.compact input.date-in,.data-wrap.compact input.pct-in,.data-wrap.compact input.assign-in,.data-wrap.compact select.type-sel,.data-wrap.compact select.status-sel{font-size:12px;}
   tr.hidden-row{opacity:.45;}
   tr.hidden-row input, tr.hidden-row select{font-style:italic;}
-  .title-in{border:none;background:transparent;font-size:13.5px;width:100%;color:var(--ink);font-family:var(--font-body);padding:4px 2px;border-radius:4px;}
+  tr.swimlane-header{background:rgba(0,118,188,0.05);font-size:13.5px;font-weight:700;color:var(--accent);}
+  tr.swimlane-header input{font-size:13.5px;font-weight:700;color:var(--accent);}
+  tr.swimlane-header .title-in{color:var(--accent);font-size:13.5px;font-weight:700;}
+  tr.swimlane-header .pct-display,tr.swimlane-header .status-display{color:var(--accent);font-size:13.5px;font-weight:700;}
+  .title-in{border:none;background:transparent;font-size:12px;font-weight:600;width:100%;color:var(--ink);font-family:var(--font-body);padding:6px 8px;border-radius:4px;overflow:hidden;text-overflow:ellipsis;}
   .title-in:focus{background:var(--accent-soft);outline:none;}
   .type-pick{display:flex;align-items:center;gap:6px;}
   .type-icon{width:13px;height:13px;flex:0 0 auto;display:inline-block;}
-  select.type-sel{border:1px solid var(--line);background:var(--surface);font-size:12px;border-radius:4px;padding:3px 4px;font-family:var(--font-body);color:var(--ink);}
-  .dur{font-family:var(--font-mono);font-size:12px;color:var(--ink-soft);white-space:nowrap;}
-  input.date-in{border:1px solid var(--line);background:var(--surface);font-size:12px;border-radius:4px;padding:4px 6px;font-family:var(--font-mono);color:var(--ink);width:128px;}
-  input.pct-in{border:1px solid var(--line);background:var(--surface);font-size:12px;border-radius:4px;padding:4px 6px;font-family:var(--font-mono);width:52px;color:var(--ink);}
-  input.assign-in{border:1px solid var(--line);background:var(--surface);font-size:12px;border-radius:4px;padding:4px 6px;font-family:var(--font-body);width:110px;color:var(--ink);}
-  select.status-sel{border:none;font-size:11.5px;font-weight:700;border-radius:20px;padding:4px 10px;font-family:var(--font-body);color:#fff;cursor:pointer;}
+  select.type-sel{border:1px solid var(--line);background:var(--surface);font-size:12px;font-weight:600;border-radius:4px;padding:6px 8px;font-family:var(--font-body);color:var(--ink);width:100%;box-sizing:border-box;overflow:hidden;text-overflow:ellipsis;}
+  select.type-sel:focus{outline:none;border-color:var(--accent);background:rgba(0,118,188,.05);}
+  .dur{font-family:var(--font-body);font-size:12px;font-weight:600;color:var(--ink-soft);white-space:nowrap;}
+  input.date-in{border:1px solid var(--line);background:var(--surface);font-size:12px;font-weight:600;border-radius:4px;padding:6px 8px;font-family:var(--font-body);color:var(--ink);width:100%;box-sizing:border-box;overflow:hidden;text-overflow:ellipsis;}
+  input.date-in:focus{outline:none;border-color:var(--accent);background:rgba(0,118,188,.05);}
+  input.pct-in{border:1px solid var(--line);background:var(--surface);font-size:12px;font-weight:600;border-radius:4px;padding:6px 8px;font-family:var(--font-body);width:100%;box-sizing:border-box;color:var(--ink);overflow:hidden;text-overflow:ellipsis;}
+  input.pct-in:focus{outline:none;border-color:var(--accent);background:rgba(0,118,188,.05);}
+  input.assign-in{border:1px solid var(--line);background:var(--surface);font-size:12px;font-weight:600;border-radius:4px;padding:6px 8px;font-family:var(--font-body);width:100%;color:var(--ink);box-sizing:border-box;overflow:hidden;text-overflow:ellipsis;}
+  input.assign-in:focus{outline:none;border-color:var(--accent);background:rgba(0,118,188,.05);}
+  select.status-sel{border:none;font-size:12px;font-weight:600;border-radius:20px;padding:5px 12px;font-family:var(--font-body);color:#fff;cursor:pointer;width:100%;box-sizing:border-box;text-align:center;overflow:hidden;text-overflow:ellipsis;}
   .eye-btn,.icon-btn{border:none;background:transparent;cursor:pointer;color:var(--ink-faint);font-size:14px;padding:4px;border-radius:4px;}
   .eye-btn:hover,.icon-btn:hover{color:var(--ink);background:var(--paper);}
   .icon-btn.del:hover{color:var(--danger);}
-  .drag-cell{width:22px; padding:7px 0 7px 8px !important; cursor:grab;}
+  .drag-cell{width:22px; padding:6px 0 6px 4px !important; cursor:grab;}
   .drag-handle{display:inline-flex; align-items:center; justify-content:center; width:16px; height:22px; border-radius:4px; color:var(--ink-faint);}
   .drag-handle:hover{color:var(--ink-soft); background:var(--paper);}
   .drag-handle svg{display:block;}
@@ -147,9 +206,13 @@
   .tl-card.compact .tl-rows{margin-top:0;}
   .tl-row{display:flex;align-items:center;height:40px;position:relative;}
   .tl-card.compact .tl-row{height:20px;}
-  .tl-card.compact .tl-row-label{font-size:11.5px;}
-  .tl-card.compact .tl-row-label.phase-lbl{font-size:13px;}
-  .tl-card.compact .tl-bar-caption{font-size:10px;}
+  .tl-card.compact .tl-row-label{font-size:12.5px;}
+  .tl-card.compact .tl-row-label.phase-lbl{font-size:14px;}
+  .tl-card.compact .tl-bar-caption{font-size:11px;}
+  .tl-card.compact .tl-year-cell{font-size:12px;}
+  .tl-card.compact .tl-month-cell{font-size:12.5px;}
+  .tl-card.compact .tl-milestone-mark .lbl{font-size:12px;}
+  .tl-card.compact .tl-milestone-mark .dt{font-size:11px;}
   .tl-row-label{flex:0 0 auto;font-size:13px;font-weight:600;color:var(--ink);font-family:var(--font-body);display:flex;align-items:center;overflow:hidden;}
   .tl-row-label.phase-lbl{font-family:var(--font-body);font-size:15px;font-weight:700;color:var(--ink);}
   .tl-row-label .lbl-text{white-space:nowrap;flex:0 0 auto;padding-right:8px;}
@@ -159,7 +222,8 @@
   .tl-bar-wrap{position:absolute;top:50%;transform:translateY(-50%);height:22px;}
   .tl-card.compact .tl-bar-wrap{height:13px;}
   .tl-bar-wrap.phase{height:32px;}
-  .tl-bar-track{position:absolute;inset:0;border-radius:5px;}
+  .tl-bar-track{position:absolute;inset:0;border-radius:5px;transition:background 300ms ease;}
+  html.dark-mode .tl-bar-track{background:var(--dm-st-notstarted-track) !important;}
   .tl-bar-fill{position:absolute;top:0;bottom:0;left:0;border-radius:5px;}
   .tl-bar-caption{position:absolute;top:50%;transform:translateY(-50%);font-size:10.5px;color:var(--ink-soft);font-family:var(--font-body);white-space:nowrap;}
   .tl-bar-caption.left{right:calc(100% + 10px);text-align:right;font-style:italic;}
@@ -172,6 +236,9 @@
 
   /* ===== VERSIONS TAB ===== */
   .ver-wrap{padding:8px 24px 48px;}
+  .ver-project-item{display:flex;align-items:center;padding:12px 10px;border-radius:6px;margin-bottom:8px;border:1px solid transparent;transition:all 150ms;}
+  .ver-project-item:hover{background:var(--accent-soft);border-color:var(--accent);}
+  .ver-project-item.active{background:var(--accent-soft);border-color:var(--accent);font-weight:600;}
   .ver-group{margin-top:26px;}
   .ver-group:first-child{margin-top:6px;}
   .ver-group-head{display:flex;align-items:center;gap:10px;cursor:pointer;user-select:none;padding:6px 2px;}
@@ -182,7 +249,7 @@
   .ver-group-caret{color:var(--ink-faint);font-size:11px;transition:transform .12s;}
   .ver-group-caret.collapsed{transform:rotate(-90deg);}
   .ver-grid{display:grid;grid-template-columns:repeat(auto-fill, minmax(230px, 1fr));gap:16px;margin-top:14px;}
-  .ver-card{background:var(--surface);border:1px solid var(--line);border-radius:10px;overflow:hidden;position:relative;transition:box-shadow .12s, border-color .12s;}
+  .ver-card{background:var(--surface);border:1px solid var(--line);border-radius:10px;overflow:visible;position:relative;transition:box-shadow .12s, border-color .12s;}
   .ver-card:hover{border-color:var(--line-strong);box-shadow:0 6px 18px rgba(20,20,30,.08);}
   .ver-card-strip{height:8px;}
   .ver-card-body{padding:14px 14px 12px;}
@@ -196,6 +263,112 @@
   .ver-current-banner .lbl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--accent);}
   .ver-current-banner .name{font-size:14.5px;font-weight:700;color:var(--ink);margin-top:2px;}
 
+  /* ===== LANDING PAGE ===== */
+  .landing-layout{display:flex;height:100%;min-height:calc(100vh - 60px);width:100%;}
+  .landing-sidebar{width:220px;background:var(--surface);border-right:1px solid var(--line);padding:20px 12px;overflow-y:auto;flex-shrink:0;}
+  .landing-main{flex:1;padding:20px 24px;overflow-y:auto;width:100%;max-width:100%;}
+  .new-project-btn{display:flex;align-items:center;gap:8px;width:100%;border:2px dashed var(--line-strong);background:transparent;color:var(--ink-soft);padding:14px 12px;border-radius:8px;cursor:pointer;font-size:14px;font-weight:600;font-family:var(--font-body);margin-bottom:20px;transition:all 150ms;}
+  .new-project-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-soft);}
+  .landing-section{margin-bottom:24px;}
+  .landing-section-title{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-soft);margin-bottom:12px;padding:0 6px;}
+  .landing-item{display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:6px;cursor:pointer;margin-bottom:6px;border:1px solid transparent;color:var(--ink-soft);font-size:13.5px;transition:all 150ms;}
+  .landing-item:hover{background:var(--accent-soft);color:var(--accent);border-color:var(--accent);}
+  .landing-item.active{background:var(--accent-soft);color:var(--accent);border-color:var(--accent);font-weight:600;}
+  .landing-item-count{margin-left:auto;font-size:12px;color:var(--ink-faint);font-weight:500;}
+  .landing-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;gap:16px;flex-wrap:wrap;}
+  .landing-search{flex:1;min-width:180px;padding:8px 12px;border:1px solid var(--line-strong);border-radius:6px;font-size:13px;font-family:var(--font-body);color:var(--ink);}
+  .landing-search::placeholder{color:var(--ink-faint);}
+  .landing-grid{display:grid;grid-template-columns:repeat(auto-fill, minmax(280px, 1fr));gap:20px;margin-top:20px;}
+  .landing-list{display:flex;flex-direction:column;gap:10px;margin-top:14px;}
+  .project-card{background:var(--surface);border:1px solid var(--line);border-radius:10px;overflow:hidden;cursor:pointer;transition:all 150ms;display:flex;flex-direction:column;}
+  .project-card:hover{border-color:var(--line-strong);box-shadow:0 6px 18px rgba(20,20,30,.08);}
+  .project-card-preview{height:140px;background:linear-gradient(135deg, #E6E7E8 0%, #D3E9F7 100%);display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--ink-faint);position:relative;overflow:hidden;}
+  .project-card-preview svg{width:80%;height:80%;opacity:.4;}
+  .project-card-body{padding:14px;flex:1;display:flex;flex-direction:column;}
+  .project-card-title{font-size:14px;font-weight:700;color:var(--ink);margin:0 0 4px;line-height:1.3;}
+  .project-card-meta{font-size:11px;color:var(--ink-faint);margin-bottom:8px;}
+  .project-card-stats{display:flex;gap:10px;font-size:11px;color:var(--ink-soft);margin-top:auto;}
+  .project-card-stat{display:flex;align-items:center;gap:4px;}
+  .project-list-item{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:18px 20px;cursor:pointer;transition:all 150ms;display:flex;align-items:center;gap:20px;}
+  .project-list-item:hover{border-color:var(--line-strong);box-shadow:0 4px 12px rgba(20,20,30,.06);}
+  .project-list-item-preview{width:100px;height:70px;background:linear-gradient(135deg, #E6E7E8 0%, #D3E9F7 100%);border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .project-list-item-preview svg{width:70%;height:70%;opacity:.3;}
+  .project-list-item-content{flex:1;min-width:0;}
+  .project-list-item-title{font-size:15px;font-weight:700;color:var(--ink);margin:0 0 6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .project-list-item-meta{font-size:12px;color:var(--ink-faint);display:flex;gap:16px;}
+  .landing-empty{text-align:center;padding:60px 40px;color:var(--ink-faint);}
+  .landing-empty-title{font-size:18px;font-weight:700;color:var(--ink);margin-bottom:8px;}
+  .view-toggle{display:flex;gap:8px;align-items:center;}
+  .view-toggle-btn{border:1px solid var(--line-strong);background:var(--surface);color:var(--ink-faint);width:36px;height:36px;border-radius:6px;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;transition:all 150ms;}
+  .view-toggle-btn:hover{border-color:var(--accent);color:var(--accent);}
+  .view-toggle-btn.active{background:var(--accent);color:#fff;border-color:var(--accent);}
+
+  /* auth landing page - exact replica (prefixed "auth-" to avoid clashing with .landing-* project-picker classes) */
+  .auth-page{display:flex;flex-direction:column;min-height:100vh;background:#eef1f5;position:relative;overflow-x:hidden;}
+  .auth-page::before{content:'';position:absolute;top:0;right:0;width:55%;height:680px;opacity:0.5;pointer-events:none;z-index:0;background-image:url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600"><path d="M120,80 Q260,140 400,70 T600,60" stroke="%23d7dde3" fill="none" stroke-width="1.5"/><path d="M100,180 Q260,240 420,170 T620,190" stroke="%23dde2e7" fill="none" stroke-width="1.5"/><path d="M140,300 Q280,360 440,280" stroke="%23e3e7eb" fill="none" stroke-width="1.5"/><circle cx="330" cy="150" r="70" fill="none" stroke="%23d7dde3" stroke-width="1"/><circle cx="470" cy="230" r="45" fill="none" stroke="%23dde2e7" stroke-width="1"/><circle cx="380" cy="380" r="4" fill="%23c7ced6"/></svg>');background-repeat:no-repeat;}
+  .auth-header{background:transparent;padding:20px 48px 0;display:flex;position:relative;z-index:1;}
+  .auth-logo-section{display:flex;flex-direction:column;align-items:flex-start;}
+  .auth-logo-img{height:60px;width:auto;margin-bottom:2px;margin-left:-4px;}
+  .auth-logo-text{font-size:24px;font-weight:800;color:#152238;letter-spacing:-0.5px;line-height:1;}
+  .auth-logo-text .highlight{color:#0076BC;}
+  .auth-logo-divider{display:flex;align-items:center;gap:4px;margin:6px 0 2px;width:100%;justify-content:center;}
+  .auth-logo-divider .line{height:1px;background:#c9d2da;flex:1;max-width:50px;}
+  .auth-logo-divider .dot{width:4px;height:4px;border-radius:50%;}
+  .auth-logo-subtitle{font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.15em;color:#8a94a0;width:100%;text-align:center;}
+  .auth-hero{display:grid;grid-template-columns:1fr 1fr;gap:32px;padding:16px 48px 20px;position:relative;z-index:1;align-items:center;max-width:1400px;margin:0 auto;}
+  .auth-hero-left{display:flex;flex-direction:column;}
+  .auth-hero-title{font-size:36px;font-weight:700;line-height:1.35;color:#1a1a2e;margin:0 0 10px;max-width:100%;letter-spacing:-0.5px;}
+  .auth-hero-desc{font-size:15px;line-height:1.5;color:#5a6472;margin:0 0 14px;max-width:420px;font-weight:400;}
+  .auth-features{display:flex;flex-direction:column;gap:10px;}
+  .auth-feature{display:flex;gap:12px;align-items:flex-start;}
+  .auth-feature-icon{width:40px;height:40px;background:#fff;border:1.5px solid #d5dbe2;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--icon-teal);}
+  .auth-feature-icon svg{width:20px;height:20px;}
+  .auth-feature-title{font-size:14px;font-weight:700;color:#1a1a2e;margin:0 0 2px;line-height:1.2;}
+  .auth-feature-desc{font-size:13px;color:#5a6472;margin:0;line-height:1.4;}
+  .auth-hero-right{display:flex;justify-content:center;}
+  .auth-form-card{background:#fff;border-radius:12px;box-shadow:0 10px 32px rgba(20,30,45,.08);padding:26px 30px;width:100%;max-width:320px;}
+  .auth-form-header{text-align:center;margin-bottom:5px;}
+  .auth-form-title{font-size:22px;font-weight:700;color:#152238;margin:0 0 4px;letter-spacing:-0.3px;}
+  .auth-form-subtitle{font-size:12px;color:#8a94a0;margin:0;}
+  .auth-form-title-login{font-size:14px;font-weight:700;color:#1a1a2e;margin:14px 0 12px;text-align:center;display:block;}
+  .auth-form-group{margin-bottom:11px;}
+  .auth-form-label{display:block;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#8a94a0;margin-bottom:5px;}
+  .auth-form-input{width:100%;border:1.5px solid #dde2e7;background:#fbfcfd;font-size:13px;border-radius:6px;padding:8px 11px;font-family:var(--font-body);color:#1a1a2e;transition:all 200ms;}
+  .auth-form-input:focus{outline:none;border-color:#0076BC;background:#fff;box-shadow:0 0 0 3px rgba(0,118,188,.08);}
+  .auth-form-input::placeholder{color:#aab2bc;}
+  .auth-password-wrapper{position:relative;display:flex;align-items:center;}
+  .auth-password-toggle{position:absolute;right:8px;background:none;border:none;cursor:pointer;color:#8a94a0;padding:6px;display:flex;align-items:center;justify-content:center;transition:color 200ms;}
+  .auth-password-toggle:hover{color:#5a6472;}
+  .auth-password-toggle svg{width:18px;height:18px;}
+  .auth-form-row{display:flex;justify-content:space-between;align-items:center;font-size:12px;margin-top:9px;margin-bottom:12px;}
+  .auth-form-checkbox{display:flex;align-items:center;gap:6px;cursor:pointer;color:#3a4452;font-size:12px;}
+  .auth-form-checkbox input{width:14px;height:14px;cursor:pointer;accent-color:#003057;}
+  .auth-form-link{color:#0076BC;text-decoration:underline;cursor:pointer;font-weight:500;font-size:12px;}
+  .auth-form-link:hover{color:#005a8d;}
+  .auth-form-actions{display:flex;gap:8px;margin-top:3px;}
+  .auth-form-actions button{padding:7px 20px;border-radius:6px;border:1.5px solid #dde2e7;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font-body);transition:all 200ms;text-align:center;}
+  .auth-form-actions .btn-secondary{background:#fff;color:#1a1a2e;}
+  .auth-form-actions .btn-secondary:hover{border-color:#9aa4b0;}
+  .auth-form-actions .btn-primary{background:#0a2540;color:#fff;border-color:#0a2540;}
+  .auth-form-actions .btn-primary:hover{background:#123a63;}
+  .auth-spinner{display:none;text-align:center;padding:40px 20px;}
+  .auth-spinner-ring{display:inline-block;width:40px;height:40px;border:4px solid #dde2e7;border-top-color:#0076BC;border-radius:50%;animation:spin 1s linear infinite;}
+  .auth-spinner-text{margin-top:16px;color:#8a94a0;font-size:14px;}
+  .auth-section-works{padding:3px 48px 14px;text-align:center;position:relative;z-index:1;}
+  .auth-section-works h2{font-size:20px;font-weight:700;color:#1a1a2e;margin:0;letter-spacing:-0.3px;}
+  .auth-section-works .auth-works-rule{width:40px;height:2px;background:#0a2540;margin:9px auto 14px;}
+  .auth-howworks-grid{display:flex;align-items:flex-start;justify-content:center;gap:0;max-width:1100px;margin:0 auto;}
+  .auth-step{background:#fff;border:1px solid #dde2e7;border-radius:10px;padding:16px 14px;text-align:left;transition:all 200ms;flex:1;max-width:220px;}
+  .auth-step:hover{border-color:#b8c1cc;box-shadow:0 3px 12px rgba(20,30,45,.05);}
+  .auth-step-chevron{display:flex;align-items:center;justify-content:center;color:#c3cad2;padding:0 6px;align-self:stretch;flex-shrink:0;}
+  .auth-step-chevron svg{width:18px;height:18px;}
+  .auth-step-icon{color:var(--icon-teal);margin-bottom:9px;}
+  .auth-step-icon svg{width:24px;height:24px;}
+  .auth-step-head{display:flex;align-items:center;gap:8px;margin-bottom:5px;}
+  .auth-step-num{display:flex;align-items:center;justify-content:center;width:22px;height:22px;background:#1a1a2e;color:#fff;border-radius:50%;font-size:12px;font-weight:700;flex-shrink:0;}
+  .auth-step-title{font-size:13px;font-weight:700;color:#1a1a2e;margin:0;letter-spacing:-0.2px;}
+  .auth-step-desc{font-size:11px;color:#5a6472;line-height:1.5;margin:0;}
+
   /* modal */
   .modal-overlay{position:fixed;inset:0;background:rgba(15,20,28,.42);display:flex;align-items:center;justify-content:center;z-index:200;}
   .modal-card{background:var(--surface);border-radius:12px;box-shadow:0 20px 50px rgba(15,20,28,.28);width:420px;max-width:92vw;padding:22px 24px 20px;}
@@ -203,10 +376,252 @@
   .modal-sub{font-size:12.5px;color:var(--ink-soft);margin:0 0 18px;}
   .modal-field{margin-bottom:14px;}
   .modal-field label{display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-soft);margin-bottom:6px;}
-  .modal-field input{width:100%;border:1px solid var(--line-strong);background:var(--paper);font-size:13.5px;border-radius:6px;padding:9px 11px;font-family:var(--font-body);color:var(--ink);}
-  .modal-field input:focus{outline:none;border-color:var(--accent);background:var(--surface);}
+  .modal-field input, .modal-field select{width:100%;border:1px solid var(--line-strong);background:var(--paper);font-size:13.5px;border-radius:6px;padding:9px 11px;font-family:var(--font-body);color:var(--ink);}
+  .modal-field input:focus, .modal-field select:focus{outline:none;border-color:var(--accent);background:var(--surface);}
   .modal-hint{font-size:11px;color:var(--ink-faint);margin-top:5px;}
   .modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:20px;}
+
+  /* Mobile responsive */
+  @media (max-width:768px){
+    .auth-page::before{width:100%;height:400px;opacity:0.25;}
+    .auth-header{padding:16px 24px 0;}
+    .auth-logo-img{height:52px;}
+    .auth-logo-text{font-size:22px;}
+    .auth-logo-divider{margin:4px 0 2px;}
+    .auth-logo-divider .line{max-width:40px;}
+    .auth-logo-divider .dot{width:3px;height:3px;}
+    .auth-logo-subtitle{font-size:7px;}
+    .auth-hero{grid-template-columns:1fr;gap:20px;padding:12px 24px 16px;}
+    .auth-hero-title{font-size:32px;margin:0 0 9px;}
+    .auth-hero-desc{font-size:14px;margin:0 0 11px;}
+    .auth-features{gap:9px;}
+    .auth-feature{gap:10px;}
+    .auth-feature-icon{width:36px;height:36px;}
+    .auth-feature-icon svg{width:18px;height:18px;}
+    .auth-feature-title{font-size:13px;margin:0 0 2px;}
+    .auth-feature-desc{font-size:11px;}
+    .auth-form-card{max-width:100%;padding:23px 18px;}
+    .auth-form-title{font-size:20px;margin:0 0 4px;}
+    .auth-form-subtitle{font-size:11px;}
+    .auth-form-title-login{font-size:13px;margin:13px 0 11px;}
+    .auth-form-input{font-size:12px;padding:7px 10px;}
+    .auth-form-row{font-size:11px;margin-top:8px;margin-bottom:11px;}
+    .auth-form-checkbox{font-size:11px;gap:5px;}
+    .auth-form-checkbox input{width:13px;height:13px;}
+    .auth-form-link{font-size:11px;}
+    .auth-form-actions{gap:6px;margin-top:3px;}
+    .auth-form-actions button{padding:6px 16px;font-size:11px;}
+    .auth-section-works{padding:4px 24px 12px;}
+    .auth-section-works h2{font-size:16px;}
+    .auth-section-works .auth-works-rule{margin:8px auto 12px;}
+    .auth-howworks-grid{flex-wrap:wrap;gap:8px;max-width:100%;}
+    .auth-step{max-width:100%;flex:0 1 calc(50% - 4px);}
+    .auth-step{padding:14px 12px;border-radius:8px;}
+    .auth-step-chevron{display:none;}
+    .auth-step-icon{margin-bottom:8px;}
+    .auth-step-icon svg{width:20px;height:20px;}
+    .auth-step-num{width:20px;height:20px;font-size:10px;}
+    .auth-step-title{font-size:11px;}
+    .auth-step-desc{font-size:9px;}
+  }
+
+  @media (max-width:480px){
+    .auth-header{padding:12px 16px 0;}
+    .auth-logo-img{height:48px;}
+    .auth-logo-text{font-size:20px;}
+    .auth-hero{padding:9px 16px 11px;gap:14px;}
+    .auth-hero-title{font-size:28px;margin:0 0 7px;}
+    .auth-hero-desc{font-size:13px;margin:0 0 9px;}
+    .auth-features{gap:7px;}
+    .auth-feature{gap:8px;}
+    .auth-feature-icon{width:32px;height:32px;}
+    .auth-form-card{max-width:100%;padding:19px 15px;}
+    .auth-form-title{font-size:18px;}
+    .auth-form-subtitle{font-size:10px;}
+    .auth-form-input{font-size:11px;padding:6px 9px;}
+    .auth-form-actions button{padding:6px 14px;font-size:11px;}
+    .auth-howworks-grid{flex-direction:column;}
+    .auth-step{flex:1;max-width:100%;}
+    .auth-section-works{padding:2px 16px 9px;}
+    .auth-section-works h2{font-size:16px;}
+  }
+
+  /* Dashboard styles */
+  .dashboard-container{display:flex;height:100vh;background:#f8f9fb;transition:background 300ms ease;}
+  html.dark-mode .dashboard-container{background:#0b0f17;}
+  .dashboard-sidebar{width:260px;background:linear-gradient(135deg,#0a2540 0%,#0d3050 100%);color:#fff;padding:0;box-shadow:2px 0 16px rgba(0,0,0,.08);transition:all 250ms cubic-bezier(.4,.0,.2,1);position:relative;display:flex;flex-direction:column;height:100vh;}
+  html.dark-mode .dashboard-sidebar{background:linear-gradient(135deg,#0a1628 0%,#0d1f35 100%);box-shadow:2px 0 16px rgba(0,0,0,.3);}
+  .dashboard-sidebar-header{display:flex;align-items:center;justify-content:space-between;padding:28px 20px;border-bottom:1px solid rgba(255,255,255,.06);flex-shrink:0;transition:border-color 300ms ease;}
+  .dashboard-sidebar-content{flex:1;overflow-y:auto;padding:0;}
+  .dashboard-sidebar-footer{flex-shrink:0;padding:20px;display:flex;justify-content:flex-end;border-top:1px solid rgba(255,255,255,.08);background:rgba(0,0,0,.1);}
+  .dashboard-sidebar-toggle{background:rgba(255,255,255,.1);border:none;color:#fff;width:40px;height:40px;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:18px;transition:all 250ms cubic-bezier(.4,.0,.2,1);flex-shrink:0;font-weight:bold;}
+  .dashboard-sidebar-toggle:hover{background:rgba(255,255,255,.15);transform:scale(1.05);}
+  .dashboard-sidebar.collapsed{width:80px;overflow:visible;}
+  .dashboard-sidebar.collapsed .dashboard-sidebar-header{padding:28px 15px;}
+  .dashboard-sidebar.collapsed .dashboard-sidebar-logo{display:block;}
+  .dashboard-sidebar.collapsed .dashboard-sidebar-section{margin:0;}
+  .dashboard-sidebar.collapsed .dashboard-sidebar-label{display:none;}
+  .dashboard-sidebar.collapsed .dashboard-sidebar-item span{display:none;}
+  .dashboard-sidebar.collapsed .dashboard-sidebar-item{justify-content:center;padding:14px 8px;position:relative;}
+  .dashboard-sidebar.collapsed .dashboard-sidebar-item i{display:block;color:rgba(255,255,255,.7);}
+  .dashboard-sidebar.collapsed .dashboard-sidebar-item.active i{color:#00D9FF;}
+  .dashboard-sidebar.collapsed .dashboard-sidebar-item:hover::after{content:attr(data-tooltip);position:absolute;left:calc(100% + 12px);top:50%;transform:translateY(-50%);background:rgba(0,0,0,.9);color:#fff;padding:8px 12px;border-radius:4px;font-size:12px;white-space:nowrap;z-index:9999;pointer-events:none;}
+  .dashboard-sidebar.collapsed .dashboard-sidebar-item::before{content:'';display:none;}
+  .dashboard-header{flex:1;display:flex;flex-direction:column;}
+  .dashboard-topbar{display:flex;align-items:center;justify-content:space-between;padding:20px 32px;background:#fff;border-bottom:1px solid #e2e8f0;box-shadow:0 1px 2px rgba(0,0,0,.04);transition:all 300ms ease;}
+  html.dark-mode .dashboard-topbar{background:#161e2e;border-bottom-color:#334155;box-shadow:0 1px 2px rgba(0,0,0,.3);}
+  .dashboard-logo{display:flex;align-items:center;gap:12px;font-size:20px;font-weight:700;color:#0a2540;letter-spacing:-.5px;transition:color 300ms ease;}
+  html.dark-mode .dashboard-logo{color:#e2e8f0;}
+  .dashboard-logo img{height:36px;}
+  .dashboard-topbar-right{display:flex;align-items:center;gap:20px;}
+  .dashboard-search{flex:1;max-width:520px;display:flex;align-items:center;gap:10px;padding:11px 16px;background:#f1f5f9;border-radius:8px;border:1px solid #cbd5e1;transition:all 200ms;}
+  html.dark-mode .dashboard-search{background:#1a2332;border-color:#475569;}
+  .dashboard-search:focus-within{background:#fff;border-color:#0076BC;box-shadow:0 0 0 3px rgba(0,118,188,.08);}
+  html.dark-mode .dashboard-search:focus-within{background:#1f2a38;border-color:#0076BC;box-shadow:0 0 0 3px rgba(0,118,188,.2);}
+  .dashboard-search input{flex:1;background:none;border:none;outline:none;font-size:13px;color:#1e293b;font-weight:500;}
+  html.dark-mode .dashboard-search input{color:#f1f5f9;}
+  .dashboard-search input::placeholder{color:#94a3b8;}
+  html.dark-mode .dashboard-search input::placeholder{color:#64748b;}
+  .dashboard-user{display:flex;align-items:center;gap:10px;cursor:pointer;}
+  .dashboard-user-info{color:#1e293b;transition:color 300ms ease;font-weight:500;}
+  html.dark-mode .dashboard-user-info{color:#ffffff;}
+  .dashboard-avatar{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#0076BC,#0055a8);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;box-shadow:0 2px 8px rgba(0,118,188,.2);flex-shrink:0;}
+  .dashboard-content{flex:1;overflow-y:auto;padding:32px;transition:background 300ms ease;}
+  .dashboard-sidebar-logo{margin:0;flex:0 0 auto;}
+  .dashboard-sidebar-logo img{height:28px;display:block;}
+  .dashboard-sidebar-menu{display:flex;flex-direction:column;gap:6px;padding:12px 8px;}
+  .dashboard-sidebar-item{display:flex;align-items:center;gap:12px;padding:12px 14px;margin:2px 0;border-radius:8px;cursor:pointer;font-size:14px;transition:all 200ms cubic-bezier(.4,.0,.2,1);color:rgba(255,255,255,.7);font-weight:500;}
+  .dashboard-sidebar-item i{width:16px;text-align:center;font-size:16px;color:rgba(255,255,255,.7);}
+  .dashboard-sidebar-item span{display:inline;}
+  .dashboard-sidebar-item:hover{background:rgba(255,255,255,.12);color:#fff;}
+  .dashboard-sidebar-item:hover i{color:#fff;}
+  .dashboard-sidebar-item.active{background:rgba(0,118,188,.9);color:#fff;box-shadow:inset 0 0 8px rgba(0,0,0,.2);}
+  .dashboard-sidebar-item.active i{color:#00D9FF;}
+  html.dark-mode .dashboard-sidebar-item.active{background:rgba(0,118,188,.8);}
+  html.dark-mode .dashboard-sidebar-item.active i{color:#00D9FF;}
+  .dashboard-sidebar-section{margin-top:12px;padding:12px 0 0;}
+  .dashboard-sidebar-label{font-size:10px;font-weight:700;text-transform:uppercase;color:rgba(255,255,255,.45);margin-bottom:10px;padding:0 14px;letter-spacing:.8px;}
+  .dashboard-stats{display:grid;grid-template-columns:repeat(5,1fr);gap:18px;margin-bottom:32px;}
+  .dashboard-stat-card{background:#fff;padding:24px;border-radius:12px;border:1px solid #e2e8f0;border-left:4px solid transparent;transition:all 200ms;cursor:default;box-shadow:0 1px 2px rgba(0,0,0,.04);}
+  html.dark-mode .dashboard-stat-card{background:#161e2e;border-color:#334155;box-shadow:0 1px 2px rgba(0,0,0,.3);}
+  .dashboard-stat-card:hover{border-color:#cbd5e1;box-shadow:0 2px 4px rgba(0,0,0,.06);}
+  html.dark-mode .dashboard-stat-card:hover{border-color:#475569;box-shadow:0 2px 4px rgba(0,0,0,.2);}
+  .dashboard-stat-card.total-projects{background:linear-gradient(135deg,#E8F4FF 0%,#f0f8ff 100%);border-left-color:#0076BC;}
+  html.dark-mode .dashboard-stat-card.total-projects{background:linear-gradient(135deg,rgba(0,118,188,.12) 0%,rgba(0,118,188,.08) 100%);}
+  .dashboard-stat-card.on-track{background:linear-gradient(135deg,#E6F4EA 0%,#f0f9f3 100%);border-left-color:#1B7A45;}
+  html.dark-mode .dashboard-stat-card.on-track{background:linear-gradient(135deg,rgba(27,122,69,.12) 0%,rgba(27,122,69,.08) 100%);}
+  .dashboard-stat-card.at-risk{background:linear-gradient(135deg,#FFF3E0 0%,#fffaf4 100%);border-left-color:#D98324;}
+  html.dark-mode .dashboard-stat-card.at-risk{background:linear-gradient(135deg,rgba(217,131,36,.12) 0%,rgba(217,131,36,.08) 100%);}
+  .dashboard-stat-card.off-track{background:linear-gradient(135deg,#FFEBEE 0%,#fff5f5 100%);border-left-color:#C0392B;}
+  html.dark-mode .dashboard-stat-card.off-track{background:linear-gradient(135deg,rgba(192,57,43,.12) 0%,rgba(192,57,43,.08) 100%);}
+  .dashboard-stat-card.not-started{background:linear-gradient(135deg,#F5F5F5 0%,#fafafa 100%);border-left-color:#77787B;}
+  html.dark-mode .dashboard-stat-card.not-started{background:linear-gradient(135deg,rgba(119,120,123,.12) 0%,rgba(119,120,123,.08) 100%);}
+  .dashboard-stat-label{font-size:11px;font-weight:700;color:#64748b;margin-bottom:10px;text-transform:uppercase;letter-spacing:.6px;transition:color 300ms ease;}
+  html.dark-mode .dashboard-stat-label{color:#94a3b8;}
+  .dashboard-stat-value{font-size:36px;font-weight:800;color:#1e293b;margin-bottom:4px;transition:color 300ms ease;}
+  html.dark-mode .dashboard-stat-value{color:#f1f5f9;}
+  .dashboard-stat-meta{font-size:12px;color:#94a3b8;transition:color 300ms ease;font-weight:500;}
+  html.dark-mode .dashboard-stat-meta{color:#64748b;}
+  .dashboard-section-title{font-size:22px;font-weight:700;color:#0a2540;margin-bottom:22px;display:flex;justify-content:space-between;align-items:center;letter-spacing:-.5px;transition:color 300ms ease;}
+  html.dark-mode .dashboard-section-title{color:#e2e8f0;}
+  .dashboard-controls{display:flex;gap:12px;align-items:center;}
+  .dashboard-filter{padding:10px 14px;background:#fff;border:1px solid #cbd5e1;border-radius:8px;font-size:13px;color:#64748b;cursor:pointer;font-weight:500;transition:all 200ms;}
+  html.dark-mode .dashboard-filter{background:#1a2332;border-color:#475569;color:#cbd5e1;}
+  .dashboard-filter:hover{border-color:#0076BC;color:#0076BC;background:#f8fafc;}
+  html.dark-mode .dashboard-filter:hover{background:#1f2937;}
+  .dashboard-theme-toggle{padding:10px 14px;background:#fff;border:1px solid #cbd5e1;border-radius:8px;font-size:13px;color:#64748b;cursor:pointer;font-weight:500;transition:all 200ms;display:flex;align-items:center;gap:6px;}
+  html.dark-mode .dashboard-theme-toggle{background:#1a2332;border-color:#475569;color:#cbd5e1;}
+  .dashboard-theme-toggle:hover{border-color:#0076BC;color:#0076BC;background:#f8fafc;}
+  html.dark-mode .dashboard-theme-toggle:hover{background:#1f2937;}
+  .dashboard-table{width:100%;background:#fff;transition:background 300ms ease;border-collapse:collapse;}
+  html.dark-mode .dashboard-table{background:#161e2e;}
+  .dashboard-table-head{display:grid;grid-template-columns:2fr 1fr 1.5fr 1.5fr 0.5fr;gap:0;padding:0;background:#f8f9fb;border-bottom:1px solid #cbd5e1;transition:all 300ms ease;}
+  html.dark-mode .dashboard-table-head{background:#1a2332;border-bottom-color:#475569;}
+  .dashboard-table-head div{padding:16px 24px;font-weight:600;font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:.6px;text-align:left;cursor:pointer;user-select:none;transition:color 200ms ease;}
+  html.dark-mode .dashboard-table-head div{color:#94a3b8;}
+  .dashboard-table-head div:last-child{text-align:right;}
+  .dashboard-table-head div:hover{color:#0076BC;}
+  .dashboard-table-row{display:grid;grid-template-columns:2fr 1fr 1.5fr 1.5fr 0.5fr;gap:0;border-bottom:1px solid #e2e8f0;transition:background 200ms;align-items:center;}
+  html.dark-mode .dashboard-table-row{border-bottom-color:#334155;}
+  .dashboard-table-row:hover{background:#f8fafc;}
+  html.dark-mode .dashboard-table-row:hover{background:#1f2937;}
+  .dashboard-table-row:last-child{border-bottom:none;}
+  .dashboard-table-row > div{padding:16px 24px;display:flex;align-items:center;transition:color 300ms ease;}
+  html.dark-mode .dashboard-table-row > div{color:#e2e8f0;}
+  .dashboard-table-row > div:last-child{justify-content:flex-end;}
+  .dashboard-project-name{font-weight:600;color:#0a2540;font-size:13px;cursor:pointer;transition:color 200ms;}
+  html.dark-mode .dashboard-project-name{color:#e2e8f0;}
+  .dashboard-project-name:hover{color:#0076BC;}
+  .dashboard-project-desc{font-size:11px;color:#8a94a0;margin-top:2px;}
+  .dashboard-status{display:inline-flex;align-items:center;padding:6px 12px;border-radius:20px;font-size:11px;font-weight:600;width:fit-content;gap:0;}
+  .dashboard-status.on-track{background:#D4E4F7;color:#0055a8;border:1px solid #a3c8f2;}
+  .dashboard-status.at-risk{background:#FDEBD8;color:#a8570f;border:1px solid #ffd9b3;}
+  .dashboard-status.completed{background:#D4F4DD;color:#0d6d42;border:1px solid #a8e6b8;}
+  .dashboard-status.off-track{background:#F5C6C1;color:#9d2c2a;border:1px solid #f4a49f;}
+  .dashboard-status.not-started{background:#E8E8E8;color:#666;border:1px solid #d3d3d3;}
+  .dashboard-progress{display:flex;align-items:center;gap:8px;width:100%;}
+  .dashboard-progress-bar{flex:1;height:6px;background:#e2e8f0;border-radius:3px;overflow:hidden;min-width:60px;transition:background 300ms ease;}
+  html.dark-mode .dashboard-progress-bar{background:#334155;}
+  .dashboard-progress-fill{height:100%;background:linear-gradient(90deg,#0076BC,#0055a8);border-radius:3px;transition:width 200ms ease;}
+  .dashboard-progress-text{font-size:11px;color:#64748b;font-weight:600;min-width:35px;text-align:right;flex-shrink:0;transition:color 300ms ease;}
+  html.dark-mode .dashboard-progress-text{color:#ffffff;}
+  .dashboard-status-cell{width:100%;}
+  .dashboard-updated-cell{font-size:11px;color:#8a94a0;}
+  .dashboard-actions{cursor:pointer;color:#8a94a0;font-size:16px;transition:color 200ms;padding:8px;border-radius:4px;}
+  .dashboard-actions:hover{color:#0076BC;background:#f0f3f9;}
+  .dashboard-pagination{display:flex;align-items:center;justify-content:space-between;padding:20px 24px;border-top:1px solid #e2e8f0;background:#fff;transition:all 300ms ease;}
+  html.dark-mode .dashboard-pagination{background:#161e2e;border-top-color:#334155;}
+  .dashboard-pagination-text{font-size:12px;color:#64748b;font-weight:500;transition:color 300ms ease;}
+  html.dark-mode .dashboard-pagination-text{color:#cbd5e1;}
+  .dashboard-pagination-controls{display:flex;gap:8px;align-items:center;}
+  .dashboard-pagination-btn{padding:8px 12px;border:1px solid #cbd5e1;background:#fff;border-radius:6px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;color:#64748b;transition:all 200ms;}
+  html.dark-mode .dashboard-pagination-btn{background:#1a2332;border-color:#475569;color:#cbd5e1;}
+  .dashboard-pagination-btn:hover:not(:disabled){border-color:#0076BC;color:#0076BC;background:#f8fafc;}
+  html.dark-mode .dashboard-pagination-btn:hover:not(:disabled){background:#1f2937;border-color:#0076BC;color:#0076BC;}
+  .dashboard-pagination-btn.active{background:#0076BC;color:#fff;border-color:#0076BC;font-weight:600;}
+  .dashboard-pagination-btn:disabled{opacity:0.4;cursor:not-allowed;}
+
+  /* Custom modal/popup */
+  .custom-modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:10000;}
+  .custom-modal{background:#ffffff !important;border-radius:10px;padding:32px;max-width:500px;box-shadow:0 10px 40px rgba(0,0,0,0.2);animation:slideUp 300ms ease-out;}
+  @keyframes slideUp{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}
+  .custom-modal-title{font-size:18px;font-weight:700;color:#0a2540;margin-bottom:12px;}
+  .custom-modal-message{font-size:14px;color:#5a6472;line-height:1.5;margin-bottom:24px;}
+  .custom-modal-buttons{display:flex;gap:12px;justify-content:flex-end;}
+  .custom-modal-btn{padding:10px 20px;border:1px solid #e0e6f2;background:#fff;border-radius:6px;font-size:14px;cursor:pointer;font-weight:600;}
+  .custom-modal-btn.primary{background:#0076BC;color:#fff;border-color:#0076BC;}
+  .custom-modal-btn:hover{opacity:0.8;}
+  .dashboard-user-menu{position:relative;}
+  .dashboard-user-dropdown{position:absolute;top:100%;right:0;margin-top:8px;background:#fff;border:1px solid #cbd5e1;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,.08);min-width:200px;display:none;z-index:100;transition:all 300ms ease;}
+  html.dark-mode .dashboard-user-dropdown{background:#161e2e;border-color:#475569;box-shadow:0 4px 12px rgba(0,0,0,.3);}
+  .dashboard-user-dropdown.active{display:block;}
+  .dashboard-user-dropdown-item{padding:12px 16px;font-size:13px;color:#1e293b;cursor:pointer;transition:all 200ms;border-bottom:1px solid #e2e8f0;}
+  html.dark-mode .dashboard-user-dropdown-item{color:#f1f5f9;border-bottom-color:#334155;}
+  .dashboard-user-dropdown-item:last-child{border-bottom:none;}
+  .dashboard-user-dropdown-item:hover{background:#f8fafc;}
+  html.dark-mode .dashboard-user-dropdown-item:hover{background:#1f2937;}
+  .dashboard-user-dropdown-item.logout{color:#dc2626;}
+  html.dark-mode .dashboard-user-dropdown-item.logout{color:#ef4444;}
+  .dashboard-project-menu{position:relative;}
+  .dashboard-project-dropdown{position:fixed;background:#fff;border:1px solid #e0e6f2;border-radius:6px;box-shadow:0 8px 16px rgba(0,0,0,.1);min-width:160px;display:none;z-index:50;}
+  .dashboard-project-dropdown.active{display:block;}
+  .dashboard-project-dropdown-item{padding:10px 14px;font-size:12px;color:#0a2540;cursor:pointer;transition:background 200ms;border-bottom:1px solid #f0f3f9;}
+  .dashboard-project-dropdown-item:last-child{border-bottom:none;}
+  .dashboard-project-dropdown-item:hover{background:#f5f7fa;}
+  .dashboard-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;z-index:200;}
+  .dashboard-modal-overlay.active{display:flex;}
+  .dashboard-modal{background:#fff;border-radius:12px;padding:24px;max-width:500px;width:90%;max-height:80vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.3);}
+  .dashboard-modal-title{font-size:20px;font-weight:700;color:#0a2540;margin-bottom:16px;}
+  .dashboard-modal-field{margin-bottom:16px;}
+  .dashboard-modal-label{display:block;font-size:12px;font-weight:700;color:#5a6472;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px;}
+  .dashboard-modal-input{width:100%;padding:10px 12px;border:1px solid #e0e6f2;border-radius:6px;font-size:13px;color:#0a2540;font-family:inherit;}
+  .dashboard-modal-input:focus{outline:none;border-color:#0076BC;box-shadow:0 0 0 3px rgba(0,118,188,.1);}
+  .dashboard-modal-actions{display:flex;gap:12px;justify-content:flex-end;margin-top:24px;}
+  .dashboard-modal-btn{padding:10px 16px;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;border:none;transition:all 200ms;}
+  .dashboard-modal-btn.primary{background:#0076BC;color:#fff;}
+  .dashboard-modal-btn.primary:hover{background:#0056a0;}
+  .dashboard-modal-btn.secondary{background:#f0f3f9;color:#0a2540;}
+  .dashboard-modal-btn.secondary:hover{background:#e0e6f2;}
 </style>
 </head>
 <body>
@@ -217,46 +632,119 @@
 <script>
 /* ---------------- state ---------------- */
 let uid = 100;
-let projectTitle = "Credit Services Phase 1 (CRT) Timelines";
-let activeTab = "data"; // data | timeline
+let projectTitle = "Untitled Project";
+let activeTab = "data"; // data | timeline | versions | account
 let openMenuKey = null; // "<slId>-<rowId>-<isPhase>" of currently open row menu
 let dragSrc = null; // {slId, rowId, isPhase} of the row currently being dragged
 let compactMode = false; // when true, halves the vertical spacing between timeline rows
 
+/* Auth state */
+let authUser = null; // {id, email, displayName} once logged in
+let myProjects = []; // [{id, title, createdAt, updatedAt}] for picker
+let currentProjectId = null; // currently open project
+let projectDataCache = {}; // cache for project swimlanes data
+let dashboardSortField = 'updated'; // current sort field
+let dashboardSortAsc = false; // sort ascending
+let dashboardCurrentPage = 1; // current page for pagination
+const PROJECTS_PER_PAGE = 5; // projects per page
+
+/* API wrapper with auth */
+async function apiFetch(path, opts={}, attemptCount=0){
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
+
+  try {
+    const res = await fetch(path, {
+      ...opts,
+      credentials:'include',
+      signal: controller.signal,
+      headers: { 'Content-Type':'application/json', ...(opts.headers||{}) }
+    });
+    clearTimeout(timeoutId);
+    return handleAuthResponse(res, path, opts, attemptCount);
+  } catch (err) {
+    clearTimeout(timeoutId);
+    if (err.name === 'AbortError') {
+      throw new Error('Request timeout - server not responding');
+    }
+    throw err;
+  }
+}
+
+async function handleAuthResponse(res, path, opts, attemptCount){
+
+  if(res.status === 401 && attemptCount === 0 && path !== '/api/v1/auth/refresh'){
+    // Try to refresh token only once
+    try {
+      const refreshRes = await fetch('/api/v1/auth/refresh', {
+        method: 'POST',
+        credentials:'include',
+        headers: { 'Content-Type':'application/json' }
+      });
+
+      if(refreshRes && refreshRes.ok){
+        // Token refreshed, retry original request (but only once)
+        return await fetch(path, { ...opts, credentials:'include',
+          headers: { 'Content-Type':'application/json', ...(opts.headers||{}) } });
+      }
+    } catch(e) {
+      console.error('Token refresh error:', e);
+    }
+  }
+
+  if(res.status === 401){
+    // Refresh failed or already attempted, log out
+    authUser = null;
+    renderAuthScreen();
+    return null;
+  }
+
+  return res;
+}
+
 /* ---------------- saved versions (by business group) ---------------- */
 const VER_STORAGE_KEY = "tlStudio.versions.v1";
-const TIMELINE_STORAGE_KEY = "tlStudio.timeline.v1";
-let versions = loadVersions();
+let versions = [];
 let collapsedGroups = new Set();
 let versionMenuKey = null; // id of version whose card menu is open
-let modalMode = null; // null | "save" | "edit"
+let selectedVersions = new Set(); // ids of selected versions for bulk operations
+let versionsViewMode = localStorage.getItem('versionsViewMode') || 'tile'; // 'tile' or 'list'
+let versionsSortBy = localStorage.getItem('versionsSortBy') || 'date'; // 'date', 'name', 'swimlanes'
+let projectViewMode = "list"; // "card" or "list"
+let modalMode = null; // null | "save" | "edit" | "move-version"
 let modalEditId = null; // version id being edited, when modalMode === "edit"
+let modalMoveVersionId = null; // version id being moved, when modalMode === "move-version"
 let modalName = "";
 let modalGroup = "";
+let modalTargetProject = "";
 
-function loadVersions(){
+async function loadVersions(){
   try{
-    const raw = localStorage.getItem(VER_STORAGE_KEY);
-    return raw ? JSON.parse(raw) : [];
-  }catch(e){ return []; }
+    const res = await apiFetch(`/api/v1/projects/${currentProjectId}/versions`);
+    versions = res && res.ok ? (await res.json()) : [];
+  }catch(e){ console.error('Error loading versions:', e); versions = []; }
 }
-function persistVersions(){
-  try{ localStorage.setItem(VER_STORAGE_KEY, JSON.stringify(versions)); }catch(e){ /* storage unavailable */ }
-}
-function loadTimeline(){
+
+async function maybeImportLocalStorageVersions(){
+  const raw = localStorage.getItem(VER_STORAGE_KEY);
+  if(!raw) return;
   try{
-    const raw = localStorage.getItem(TIMELINE_STORAGE_KEY);
-    return raw ? JSON.parse(raw) : null;
-  }catch(e){ return null; }
-}
-function persistTimeline(){
-  try{
-    const data = JSON.stringify({ swimlanes, projectTitle });
-    localStorage.setItem(TIMELINE_STORAGE_KEY, data);
-    console.log("Timeline saved to localStorage:", { swimlanes: swimlanes.length, projectTitle });
-  }catch(e){
-    console.error("Failed to save timeline:", e);
-  }
+    const oldVersions = JSON.parse(raw);
+    if(!Array.isArray(oldVersions) || oldVersions.length === 0) return;
+    const proceed = confirm(`Import ${oldVersions.length} locally-saved versions into your account?`);
+    if(!proceed) return;
+
+    for(const oldVer of oldVersions){
+      try{
+        await apiFetch(`/api/v1/projects/${currentProjectId}/versions`, {
+          method:'POST',
+          body: JSON.stringify({ name: oldVer.name, group: oldVer.group })
+        });
+      }catch(e){ console.error('Error importing version:', e); }
+    }
+    localStorage.removeItem(VER_STORAGE_KEY);
+    await loadVersions();
+  }catch(e){ console.error('Error in maybeImportLocalStorageVersions:', e); }
 }
 
 /* ---------------- undo / redo history ---------------- */
@@ -304,33 +792,7 @@ document.addEventListener("click", (e)=>{
   render();
 });
 
-const DEFAULT_SWIMLANES = [
-  {
-    id: 1, name: "Credit Services Phase 1",
-    phase: null,
-    children: [
-      { id: 2, title:"Discovery", type:"task", start:"2025-09-01", end:"2026-01-04", percent:100, assignedTo:"Business, Commission Systems", status:"complete", visible:true },
-      { id: 3, title:"Requirements Gathering", type:"task", start:"2026-01-05", end:"2026-03-29", percent:100, assignedTo:"Business, Commission Systems", status:"complete", visible:true },
-      { id: 6, title:"Requirements Documentation", type:"task", start:"2026-04-01", end:"2026-05-26", percent:100, assignedTo:"Commission Systems", status:"complete", visible:true },
-      { id: 7, title:"IT Analysis and Design", type:"task", start:"2026-07-06", end:"2026-07-17", percent:100, assignedTo:"IT", status:"complete", visible:true },
-      { id: 8, title:"Requirement Freeze", type:"milestone", start:"2026-07-20", end:"2026-07-20", percent:100, assignedTo:"All", status:"complete", visible:true },
-      { id: 9, title:"IT Build & Unit Test", type:"task", start:"2026-07-20", end:"2026-09-18", percent:25, assignedTo:"IT", status:"in-progress", visible:true },
-      { id: 10, title:"SIT", type:"task", start:"2026-09-14", end:"2026-10-02", percent:0, assignedTo:"IT", status:"not-started", visible:true },
-      { id: 11, title:"UAT", type:"task", start:"2026-10-05", end:"2026-10-16", percent:0, assignedTo:"Business, Commission Systems", status:"not-started", visible:true },
-      { id: 12, title:"Go/No Go", type:"milestone", start:"2026-10-16", end:"2026-10-16", percent:0, assignedTo:"Business", status:"not-started", visible:true },
-      { id: 13, title:"Production Migration Prep", type:"task", start:"2026-10-19", end:"2026-10-23", percent:0, assignedTo:"IT", status:"not-started", visible:true },
-      { id: 15, title:"Production Migration", type:"milestone", start:"2026-10-26", end:"2026-10-26", percent:0, assignedTo:"IT", status:"not-started", visible:true },
-      { id: 16, title:"Production Validation (IT)", type:"task", start:"2026-11-02", end:"2026-11-03", percent:0, assignedTo:"IT", status:"not-started", visible:true },
-      { id: 17, title:"Production Validation (Business)", type:"task", start:"2026-11-04", end:"2026-11-05", percent:0, assignedTo:"Business, Commission Systems", status:"not-started", visible:true },
-      { id: 14, title:"Go Live", type:"major", start:"2026-11-06", end:"2026-11-06", percent:0, assignedTo:"", status:"not-started", visible:true }
-    ]
-  }
-];
-const savedTimeline = loadTimeline();
-console.log("Loaded timeline from storage:", savedTimeline ? "Yes" : "No");
-let swimlanes = savedTimeline ? savedTimeline.swimlanes : DEFAULT_SWIMLANES;
-if(savedTimeline) projectTitle = savedTimeline.projectTitle;
-console.log("Initial state - swimlanes count:", swimlanes.length, "projectTitle:", projectTitle);
+let swimlanes = [];
 
 /* ---------------- helpers ---------------- */
 function parseD(s){ return new Date(s + "T00:00:00"); }
@@ -354,15 +816,64 @@ function todayISO(){
   const d = new Date();
   return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
 }
+let autosaveTimer = null;
 function saveFlash(){
-  console.log("saveFlash called");
-  persistTimeline();
   const dot = document.querySelector(".save-dot");
   const lbl = document.querySelector(".save-lbl");
   if(!dot) return;
   lbl.textContent = "Saving…";
   dot.style.opacity = .3;
-  setTimeout(()=>{ lbl.textContent = "Saved"; dot.style.opacity = 1; }, 450);
+  clearTimeout(autosaveTimer);
+  console.log('[SAVE] Scheduled save in 800ms for project:', currentProjectId);
+  autosaveTimer = setTimeout(async ()=>{
+    console.log('[SAVE] Timeout fired, attempting save...');
+    if(!currentProjectId){
+      console.error('[SAVE] ✗ No currentProjectId set');
+      return;
+    }
+
+    console.log('[SAVE] Current swimlanes count:', swimlanes.length);
+    swimlanes.forEach((sl, i) => {
+      console.log(`[SAVE] Swimlane ${i}:`, sl.name, '- children:', sl.children?.length);
+      if(sl.children){
+        sl.children.forEach((child, j) => {
+          console.log(`[SAVE]   Child ${j}:`, child.title, '- percent:', child.percent);
+        });
+      }
+    });
+
+    const payload = { swimlanes, projectTitle };
+    console.log('[SAVE] Payload size:', JSON.stringify(payload).length, 'bytes');
+    console.log('[SAVE] Sending to server for project:', currentProjectId);
+
+    try {
+      const res = await apiFetch(`/api/v1/projects/${currentProjectId}`, {
+        method:'PUT', body: JSON.stringify(payload)
+      });
+      console.log('[SAVE] Response:', res?.status, res?.ok);
+      if(res?.ok){
+        console.log('[SAVE] ✓ Data saved successfully');
+        projectDataCache[currentProjectId] = null; // Invalidate cache for this project
+      } else {
+        console.error('[SAVE] ✗ Save failed with status:', res?.status);
+      }
+
+      if(dot){
+        lbl.textContent = (res && res.ok) ? "Saved" : "Save failed — retrying";
+        dot.style.opacity = 1;
+      }
+      if(!res || !res.ok){
+        console.warn('[SAVE] Save failed, retrying in 3 seconds');
+        autosaveTimer = setTimeout(()=>saveFlash(), 3000);
+      }
+    } catch(err) {
+      console.error('[SAVE] Exception:', err);
+      if(dot){
+        lbl.textContent = "Save error";
+        dot.style.opacity = 1;
+      }
+    }
+  }, 800);
 }
 
 function allRows(){
@@ -376,11 +887,11 @@ function allRows(){
 }
 
 const STATUS_META = {
-  "not-started": {label:"Not Started", color:"var(--st-notstarted)", bar:"var(--st-notstarted-bar)", track:"var(--st-notstarted-track)"},
-  "in-progress": {label:"In Progress", color:"var(--st-progress)", bar:"var(--st-progress)", track:"var(--st-progress-track)"},
-  "complete": {label:"Complete", color:"var(--st-complete)", bar:"var(--st-complete)", track:"var(--st-complete-track)"},
-  "behind-schedule": {label:"Behind Schedule", color:"var(--st-behind)", bar:"var(--st-behind)", track:"var(--st-behind-track)"},
-  "at-risk": {label:"At Risk", color:"var(--st-risk)", bar:"var(--st-risk)", track:"var(--st-risk-track)"}
+  "not-started": {label:"⚪ Not Started", color:"#999999", bar:"#CCCCCC", track:"#E8E8E8"},
+  "on-track": {label:"🟢 On Track", color:"#0076BC", bar:"#0099D8", track:"#D4E4F7"},
+  "complete": {label:"🟢 Complete", color:"#1B7A45", bar:"#1B7A45", track:"#D4F4DD"},
+  "at-risk": {label:"🟡 At Risk", color:"#D98324", bar:"#E8A855", track:"#FDEBD8"},
+  "off-track": {label:"🔴 Off Track", color:"#C0392B", bar:"#E74C3C", track:"#F5C6C1"}
 };
 
 /* ---------------- mutations ---------------- */
@@ -454,8 +965,54 @@ function toggleVisible(row){
   saveFlash(); render();
 }
 function onFieldChange(slId, rowId, isPhase, field, val){
+  console.log('[FIELD_CHANGE]', field, '=', val);
   const row = findRow(slId, rowId, isPhase);
-  if(row){ pushHistory(); row[field] = val; saveFlash(); render(); }
+  console.log('[FIELD_CHANGE] Row found:', !!row);
+  if(row){
+    // Validate date fields
+    if(field === 'start' || field === 'end'){
+      const startDate = field === 'start' ? val : row.start;
+      const endDate = field === 'end' ? val : row.end;
+
+      if(startDate && endDate){
+        const start = new Date(startDate + 'T00:00:00');
+        const end = new Date(endDate + 'T00:00:00');
+
+        // For milestones: end date must equal start date
+        if(row.type === 'milestone' || row.type === 'major'){
+          if(field === 'start'){
+            val = startDate; // Keep the value
+            row[field] = val;
+            // Auto-sync end date to start date for milestones
+            row.end = startDate;
+            console.log('[FIELD_CHANGE] Milestone: auto-synced end date to start date');
+          } else if(field === 'end'){
+            // Force end date to match start date for milestones
+            val = row.start;
+            row[field] = val;
+            console.log('[FIELD_CHANGE] Milestone: corrected end date to match start date');
+          }
+        } else {
+          // For tasks: end date must be >= start date
+          if(end < start){
+            alert('End date must be on or after the start date');
+            console.log('[FIELD_CHANGE] Invalid: end date before start date');
+            return;
+          }
+          row[field] = val;
+        }
+      } else {
+        row[field] = val;
+      }
+    } else {
+      row[field] = val;
+    }
+
+    pushHistory();
+    console.log('[FIELD_CHANGE] Updated row, calling saveFlash');
+    saveFlash();
+    render();
+  }
 }
 
 /* ---------------- row menu ---------------- */
@@ -532,6 +1089,1702 @@ function hideFromTimeline(slId, rowId, isPhase){
   saveFlash(); render();
 }
 
+/* Auth UI */
+async function loadProjectList(){
+  const res = await apiFetch('/api/v1/projects');
+  myProjects = res && res.ok ? (await res.json()) : [];
+}
+
+async function goToDashboard(){
+  console.log('[DASHBOARD] goToDashboard() called, currentProjectId:', currentProjectId);
+
+  // Flush any pending saves in background (don't wait for it)
+  if(autosaveTimer && currentProjectId){
+    clearTimeout(autosaveTimer);
+    const projId = currentProjectId;
+    const payload = { swimlanes, projectTitle };
+    console.log('[DASHBOARD] Flushing pending save in background for project:', projId);
+    apiFetch(`/api/v1/projects/${projId}`, {
+      method:'PUT', body: JSON.stringify(payload)
+    }).then(res => {
+      console.log('[DASHBOARD] Background save completed, response:', res?.status, res?.ok);
+    }).catch(e => {
+      console.error('[DASHBOARD] Background save error:', e.message);
+    });
+  } else {
+    console.log('[DASHBOARD] No pending saves to flush');
+  }
+
+  // Switch to dashboard view
+  try {
+    console.log('[DASHBOARD] Clearing project state');
+    currentProjectId = null;
+    projectDataCache = {};
+    dashboardCurrentPage = 1;
+    console.log('[DASHBOARD] About to call renderDashboard()');
+    await renderDashboard();
+    console.log('[DASHBOARD] renderDashboard() completed successfully');
+  } catch(e) {
+    console.error('[DASHBOARD] Error in goToDashboard:', e);
+    console.error('[DASHBOARD] Stack:', e.stack);
+  }
+}
+
+function goToDashboardPage(pageNum){
+  const totalPages = Math.ceil(myProjects.length / PROJECTS_PER_PAGE);
+  if(pageNum >= 1 && pageNum <= totalPages){
+    dashboardCurrentPage = pageNum;
+    renderDashboard();
+  }
+}
+
+function showModal(message, title='Message', onClose=null){
+  const overlay = document.createElement('div');
+  overlay.className = 'custom-modal-overlay';
+  overlay.innerHTML = `
+    <div class="custom-modal">
+      ${title ? `<div class="custom-modal-title">${escapeHtml(title)}</div>` : ''}
+      <div class="custom-modal-message">${escapeHtml(message)}</div>
+      <div class="custom-modal-buttons">
+        <button class="custom-modal-btn primary" onclick="this.closest('.custom-modal-overlay').remove(); ${onClose ? onClose + '()' : ''}">OK</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+  overlay.addEventListener('click', (e) => {
+    if(e.target === overlay) overlay.remove();
+  });
+}
+
+// Custom confirm modal with callback
+function showConfirmModal(message, onConfirm, onCancel){
+  const overlay = document.createElement('div');
+  overlay.className = 'custom-modal-overlay';
+  overlay.innerHTML = `
+    <div class="custom-modal">
+      <div class="custom-modal-message">${escapeHtml(message)}</div>
+      <div class="custom-modal-buttons">
+        <button class="custom-modal-btn" onclick="this.closest('.custom-modal-overlay').remove(); window._modalCallback?.cancel?.();">Cancel</button>
+        <button class="custom-modal-btn primary" onclick="this.closest('.custom-modal-overlay').remove(); window._modalCallback?.confirm?.();">OK</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+
+  window._modalCallback = {
+    confirm: onConfirm,
+    cancel: onCancel
+  };
+
+  overlay.addEventListener('click', (e) => {
+    if(e.target === overlay) {
+      overlay.remove();
+      onCancel?.();
+    }
+  });
+};
+
+function matchesSearchQuery(projectName, statusText, progress, query){
+  if(!query) return true;
+
+  const parts = query.split(/\s+/);
+  return parts.every(part => {
+    if(!part) return true;
+
+    // Check if it's a progress filter (contains > < >= <= =)
+    const progressMatch = part.match(/^([><=]+)(\d+)%?$/);
+    if(progressMatch){
+      const operator = progressMatch[1];
+      const value = parseInt(progressMatch[2]);
+      if(operator === '>') return progress > value;
+      if(operator === '<') return progress < value;
+      if(operator === '>=') return progress >= value;
+      if(operator === '<=') return progress <= value;
+      if(operator === '=') return progress === value;
+      return false;
+    }
+
+    // Check project name
+    if(projectName.includes(part)) return true;
+
+    // Check status
+    if(statusText.includes(part)) return true;
+
+    return false;
+  });
+}
+
+function onDashboardSearch(){
+  const searchInput = document.getElementById("dashboardSearchInput");
+  const query = (searchInput?.value || "").toLowerCase().trim();
+  const tableRows = document.querySelectorAll(".dashboard-table-row");
+
+  tableRows.forEach(row => {
+    const projectName = row.querySelector("div:first-child")?.textContent.toLowerCase() || "";
+    const statusElement = row.querySelector(".dashboard-status");
+    const statusText = (statusElement?.textContent || "").toLowerCase();
+    const progressText = row.querySelector(".dashboard-progress-text")?.textContent || "0%";
+    const progress = parseInt(progressText) || 0;
+
+    const matches = matchesSearchQuery(projectName, statusText, progress, query);
+    row.style.display = matches ? "" : "none";
+  });
+}
+
+function sortDashboardProjects(field){
+  if(dashboardSortField === field){
+    dashboardSortAsc = !dashboardSortAsc;
+  } else {
+    dashboardSortField = field;
+    dashboardSortAsc = false;
+  }
+
+  myProjects.sort((a, b) => {
+    let valA, valB;
+
+    if(field === 'name'){
+      valA = (a.title || "").toLowerCase();
+      valB = (b.title || "").toLowerCase();
+      return dashboardSortAsc ? valA.localeCompare(valB) : valB.localeCompare(valA);
+    } else if(field === 'updated'){
+      valA = new Date(a.updatedAt).getTime();
+      valB = new Date(b.updatedAt).getTime();
+      return dashboardSortAsc ? valA - valB : valB - valA;
+    } else if(field === 'status'){
+      const statusOrder = {'Off Track': 0, 'At Risk': 1, 'On Track': 2, 'Complete': 3, 'Not Started': 4};
+      const statusA = calculateProjectStatus(projectDataCache[a.id]) || 'Not Started';
+      const statusB = calculateProjectStatus(projectDataCache[b.id]) || 'Not Started';
+      const orderA = statusOrder[statusA] ?? 5;
+      const orderB = statusOrder[statusB] ?? 5;
+      return dashboardSortAsc ? orderA - orderB : orderB - orderA;
+    } else if(field === 'progress'){
+      const progA = calculateProjectProgress(projectDataCache[a.id]) || 0;
+      const progB = calculateProjectProgress(projectDataCache[b.id]) || 0;
+      return dashboardSortAsc ? progA - progB : progB - progA;
+    }
+    return 0;
+  });
+
+  reRenderDashboardTable();
+}
+
+function reRenderDashboardTable(){
+  const searchInput = document.getElementById("dashboardSearchInput");
+  const searchQuery = (searchInput?.value || "").toLowerCase().trim();
+
+  const tableBody = document.querySelector(".dashboard-table");
+  if(!tableBody) return;
+
+  const contentHtml = myProjects.length === 0 ? `
+    <div style="padding:40px;text-align:center;color:#8a94a0;">
+      <p>No projects yet. Create your first project to get started!</p>
+      <button onclick="addNewProject()" style="margin-top:16px;padding:8px 16px;background:#0076BC;color:white;border:none;border-radius:6px;cursor:pointer;">Create Project</button>
+    </div>
+  ` : myProjects.map((proj) => {
+    const updated = new Date(proj.updatedAt);
+    const month = updated.toLocaleString('default', { month: 'short' });
+    const day = updated.getDate();
+    const time = updated.toLocaleTimeString('en-US', { hour: '2-digit', minute:'2-digit' });
+    const updatedStr = `${month} ${day}, ${updated.getFullYear()} ${time}`;
+
+    let progress = 0;
+    let status = 'Not Started';
+    let statusClass = 'not-started';
+    let statusLabel = 'Not Started';
+    let statusKey = 'not-started';
+
+    if(projectDataCache[proj.id]){
+      const cachedData = projectDataCache[proj.id];
+      progress = calculateProjectProgress(cachedData);
+      status = calculateProjectStatus(cachedData);
+
+      const statusMap = {
+        'Complete': 'complete',
+        'On Track': 'on-track',
+        'At Risk': 'at-risk',
+        'Off Track': 'off-track',
+        'Not Started': 'not-started'
+      };
+      statusKey = statusMap[status] || 'not-started';
+      statusClass = statusKey === 'complete' ? 'completed' : statusKey;
+      statusLabel = STATUS_META[statusKey]?.label || status;
+    }
+
+    const projectName = (proj.title || "").toLowerCase();
+    const statusText = (status || "").toLowerCase();
+    const searchMatch = matchesSearchQuery(projectName, statusText, progress, searchQuery);
+    const displayStyle = searchMatch ? "" : "none";
+
+    return `
+      <div class="dashboard-table-row" onclick="openProject('${escapeAttr(proj.id)}')" style="display:${displayStyle};">
+        <div>
+          <div class="dashboard-project-name">${escapeHtml(proj.title)}</div>
+        </div>
+        <div><span class="dashboard-status ${statusClass}">${statusLabel}</span></div>
+        <div>
+          <div class="dashboard-progress">
+            <div class="dashboard-progress-bar">
+              <div class="dashboard-progress-fill" style="width:${progress}%;background:${STATUS_META[statusKey]?.bar || '#0076BC'};"></div>
+            </div>
+            <div class="dashboard-progress-text" style="min-width:40px;text-align:right;font-weight:600;color:#0a2540;">${progress}%</div>
+          </div>
+        </div>
+        <div style="font-size:12px;color:#5a6472;">${updatedStr}</div>
+        <div class="dashboard-project-menu">
+          <div class="dashboard-actions" onclick="event.stopPropagation(); toggleProjectMenu(event, '${escapeAttr(proj.id)}')">⋮</div>
+          <div class="dashboard-project-dropdown" id="menu-${proj.id}">
+            <div class="dashboard-project-dropdown-item" onclick="openEditProjectModal(event, '${escapeAttr(proj.id)}', '${escapeAttr(proj.title)}')">✏️ Rename</div>
+            <div class="dashboard-project-dropdown-item" onclick="event.stopPropagation(); duplicateProject('${escapeAttr(proj.id)}', '${escapeAttr(proj.title)}')">📋 Duplicate</div>
+            <div class="dashboard-project-dropdown-item" onclick="event.stopPropagation(); showModal('Download - Coming soon')">⬇️ Download</div>
+            <div class="dashboard-project-dropdown-item" onclick="event.stopPropagation(); deleteProject('${escapeAttr(proj.id)}', '${escapeAttr(proj.title)}')" style="color:#d32f2f;">🗑️ Delete</div>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  tableBody.innerHTML = `
+    <div class="dashboard-table-head">
+      <div onclick="sortDashboardProjects('name')">Project<span class="sort-arrow" data-field="name">↑</span></div>
+      <div onclick="sortDashboardProjects('status')">Status<span class="sort-arrow" data-field="status">↑</span></div>
+      <div onclick="sortDashboardProjects('progress')">Progress<span class="sort-arrow" data-field="progress">↑</span></div>
+      <div onclick="sortDashboardProjects('updated')">Updated<span class="sort-arrow" data-field="updated">↑</span></div>
+      <div style="cursor:auto;">Actions</div>
+    </div>
+    ${contentHtml}
+  `;
+
+  setTimeout(() => {
+    const headers = document.querySelectorAll(".dashboard-table-head div");
+    headers.forEach(header => {
+      const arrow = header.querySelector(".sort-arrow");
+      if(arrow && arrow.dataset.field === dashboardSortField){
+        header.classList.add("sorted");
+        arrow.textContent = dashboardSortAsc ? "↑" : "↓";
+      } else {
+        header.classList.remove("sorted");
+        if(arrow) arrow.textContent = "↑";
+      }
+    });
+  }, 0);
+}
+
+async function duplicateProject(projectId, projectTitle){
+  try{
+    console.log('[DUPLICATE_PROJECT] Duplicating project:', projectId, projectTitle);
+
+    // Fetch the source project
+    const srcRes = await apiFetch(`/api/v1/projects/${projectId}`);
+    if(!srcRes || !srcRes.ok){
+      showModal('Failed to load project data. Please try again.');
+      return;
+    }
+
+    const srcProject = await srcRes.json();
+    const newTitle = `${projectTitle} (Copy)`;
+
+    console.log('[DUPLICATE_PROJECT] Creating new project:', newTitle);
+
+    // Create a new project with copied data
+    const createRes = await apiFetch('/api/v1/projects', {
+      method: 'POST',
+      body: JSON.stringify({
+        title: newTitle,
+        swimlanes: srcProject.swimlanes
+      })
+    });
+
+    if(createRes && createRes.ok){
+      console.log('[DUPLICATE_PROJECT] Project duplicated successfully');
+      showModal(`Project "${newTitle}" has been created.`);
+      await loadProjectList();
+      await renderDashboard();
+    } else {
+      console.error('[DUPLICATE_PROJECT] Failed to create duplicate:', createRes?.status);
+      showModal('Failed to duplicate project. Please try again.');
+    }
+  } catch(err){
+    console.error('[DUPLICATE_PROJECT] Error duplicating project:', err);
+    showModal('Error duplicating project: ' + err.message);
+  }
+}
+
+function deleteProject(projectId, projectTitle){
+  showConfirmModal(
+    `Are you sure you want to delete "${projectTitle}"? This cannot be undone.`,
+    async () => {
+      try{
+        console.log('[DELETE_PROJECT] Deleting project:', projectId, projectTitle);
+        const res = await apiFetch(`/api/v1/projects/${projectId}`, { method: 'DELETE' });
+
+        if(res && res.ok){
+          console.log('[DELETE_PROJECT] Project deleted successfully');
+          showModal(`Project "${projectTitle}" has been deleted.`);
+          await loadProjectList();
+          await renderDashboard();
+        } else {
+          console.error('[DELETE_PROJECT] Failed to delete project:', res?.status);
+          showModal('Failed to delete project. Please try again.');
+        }
+      } catch(err){
+        console.error('[DELETE_PROJECT] Error deleting project:', err);
+        showModal('Error deleting project: ' + err.message);
+      }
+    }
+  );
+}
+
+function calculatePlannedProgress(start, end){
+  try{
+    if(!start || !end) return 0;
+    const startDate = new Date(start);
+    const endDate = new Date(end);
+    const today = new Date();
+
+    if(isNaN(startDate.getTime()) || isNaN(endDate.getTime())) return 0;
+
+    if(today <= startDate) return 0;
+    if(today >= endDate) return 100;
+
+    const totalDays = (endDate - startDate) / (1000 * 60 * 60 * 24);
+    const elapsedDays = (today - startDate) / (1000 * 60 * 60 * 24);
+    return Math.round((elapsedDays / totalDays) * 100);
+  }catch(e){
+    console.warn('[PLANNED_PROGRESS] Error:', e.message);
+    return 0;
+  }
+}
+
+function calculateScheduleVariance(actual, start, end){
+  try{
+    const planned = calculatePlannedProgress(start, end);
+    return actual - planned;
+  }catch(e){
+    console.warn('[SCHEDULE_VARIANCE] Error:', e.message);
+    return 0;
+  }
+}
+
+function calculateTaskStatus(task){
+  try{
+    const actual = task.percent || 0;
+    const planned = calculatePlannedProgress(task.start, task.end);
+
+    if(task.title) console.log('[TASK_STATUS]', task.title, '| Actual:', actual + '%', '| Planned:', planned + '%');
+
+    // Per skill point 7 - Task Status Rules:
+    // 🟢 Complete: If Actual % = 100%
+    if(actual === 100) return 'Complete';
+
+    // ⚪ Not Started: If Actual % = 0% AND Start Date > Today
+    if(actual === 0){
+      const startDate = new Date(task.start);
+      if(!isNaN(startDate.getTime()) && startDate > new Date()) return 'Not Started';
+    }
+
+    // 🟢 On Track: If Actual Progress >= Planned Progress - 10%
+    if(actual >= planned - 10) return 'On Track';
+
+    // 🟡 At Risk: If Actual Progress < Planned Progress - 10% but >= Planned Progress - 20%
+    if(actual >= planned - 20) return 'At Risk';
+
+    // 🔴 Off Track: If Actual Progress < Planned Progress - 20%
+    return 'Off Track';
+  }catch(e){
+    console.warn('[TASK_STATUS] Error:', e.message);
+    return 'On Track';
+  }
+}
+
+function calculateProjectProgress(projectData){
+  if(!projectData || !projectData.swimlanes || projectData.swimlanes.length === 0){
+    console.log('[PROGRESS] No swimlanes found');
+    return 0;
+  }
+
+  let totalPercent = 0;
+  let taskCount = 0;
+
+  // Iterate through all swimlanes and their tasks
+  projectData.swimlanes.forEach(swimlane => {
+    // Count the phase itself
+    if(swimlane.phase){
+      totalPercent += (swimlane.phase.percent || 0);
+      taskCount++;
+    }
+
+    // Count all child tasks
+    if(swimlane.children && swimlane.children.length > 0){
+      swimlane.children.forEach(child => {
+        totalPercent += (child.percent || 0);
+        taskCount++;
+      });
+    }
+  });
+
+  const progress = taskCount > 0 ? Math.round(totalPercent / taskCount) : 0;
+  console.log('[PROGRESS] Calculated progress:', progress, '| Tasks:', taskCount, '| Total %:', totalPercent);
+  return progress;
+}
+
+function calculateProjectStatus(projectData){
+  try{
+    if(!projectData || !projectData.swimlanes || projectData.swimlanes.length === 0){
+      return 'Not Started';
+    }
+
+    let hasStartedTask = false;
+    let hasOffTrackTask = false;
+    let hasAtRiskTask = false;
+    let hasIncompleteTask = false;
+    const today = new Date();
+
+    projectData.swimlanes.forEach(swimlane => {
+      try{
+        // Check only child tasks (not swimlane phases)
+        if(swimlane.children && swimlane.children.length > 0){
+          swimlane.children.forEach(child => {
+            const taskStatus = calculateTaskStatus(child);
+            console.log('[PROJECT_STATUS] Task:', child.title, '| Status:', taskStatus);
+
+            if(taskStatus === 'Off Track') hasOffTrackTask = true;
+            if(taskStatus === 'At Risk') hasAtRiskTask = true;
+            if(taskStatus !== 'Complete' && taskStatus !== 'Not Started') hasIncompleteTask = true;
+
+            const percent = child.percent || 0;
+            if(percent > 0 || new Date(child.start) <= today) hasStartedTask = true;
+          });
+        }
+      }catch(e){
+        console.warn('[PROJECT_STATUS] Error processing swimlane:', e.message);
+      }
+    });
+
+    // If no task has started yet, return Not Started
+    if(!hasStartedTask){
+      return 'Not Started';
+    }
+
+    // If any task is Off Track, project is Off Track
+    if(hasOffTrackTask){
+      return 'Off Track';
+    }
+
+    // If any task is At Risk, project is At Risk
+    if(hasAtRiskTask){
+      return 'At Risk';
+    }
+
+    // If there are incomplete tasks, project is On Track
+    if(hasIncompleteTask){
+      return 'On Track';
+    }
+
+    // All tasks are complete
+    return 'Complete';
+  }catch(e){
+    console.warn('[PROJECT_STATUS] Error:', e.message);
+    return 'On Track';
+  }
+}
+
+async function openProject(projectId){
+  console.log('[OPEN_PROJECT] Opening project:', projectId);
+
+  // Wait for any pending saves to complete before switching projects
+  if(autosaveTimer){
+    clearTimeout(autosaveTimer);
+    console.log('[OPEN_PROJECT] Flushing pending save...');
+    // Perform save immediately without delay
+    if(currentProjectId){
+      const payload = { swimlanes, projectTitle };
+      try {
+        await apiFetch(`/api/v1/projects/${currentProjectId}`, {
+          method:'PUT', body: JSON.stringify(payload)
+        });
+        console.log('[OPEN_PROJECT] Pending save completed');
+      } catch(e) {
+        console.error('[OPEN_PROJECT] Error flushing save:', e);
+      }
+    }
+  }
+
+  currentProjectId = projectId;
+  const res = await apiFetch(`/api/v1/projects/${projectId}`);
+  if(res && res.ok){
+    const proj = await res.json();
+    console.log('[OPEN_PROJECT] Loaded project:', proj.title);
+    swimlanes = proj.swimlanes || [];
+    projectTitle = proj.title;
+    history = [];
+    future = [];
+
+    // Load versions for this specific project
+    try{
+      const versRes = await apiFetch(`/api/v1/projects/${projectId}/versions`);
+      versions = versRes && versRes.ok ? (await versRes.json()) : [];
+      console.log('[OPEN_PROJECT] Loaded versions:', versions.length);
+    } catch(e){
+      console.error('Error loading versions:', e);
+      versions = [];
+    }
+
+    // Use project's swimlanes for editing (not version's)
+    // Only fallback to latest version if project has no swimlanes
+    if(swimlanes.length === 0 && versions.length > 0){
+      const latestVersion = versions[0];
+      console.log('[OPEN_PROJECT] Project has no swimlanes, loading latest version:', latestVersion.id, latestVersion.name);
+      const verRes = await apiFetch(`/api/v1/projects/${projectId}/versions/${latestVersion.id}`);
+      if(verRes && verRes.ok){
+        const verData = await verRes.json();
+        swimlanes = verData.swimlanes || swimlanes;
+        projectTitle = verData.projectTitle || projectTitle;
+        console.log('[OPEN_PROJECT] Version loaded successfully');
+      }
+    }
+
+    activeTab = swimlanes.length > 0 ? "timeline" : "data";
+    render();
+  } else {
+    console.error('[OPEN_PROJECT] Failed to load project:', res?.status);
+  }
+}
+
+const ICON_CALENDAR = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="16" rx="2"/><line x1="16" y1="2.5" x2="16" y2="6.5"/><line x1="8" y1="2.5" x2="8" y2="6.5"/><line x1="3" y1="10" x2="21" y2="10"/></svg>';
+const ICON_BARCHART = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="20" x2="5" y2="14"/><line x1="12" y1="20" x2="12" y2="8"/><line x1="19" y1="20" x2="19" y2="4"/></svg>';
+const ICON_TEAM = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>';
+const ICON_FLAG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>';
+const ICON_TRENDUP = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>';
+const ICON_AWARD = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="6.5"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></svg>';
+const ICON_CHEVRON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>';
+
+function renderAuthScreen(){
+  const app = document.getElementById("app");
+  app.innerHTML = `
+    <div class="auth-page">
+      <div class="auth-header">
+        <div class="auth-logo-section">
+          <img src="/logo-icon.png" alt="Timeline Studio" class="auth-logo-img" />
+          <div class="auth-logo-text">Timeline <span class="highlight">Studio</span></div>
+          <div class="auth-logo-divider"><span class="line"></span><span class="dot" style="background:#0076BC"></span><span class="dot" style="background:#1b9e77"></span><span class="dot" style="background:#e08a1e"></span><span class="dot" style="background:#7b4fc9"></span><span class="line"></span></div>
+          <div class="auth-logo-subtitle">Project Planning & Gantt Charts</div>
+        </div>
+      </div>
+
+      <div class="auth-hero">
+        <div class="auth-hero-left">
+          <h1 class="auth-hero-title">Plan Smarter. See Further.<br><span style="color:#0076BC;font-weight:900;">Deliver With Confidence.</span></h1>
+          <p class="auth-hero-desc">Plan projects, visualize timelines, track progress, and deliver with confidence — all in one place.</p>
+
+          <div class="auth-features">
+            <div class="auth-feature">
+              <div class="auth-feature-icon">${ICON_CALENDAR}</div>
+              <div>
+                <div class="auth-feature-title">Smart Planning</div>
+                <div class="auth-feature-desc">Build timelines that adapt as your project evolves.</div>
+              </div>
+            </div>
+            <div class="auth-feature">
+              <div class="auth-feature-icon">${ICON_BARCHART}</div>
+              <div>
+                <div class="auth-feature-title">Clear Visibility</div>
+                <div class="auth-feature-desc">Visualize milestones, dependencies, and progress in one place.</div>
+              </div>
+            </div>
+            <div class="auth-feature">
+              <div class="auth-feature-icon">${ICON_TEAM}</div>
+              <div>
+                <div class="auth-feature-title">Team Alignment</div>
+                <div class="auth-feature-desc">Keep stakeholders informed and aligned at every step.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="auth-hero-right">
+          <div class="auth-form-card">
+            <div class="auth-form-header">
+              <h2 class="auth-form-title">Timeline Studio</h2>
+              <p class="auth-form-subtitle">Project Planning & Gantt Charts</p>
+            </div>
+
+            <div id="authForm" style="display:block;">
+              <div id="authFormTitle" class="auth-form-title-login">Login</div>
+
+              <div id="authLoadingSpinner" class="auth-spinner">
+                <div class="auth-spinner-ring"></div>
+                <div class="auth-spinner-text">Authenticating...</div>
+              </div>
+
+              <div id="authFormContent">
+                <div class="auth-form-group">
+                  <label class="auth-form-label">Email</label>
+                  <input id="authEmail" type="email" class="auth-form-input" placeholder="name@yourcompany.com" />
+                </div>
+
+                <div class="auth-form-group">
+                  <label class="auth-form-label">Password</label>
+                  <div class="auth-password-wrapper">
+                    <input id="authPassword" type="password" class="auth-form-input" placeholder="Enter your password" />
+                    <button type="button" class="auth-password-toggle" onclick="togglePasswordVisibility()" tabindex="-1">
+                      <svg id="authPasswordIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                        <circle cx="12" cy="12" r="3"></circle>
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+
+                <div class="auth-form-group" id="authNameField" style="display:none;">
+                  <label class="auth-form-label">Display Name (optional)</label>
+                  <input id="authName" type="text" class="auth-form-input" placeholder="John Doe" />
+                </div>
+
+                <div class="auth-form-row">
+                  <label class="auth-form-checkbox">
+                    <input type="checkbox" />
+                    Remember me
+                  </label>
+                  <a class="auth-form-link" onclick="openForgotPasswordModal()">Forgot password?</a>
+                </div>
+
+                <div class="auth-form-actions">
+                  <button class="btn-secondary" onclick="switchToRegister()" style="display:none;" id="switchToRegisterBtn">New User Registration</button>
+                  <button class="btn-primary" onclick="handleLogin()" id="loginBtn">Login</button>
+                  <button class="btn-secondary" onclick="switchToLogin()" style="display:none;" id="switchToLoginBtn">Back to Login</button>
+                  <button class="btn-primary" onclick="handleRegister()" style="display:none;" id="registerBtn">Create Account</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="forgotPasswordModal" class="modal-overlay" style="display:none;" onclick="if(event.target === this) closeForgotPasswordModal()">
+        <div class="modal-card">
+          <h2 class="modal-title">Reset Password</h2>
+
+          <div id="forgotPasswordStep1" style="display:block;">
+            <p class="modal-sub">Enter your email to receive a reset code</p>
+            <div id="forgotPasswordError" style="display:none;background:#fee;color:#c33;padding:10px;border-radius:6px;margin-bottom:12px;font-size:12px;"></div>
+            <div class="modal-field">
+              <label>Email Address</label>
+              <input id="forgotPasswordEmail" type="email" placeholder="name@yourcompany.com" />
+            </div>
+            <div class="modal-actions">
+              <button onclick="closeForgotPasswordModal()" style="background:none;border:none;color:#0076BC;cursor:pointer;font-weight:600;">Cancel</button>
+              <button id="forgotPasswordSendBtn" onclick="handleForgotPassword()" style="background:#0076BC;color:white;border:none;padding:8px 16px;border-radius:6px;cursor:pointer;font-weight:600;">Send Reset Code</button>
+            </div>
+          </div>
+
+          <div id="forgotPasswordLoading" style="display:none;text-align:center;padding:20px;">
+            <div style="border:3px solid #e0e0e0;border-top:3px solid #0076BC;border-radius:50%;width:40px;height:40px;animation:spin 1s linear infinite;margin:0 auto;"></div>
+            <p style="margin-top:12px;color:#666;font-size:12px;">Sending reset code...</p>
+          </div>
+
+          <div id="forgotPasswordStep2" style="display:none;">
+            <p class="modal-sub">Enter the code from your email and create a new password</p>
+            <div id="resetPasswordError" style="display:none;background:#fee;color:#c33;padding:10px;border-radius:6px;margin-bottom:12px;font-size:12px;"></div>
+            <div class="modal-field">
+              <label>Reset Code (6 digits)</label>
+              <input id="resetCode" type="text" placeholder="000000" maxlength="6" />
+            </div>
+            <div class="modal-field">
+              <label>New Password</label>
+              <input id="newPassword" type="password" placeholder="Min 8 chars, 1 uppercase, 1 number, 1 special char" />
+            </div>
+            <div class="modal-actions">
+              <button onclick="goBackForgotPassword()" style="background:none;border:none;color:#0076BC;cursor:pointer;font-weight:600;">Back</button>
+              <button id="resetPasswordBtn" onclick="handleResetPassword()" style="background:#0076BC;color:white;border:none;padding:8px 16px;border-radius:6px;cursor:pointer;font-weight:600;">Reset Password</button>
+            </div>
+          </div>
+
+          <div id="forgotPasswordSuccess" style="display:none;">
+            <p style="text-align:center;margin:16px 0;color:#0076BC;font-weight:600;font-size:16px;">✓ Password reset successfully!</p>
+            <p style="text-align:center;color:#666;font-size:12px;margin-bottom:16px;">You can now log in with your new password.</p>
+            <div class="modal-actions">
+              <button onclick="closeForgotPasswordModal()" style="background:#0076BC;color:white;border:none;padding:8px 16px;border-radius:6px;cursor:pointer;font-weight:600;width:100%;">Back to Login</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="auth-section-works">
+        <h2>How Timeline Studio Works</h2>
+        <div class="auth-works-rule"></div>
+
+        <div class="auth-howworks-grid">
+          <div class="auth-step">
+            <div class="auth-step-icon">${ICON_CALENDAR}</div>
+            <div class="auth-step-head"><div class="auth-step-num">1</div><div class="auth-step-title">Create Your Plan</div></div>
+            <div class="auth-step-desc">Define tasks, milestones, and dependencies.</div>
+          </div>
+          <div class="auth-step-chevron">${ICON_CHEVRON}</div>
+          <div class="auth-step">
+            <div class="auth-step-icon">${ICON_FLAG}</div>
+            <div class="auth-step-head"><div class="auth-step-num">2</div><div class="auth-step-title">Visualize Timeline</div></div>
+            <div class="auth-step-desc">See your project come to life on an interactive timeline.</div>
+          </div>
+          <div class="auth-step-chevron">${ICON_CHEVRON}</div>
+          <div class="auth-step">
+            <div class="auth-step-icon">${ICON_TRENDUP}</div>
+            <div class="auth-step-head"><div class="auth-step-num">3</div><div class="auth-step-title">Track Progress</div></div>
+            <div class="auth-step-desc">Monitor real-time updates and stay on track.</div>
+          </div>
+          <div class="auth-step-chevron">${ICON_CHEVRON}</div>
+          <div class="auth-step">
+            <div class="auth-step-icon">${ICON_AWARD}</div>
+            <div class="auth-step-head"><div class="auth-step-num">4</div><div class="auth-step-title">Deliver Success</div></div>
+            <div class="auth-step-desc">Keep your team aligned and deliver with confidence.</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  `;
+
+  if (!document.getElementById('spinnerStyle')) {
+    const style = document.createElement('style');
+    style.id = 'spinnerStyle';
+    style.textContent = '@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}';
+    document.head.appendChild(style);
+  }
+
+  const regBtn = document.getElementById("registerBtn");
+  const logBtn = document.getElementById("loginBtn");
+  const swReg = document.getElementById("switchToRegisterBtn");
+  const swLog = document.getElementById("switchToLoginBtn");
+
+  swReg.style.display = "inline-flex";
+  logBtn.style.display = "inline-flex";
+
+  window.togglePasswordVisibility = ()=>{
+    const passwordInput = document.getElementById("authPassword");
+    const icon = document.getElementById("authPasswordIcon");
+    if(passwordInput.type === "password"){
+      passwordInput.type = "text";
+      icon.innerHTML = '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line>';
+    } else {
+      passwordInput.type = "password";
+      icon.innerHTML = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle>';
+    }
+  };
+
+  window.switchToLogin = ()=>{
+    document.getElementById("authFormTitle").textContent = "Login";
+    document.getElementById("authNameField").style.display = "none";
+    regBtn.style.display = "none";
+    swReg.style.display = "inline-flex";
+    logBtn.style.display = "inline-flex";
+    swLog.style.display = "none";
+  };
+
+  window.switchToRegister = ()=>{
+    document.getElementById("authFormTitle").textContent = "New User Registration";
+    document.getElementById("authNameField").style.display = "block";
+    regBtn.style.display = "inline-flex";
+    swReg.style.display = "none";
+    logBtn.style.display = "none";
+    swLog.style.display = "inline-flex";
+  };
+
+  window.handleRegister = async ()=>{
+    const email = document.getElementById("authEmail").value;
+    const password = document.getElementById("authPassword").value;
+    const displayName = document.getElementById("authName").value;
+
+    showAuthSpinner();
+
+    try {
+      const res = await apiFetch('/api/v1/auth/register', {
+        method: 'POST',
+        body: JSON.stringify({ email, password, displayName: displayName || undefined })
+      });
+
+      if(res && res.ok){
+        const data = await res.json();
+        authUser = data.user;
+        await loadProjectList();
+        currentProjectId = myProjects[0]?.id;
+        if(!currentProjectId){
+          const createRes = await apiFetch('/api/v1/projects', {
+            method: 'POST',
+            body: JSON.stringify({ title: 'My First Project' })
+          });
+          if(createRes && createRes.ok){
+            const newProj = await createRes.json();
+            currentProjectId = newProj.id;
+            await loadProjectList();
+          } else {
+            console.error('Failed to create first project:', createRes?.status);
+            hideAuthSpinner();
+            showModal('Account created but could not create first project. Please try again.');
+            return;
+          }
+        }
+        await loadProjectList();
+        renderDashboard();
+      } else if(res?.status === 409){
+        hideAuthSpinner();
+        showModal('Email already registered.');
+      } else {
+        hideAuthSpinner();
+        const errData = res ? await res.json() : {};
+        showModal('Registration failed: ' + (errData.detail || 'Unknown error'));
+      }
+    } catch(err){
+      hideAuthSpinner();
+      console.error('Registration error:', err);
+      showModal('Registration error: ' + err.message);
+    }
+  };
+
+  window.handleLogin = async ()=>{
+    const email = document.getElementById("authEmail").value;
+    const password = document.getElementById("authPassword").value;
+
+    showAuthSpinner();
+
+    try {
+      const res = await apiFetch('/api/v1/auth/login', {
+        method: 'POST',
+        body: JSON.stringify({ email, password })
+      });
+
+      if(res && res.ok){
+        const data = await res.json();
+        authUser = data.user;
+        await loadProjectList();
+        renderDashboard();
+      } else {
+        hideAuthSpinner();
+        showModal('Login failed. Please check your email/password.');
+      }
+    } catch(err){
+      hideAuthSpinner();
+      console.error('Login error:', err);
+      showModal('Login error: ' + err.message);
+    }
+  };
+
+  window.openForgotPasswordModal = ()=>{
+    document.getElementById("forgotPasswordModal").style.display = "flex";
+    document.getElementById("forgotPasswordStep1").style.display = "block";
+    document.getElementById("forgotPasswordStep2").style.display = "none";
+    document.getElementById("forgotPasswordSuccess").style.display = "none";
+    document.getElementById("forgotPasswordEmail").value = "";
+    document.getElementById("resetCode").value = "";
+    document.getElementById("newPassword").value = "";
+  };
+
+  window.closeForgotPasswordModal = ()=>{
+    document.getElementById("forgotPasswordModal").style.display = "none";
+  };
+
+  window.handleForgotPassword = async ()=>{
+    const email = document.getElementById("forgotPasswordEmail").value.trim();
+    const errorDiv = document.getElementById("forgotPasswordError");
+
+    errorDiv.style.display = "none";
+    errorDiv.textContent = "";
+
+    if(!email){
+      errorDiv.textContent = "Please enter your email address";
+      errorDiv.style.display = "block";
+      return;
+    }
+
+    if(!email.includes("@")){
+      errorDiv.textContent = "Please enter a valid email address";
+      errorDiv.style.display = "block";
+      return;
+    }
+
+    document.getElementById("forgotPasswordStep1").style.display = "none";
+    document.getElementById("forgotPasswordLoading").style.display = "block";
+
+    try {
+      const res = await apiFetch('/api/v1/auth/forgot-password', {
+        method: 'POST',
+        body: JSON.stringify({ email })
+      });
+
+      if(res && res.ok){
+        const data = await res.json();
+        console.log('[FORGOT PASSWORD]', data);
+
+        document.getElementById("forgotPasswordLoading").style.display = "none";
+
+        if(data.resetToken){
+          alert("Reset Code: " + data.resetToken + "\n\n📧 Email not configured\n\nPaste this code in the next screen to reset your password");
+        } else {
+          alert("✓ Reset code sent to your email!\n\nCheck your inbox for the 6-digit code.");
+        }
+        document.getElementById("forgotPasswordStep2").style.display = "block";
+      } else {
+        document.getElementById("forgotPasswordLoading").style.display = "none";
+        document.getElementById("forgotPasswordStep1").style.display = "block";
+        const errorData = res ? await res.json() : {};
+        errorDiv.textContent = errorData.detail || 'Failed to send reset code. Please try again.';
+        errorDiv.style.display = "block";
+        console.error('Forgot password error:', errorData);
+      }
+    } catch(err){
+      document.getElementById("forgotPasswordLoading").style.display = "none";
+      document.getElementById("forgotPasswordStep1").style.display = "block";
+      errorDiv.textContent = 'Error: ' + err.message;
+      errorDiv.style.display = "block";
+      console.error('Forgot password error:', err);
+    }
+  };
+
+  window.goBackForgotPassword = ()=>{
+    document.getElementById("forgotPasswordStep1").style.display = "block";
+    document.getElementById("forgotPasswordStep2").style.display = "none";
+  };
+
+  window.handleResetPassword = async ()=>{
+    const email = document.getElementById("forgotPasswordEmail").value.trim();
+    const resetToken = document.getElementById("resetCode").value.trim();
+    const newPassword = document.getElementById("newPassword").value;
+    const errorDiv = document.getElementById("resetPasswordError");
+
+    errorDiv.style.display = "none";
+    errorDiv.textContent = "";
+
+    if(!resetToken || resetToken.length !== 6){
+      errorDiv.textContent = "Please enter a valid 6-digit reset code";
+      errorDiv.style.display = "block";
+      return;
+    }
+    if(!newPassword){
+      errorDiv.textContent = "Please enter a new password";
+      errorDiv.style.display = "block";
+      return;
+    }
+
+    if(newPassword.length < 8){
+      errorDiv.textContent = "Password must be at least 8 characters";
+      errorDiv.style.display = "block";
+      return;
+    }
+
+    const resetBtn = document.getElementById("resetPasswordBtn");
+    resetBtn.disabled = true;
+    resetBtn.style.opacity = "0.6";
+
+    try {
+      const res = await apiFetch('/api/v1/auth/reset-password', {
+        method: 'POST',
+        body: JSON.stringify({ email, resetToken, newPassword })
+      });
+
+      if(res && res.ok){
+        document.getElementById("forgotPasswordStep2").style.display = "none";
+        document.getElementById("forgotPasswordSuccess").style.display = "block";
+      } else if(res?.status === 401){
+        resetBtn.disabled = false;
+        resetBtn.style.opacity = "1";
+        errorDiv.textContent = 'Invalid or expired reset code. Please try again.';
+        errorDiv.style.display = "block";
+      } else {
+        resetBtn.disabled = false;
+        resetBtn.style.opacity = "1";
+        const errData = res ? await res.json() : {};
+        errorDiv.textContent = 'Reset failed: ' + (errData.detail || 'Unknown error');
+        errorDiv.style.display = "block";
+        console.error('Reset password error:', errData);
+      }
+    } catch(err){
+      resetBtn.disabled = false;
+      resetBtn.style.opacity = "1";
+      errorDiv.textContent = 'Error: ' + err.message;
+      errorDiv.style.display = "block";
+      console.error('Reset password error:', err);
+    }
+  };
+}
+
+function renderProjectPicker(){
+  const app = document.getElementById("app");
+  let projectCardsHtml = "";
+  let projectListHtml = "";
+
+  const svgTemplate = `<svg viewBox="0 0 200 140" xmlns="http://www.w3.org/2000/svg" style="opacity:0.3;">
+    <rect x="20" y="20" width="160" height="15" fill="#0076BC" rx="2"/>
+    <rect x="20" y="50" width="160" height="12" fill="#0076BC" rx="2"/>
+    <rect x="20" y="70" width="140" height="12" fill="#0076BC" rx="2"/>
+    <rect x="20" y="90" width="130" height="12" fill="#0099D8" rx="2"/>
+    <rect x="20" y="110" width="110" height="12" fill="#0099D8" rx="2"/>
+  </svg>`;
+
+  myProjects.forEach(proj => {
+    const updated = new Date(proj.updatedAt);
+    const month = updated.toLocaleString('default', { month: 'short' });
+    const day = updated.getDate();
+    const year = updated.getFullYear();
+    const updatedStr = `${day} ${month}, ${year}`;
+
+    // Card view
+    projectCardsHtml += `
+      <div class="project-card" onclick="openProject('${escapeAttr(proj.id)}')">
+        <div class="project-card-preview">${svgTemplate}</div>
+        <div class="project-card-body">
+          <p class="project-card-title">${escapeHtml(proj.title)}</p>
+          <div class="project-card-meta">Updated ${updatedStr}</div>
+          <div class="project-card-stats">
+            <span class="project-card-stat">📊 Timeline</span>
+          </div>
+        </div>
+      </div>
+    `;
+
+    // List view
+    projectListHtml += `
+      <div class="project-list-item" onclick="openProject('${escapeAttr(proj.id)}')">
+        <div class="project-list-item-preview">${svgTemplate}</div>
+        <div class="project-list-item-content">
+          <p class="project-list-item-title">${escapeHtml(proj.title)}</p>
+          <div class="project-list-item-meta">
+            <span>Updated ${updatedStr}</span>
+          </div>
+        </div>
+      </div>
+    `;
+  });
+
+  const viewContent = projectCardsHtml || projectListHtml ? `
+    <div class="landing-header">
+      <h1 style="margin:0;font-size:24px;font-weight:700;">All Projects</h1>
+      <input type="text" class="landing-search" placeholder="Search projects..." id="landingSearch" oninput="filterProjectCards(this.value)"/>
+    </div>
+    <div class="landing-list">${projectListHtml}</div>
+  ` : `
+    <div class="landing-empty">
+      <div class="landing-empty-title">No projects yet</div>
+      <p>Create your first project to get started building timelines</p>
+      <button class="btn primary" onclick="createNewProject()" style="margin-top:20px;">+ Create Project</button>
+    </div>
+  `;
+
+  app.innerHTML = `
+    <div class="app">
+      <div class="topbar">
+        <div style="flex:1;"></div>
+        <div style="display:flex;gap:12px;align-items:center;">
+          <button class="btn" style="background:transparent;color:#fff;border-color:rgba(255,255,255,.2);" onclick="logout()">Log Out</button>
+        </div>
+      </div>
+
+      <div class="landing-layout">
+        <div class="landing-sidebar">
+          <button class="new-project-btn" onclick="createNewProject()">
+            <span>+</span> New Project
+          </button>
+
+          <div class="landing-section">
+            <div class="landing-section-title">My Projects</div>
+            <div class="landing-item active">
+              <span>📁 All Projects</span>
+              <span class="landing-item-count">${myProjects.length}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="landing-main">
+          ${viewContent}
+        </div>
+      </div>
+    </div>
+  `;
+
+  window.deleteProject = async (projId)=>{
+    if(!confirm("Delete this project? This cannot be undone.")) return;
+    const res = await apiFetch(`/api/v1/projects/${projId}`, { method: 'DELETE' });
+    if(res && res.status === 204){
+      await loadProjectList();
+      renderProjectPicker();
+    }
+  };
+}
+
+function filterProjectCards(query){
+  const cards = document.querySelectorAll('.project-card, .project-list-item');
+  const lowerQuery = query.toLowerCase();
+  cards.forEach(card => {
+    const title = card.querySelector('.project-card-title, .project-list-item-title')?.textContent.toLowerCase() || '';
+    card.style.display = title.includes(lowerQuery) ? '' : 'none';
+  });
+}
+
+function toggleUserMenu(event){
+  event.stopPropagation();
+  const dropdown = document.getElementById("userMenuDropdown");
+  if(dropdown){
+    dropdown.classList.toggle("active");
+  }
+}
+
+function toggleDashboardSidebar(){
+  const sidebar = document.getElementById("dashboardSidebar");
+  if(!sidebar) return;
+
+  const isCollapsed = sidebar.classList.toggle("collapsed");
+  localStorage.setItem("dashboardSidebarCollapsed", isCollapsed ? "true" : "false");
+
+  const toggle = sidebar.querySelector(".dashboard-sidebar-toggle");
+  if(toggle){
+    toggle.textContent = isCollapsed ? "»" : "«";
+  }
+}
+
+function toggleDarkMode(){
+  const html = document.documentElement;
+  const isDarkMode = html.classList.toggle("dark-mode");
+  localStorage.setItem("darkModeEnabled", isDarkMode ? "true" : "false");
+  updateThemeToggleButton();
+}
+
+function updateThemeToggleButton(){
+  const isDarkMode = document.documentElement.classList.contains("dark-mode");
+  // Update dashboard theme toggle
+  const themeIcon = document.getElementById("themeIcon");
+  const themeText = document.getElementById("themeText");
+  if(themeIcon && themeText){
+    themeIcon.textContent = isDarkMode ? "☀️" : "🌙";
+    themeText.textContent = isDarkMode ? "Light" : "Dark";
+  }
+  // Update app page theme toggle
+  const appThemeIcon = document.getElementById("appThemeIcon");
+  const appThemeText = document.getElementById("appThemeText");
+  if(appThemeIcon && appThemeText){
+    appThemeIcon.textContent = isDarkMode ? "☀️" : "🌙";
+    appThemeText.textContent = isDarkMode ? "Light" : "Dark";
+  }
+}
+
+function initializeDarkMode(){
+  const darkModeEnabled = localStorage.getItem("darkModeEnabled") === "true";
+  if(darkModeEnabled){
+    document.documentElement.classList.add("dark-mode");
+    updateThemeToggleButton();
+  }
+}
+
+window.addEventListener('click', function(){
+  const dropdown = document.getElementById("userMenuDropdown");
+  if(dropdown && dropdown.classList.contains("active")){
+    dropdown.classList.remove("active");
+  }
+});
+
+async function handleLogout(){
+  try{
+    const res = await apiFetch('/api/v1/auth/logout', { method:'POST' });
+    if(res && res.ok){
+      authUser = null;
+      renderAuthScreen();
+    } else {
+      showModal('Logout failed');
+    }
+  } catch(err){
+    console.error('Logout error:', err);
+    showModal('Logout error: ' + err.message);
+  }
+}
+
+function toggleProjectMenu(event, projectId){
+  event.stopPropagation();
+  const menu = document.getElementById(`menu-${projectId}`);
+  const allMenus = document.querySelectorAll('.dashboard-project-dropdown.active');
+
+  allMenus.forEach(m => {
+    if(m.id !== `menu-${projectId}`){
+      m.classList.remove('active');
+    }
+  });
+
+  if(menu){
+    menu.classList.toggle('active');
+    if(menu.classList.contains('active')){
+      const btn = event.target.closest('.dashboard-actions');
+      const rect = btn.getBoundingClientRect();
+      menu.style.top = (rect.bottom + 4) + 'px';
+      menu.style.left = (rect.left - 160 + rect.width) + 'px';
+    }
+  }
+}
+
+window.addEventListener('click', function(){
+  const dropdowns = document.querySelectorAll('.dashboard-project-dropdown.active');
+  dropdowns.forEach(dropdown => dropdown.classList.remove('active'));
+});
+
+function openEditProjectModal(event, projectId, projectName){
+  event.stopPropagation();
+  const modal = document.getElementById('editProjectModal');
+  if(modal){
+    document.getElementById('editProjectName').value = projectName;
+    document.getElementById('editProjectId').value = projectId;
+    modal.classList.add('active');
+  }
+  // Close the dropdown menu
+  const menu = document.getElementById(`menu-${projectId}`);
+  if(menu) menu.classList.remove('active');
+}
+
+function closeEditProjectModal(){
+  const modal = document.getElementById('editProjectModal');
+  if(modal) modal.classList.remove('active');
+}
+
+async function addNewProject(){
+  const title = prompt("Project name:", "New Project");
+  if(!title) return;
+  const res = await apiFetch('/api/v1/projects', {
+    method: 'POST',
+    body: JSON.stringify({ title })
+  });
+  if(res && res.ok){
+    await loadProjectList();
+    await renderDashboard();
+  }
+}
+
+async function saveProjectChanges(){
+  const projectId = document.getElementById('editProjectId').value;
+  const projectName = document.getElementById('editProjectName').value;
+
+  console.log('[SAVE] Starting save for project:', projectId, 'Name:', projectName);
+
+  if(!projectName.trim()){
+    showModal('Project name is required');
+    return;
+  }
+
+  const saveBtn = document.querySelector('.dashboard-modal-btn.primary');
+  if(saveBtn){
+    saveBtn.disabled = true;
+    saveBtn.textContent = 'Saving...';
+  }
+
+  try{
+    const payload = {
+      projectTitle: projectName,
+      swimlanes: []
+    };
+    console.log('[SAVE] Sending payload:', payload);
+
+    const res = await apiFetch(`/api/v1/projects/${projectId}`, {
+      method: 'PUT',
+      body: JSON.stringify(payload)
+    });
+
+    console.log('[SAVE] Response status:', res?.status);
+    console.log('[SAVE] Response ok:', res?.ok);
+
+    if(res && res.ok){
+      console.log('[SAVE] Project saved successfully');
+
+      // Reload project list and refresh dashboard
+      console.log('[SAVE] Loading project list...');
+      await loadProjectList();
+      console.log('[SAVE] Projects loaded:', myProjects);
+
+      console.log('[SAVE] Rendering dashboard...');
+      renderDashboard();
+      console.log('[SAVE] Dashboard rendered');
+
+      closeEditProjectModal();
+
+      // Show success message
+      showModal('✓ Project updated successfully!');
+    } else {
+      const errorData = res ? await res.json() : {};
+      console.error('[SAVE] API Error:', errorData);
+      showModal('Failed to update project: ' + (errorData.detail || 'Unknown error'));
+      if(saveBtn){
+        saveBtn.disabled = false;
+        saveBtn.textContent = 'Save Changes';
+      }
+    }
+  } catch(err){
+    console.error('[SAVE] Exception:', err);
+    showModal('Error: ' + err.message);
+    if(saveBtn){
+      saveBtn.disabled = false;
+      saveBtn.textContent = 'Save Changes';
+    }
+  }
+}
+
+async function renderDashboard(){
+  await loadProjectList();
+
+  // Load and cache project data for progress calculation
+  console.log('[DASHBOARD] Loading project data for', myProjects.length, 'projects');
+  for(const proj of myProjects){
+    if(!projectDataCache[proj.id]){
+      try{
+        const res = await apiFetch(`/api/v1/projects/${proj.id}`);
+        if(res && res.ok){
+          const data = await res.json();
+          projectDataCache[proj.id] = data;
+          console.log('[DASHBOARD] API Response for', proj.title, ':', data);
+          const progress = calculateProjectProgress(data);
+          console.log('[DASHBOARD] Loaded', proj.title, '- Progress:', progress, '- Swimlanes:', data.swimlanes?.length);
+        }
+      } catch(err){
+        console.warn(`Failed to load data for project ${proj.id}:`, err);
+      }
+    }
+  }
+
+  const app = document.getElementById("app");
+
+  // Calculate stats based on schedule variance, not simple progress
+  const totalProjects = myProjects.length;
+  let onTrackCount = 0;
+  let atRiskCount = 0;
+  let offTrackCount = 0;
+  let notStartedCount = 0;
+
+  myProjects.forEach(proj => {
+    const projectData = projectDataCache[proj.id];
+    if(projectData){
+      const status = calculateProjectStatus(projectData);
+      if(status === 'On Track') onTrackCount++;
+      else if(status === 'At Risk') atRiskCount++;
+      else if(status === 'Off Track') offTrackCount++;
+      else if(status === 'Not Started') notStartedCount++;
+    }
+  });
+
+  const initials = (authUser?.displayName || authUser?.email || 'U')
+    .split(' ')
+    .map(n => n[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2);
+
+  app.innerHTML = `
+    <div class="dashboard-container">
+      <div class="dashboard-sidebar" id="dashboardSidebar">
+        <div class="dashboard-sidebar-header">
+          <div class="dashboard-sidebar-logo">
+            <img src="/logo-icon.png" alt="Timeline Studio">
+          </div>
+        </div>
+
+        <div class="dashboard-sidebar-content">
+        <div class="dashboard-sidebar-menu">
+          <div class="dashboard-sidebar-item active" data-emoji="📊" data-tooltip="Dashboard" onclick="showModal('Dashboard')"><i class="fa-solid fa-grid-2"></i><span>Dashboard</span></div>
+          <div class="dashboard-sidebar-item" data-emoji="📁" data-tooltip="All Projects" onclick="renderProjectPicker()"><i class="fa-solid fa-folder-open"></i><span>All Projects</span></div>
+          <div class="dashboard-sidebar-item" data-emoji="👤" data-tooltip="My Projects" onclick="showModal('My Projects')"><i class="fa-solid fa-user-gear"></i><span>My Projects</span></div>
+          <div class="dashboard-sidebar-item" data-emoji="👥" data-tooltip="Shared With Me" onclick="showModal('Shared')"><i class="fa-solid fa-users-viewfinder"></i><span>Shared With Me</span></div>
+          <div class="dashboard-sidebar-item" data-emoji="📦" data-tooltip="Archived" onclick="showModal('Archived')"><i class="fa-solid fa-box-archive"></i><span>Archived</span></div>
+        </div>
+
+        <div class="dashboard-sidebar-section">
+          <div class="dashboard-sidebar-label">Resources</div>
+          <div class="dashboard-sidebar-menu">
+            <div class="dashboard-sidebar-item" data-emoji="📋" data-tooltip="Templates" onclick="showModal('Templates')"><i class="fa-solid fa-layer-group"></i><span>Templates</span></div>
+            <div class="dashboard-sidebar-item" data-emoji="📈" data-tooltip="Reports" onclick="showModal('Reports')"><i class="fa-solid fa-chart-pie"></i><span>Reports</span></div>
+          </div>
+        </div>
+
+        <div class="dashboard-sidebar-section">
+          <div class="dashboard-sidebar-label">Settings</div>
+          <div class="dashboard-sidebar-menu">
+            <div class="dashboard-sidebar-item" data-emoji="👥" data-tooltip="Team" onclick="showModal('Team')"><i class="fa-solid fa-people-group"></i><span>Team</span></div>
+            <div class="dashboard-sidebar-item" data-emoji="🔗" data-tooltip="Integrations" onclick="showModal('Integrations')"><i class="fa-solid fa-link"></i><span>Integrations</span></div>
+            <div class="dashboard-sidebar-item" data-emoji="⚙️" data-tooltip="Settings" onclick="showModal('Settings')"><i class="fa-solid fa-gear"></i><span>Settings</span></div>
+          </div>
+        </div>
+        </div>
+
+        <div class="dashboard-sidebar-footer">
+          <button class="dashboard-sidebar-toggle" onclick="toggleDashboardSidebar()" style="background:#0a2540 !important;border:none !important;color:#fff !important;width:40px !important;height:40px !important;display:flex !important;align-items:center !important;justify-content:center !important;font-size:20px !important;">←</button>
+        </div>
+      </div>
+
+      <div class="dashboard-header">
+        <div class="dashboard-topbar">
+          <div style="display:flex;align-items:center;gap:24px;flex:1;">
+            <button onclick="addNewProject()" style="padding:8px 16px;background:#0076BC;color:white;border:none;border-radius:6px;cursor:pointer;font-weight:600;">+ New Project</button>
+            <div class="dashboard-search">
+              <span style="color:#8a94a0;">🔍</span>
+              <input type="text" id="dashboardSearchInput" placeholder="Search by name, status, or progress (e.g., '>50%', 'on track')..." style="width:100%;" oninput="onDashboardSearch()">
+            </div>
+          </div>
+          <div class="dashboard-topbar-right">
+            <button class="dashboard-theme-toggle" id="themeToggleBtn" onclick="toggleDarkMode()">
+              <span id="themeIcon">🌙</span>
+              <span id="themeText">Dark</span>
+            </button>
+            <div class="dashboard-user-menu">
+              <div class="dashboard-user" onclick="toggleUserMenu(event)">
+                <div class="dashboard-avatar">${initials}</div>
+                <div style="font-size:12px;transition:color 300ms ease;" class="dashboard-user-info">
+                  <div style="font-weight:600;">Welcome,</div>
+                  <div>${authUser?.displayName || authUser?.email?.split('@')[0]}</div>
+                </div>
+              </div>
+              <div class="dashboard-user-dropdown" id="userMenuDropdown">
+                <div class="dashboard-user-dropdown-item" onclick="showModal('My Account - Coming soon')">👤 My Account</div>
+                <div class="dashboard-user-dropdown-item" onclick="showModal('Settings - Coming soon')">⚙️ User Settings</div>
+                <div class="dashboard-user-dropdown-item" onclick="showModal('Help - Coming soon')">❓ Help</div>
+                <div class="dashboard-user-dropdown-item logout" onclick="handleLogout()">🚪 Log Out</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="dashboard-content">
+          <div class="dashboard-section-title">All Projects</div>
+
+          <div class="dashboard-stats">
+            <div class="dashboard-stat-card total-projects">
+              <div class="dashboard-stat-label">Total Projects</div>
+              <div class="dashboard-stat-value">${totalProjects}</div>
+              <div class="dashboard-stat-meta">All time</div>
+            </div>
+            <div class="dashboard-stat-card on-track">
+              <div class="dashboard-stat-label">On Track</div>
+              <div class="dashboard-stat-value">${onTrackCount}</div>
+              <div class="dashboard-stat-meta">${totalProjects > 0 ? Math.round((onTrackCount/totalProjects)*100) : 0}% of projects</div>
+            </div>
+            <div class="dashboard-stat-card at-risk">
+              <div class="dashboard-stat-label">At Risk</div>
+              <div class="dashboard-stat-value">${atRiskCount}</div>
+              <div class="dashboard-stat-meta">${totalProjects > 0 ? Math.round((atRiskCount/totalProjects)*100) : 0}% of projects</div>
+            </div>
+            <div class="dashboard-stat-card off-track">
+              <div class="dashboard-stat-label">Off Track</div>
+              <div class="dashboard-stat-value">${offTrackCount}</div>
+              <div class="dashboard-stat-meta">${totalProjects > 0 ? Math.round((offTrackCount/totalProjects)*100) : 0}% of projects</div>
+            </div>
+            <div class="dashboard-stat-card not-started">
+              <div class="dashboard-stat-label">Not Started</div>
+              <div class="dashboard-stat-value">${notStartedCount}</div>
+              <div class="dashboard-stat-meta">${totalProjects > 0 ? Math.round((notStartedCount/totalProjects)*100) : 0}% of projects</div>
+            </div>
+          </div>
+
+
+          <div class="dashboard-table">
+            <div class="dashboard-table-head">
+              <div onclick="sortDashboardProjects('name')">Project<span class="sort-arrow" data-field="name">↑</span></div>
+              <div onclick="sortDashboardProjects('status')">Status<span class="sort-arrow" data-field="status">↑</span></div>
+              <div onclick="sortDashboardProjects('progress')">Progress<span class="sort-arrow" data-field="progress">↑</span></div>
+              <div onclick="sortDashboardProjects('updated')">Updated<span class="sort-arrow" data-field="updated">↑</span></div>
+              <div style="cursor:auto;">Actions</div>
+            </div>
+            ${myProjects.length === 0 ? `
+              <div style="padding:40px;text-align:center;color:#8a94a0;">
+                <p>No projects yet. Create your first project to get started!</p>
+                <button onclick="addNewProject()" style="margin-top:16px;padding:8px 16px;background:#0076BC;color:white;border:none;border-radius:6px;cursor:pointer;">Create Project</button>
+              </div>
+            ` : (() => {
+              const startIdx = (dashboardCurrentPage - 1) * PROJECTS_PER_PAGE;
+              const endIdx = startIdx + PROJECTS_PER_PAGE;
+              const paginatedProjects = myProjects.slice(startIdx, endIdx);
+              return paginatedProjects.map((proj, idx) => {
+              const updated = new Date(proj.updatedAt);
+              const month = updated.toLocaleString('default', { month: 'short' });
+              const day = updated.getDate();
+              const time = updated.toLocaleTimeString('en-US', { hour: '2-digit', minute:'2-digit' });
+              const updatedStr = `${month} ${day}, ${updated.getFullYear()} ${time}`;
+
+              // Calculate progress and status from cached project data
+              let progress = 0;
+              let status = 'Not Started';
+              let statusClass = 'not-started';
+              let statusLabel = 'Not Started';
+              let statusKey = 'not-started';
+
+              if(projectDataCache[proj.id]){
+                const cachedData = projectDataCache[proj.id];
+                progress = calculateProjectProgress(cachedData);
+                status = calculateProjectStatus(cachedData);
+
+                // Map status to CSS class and get label from STATUS_META
+                const statusMap = {
+                  'Complete': 'complete',
+                  'On Track': 'on-track',
+                  'At Risk': 'at-risk',
+                  'Off Track': 'off-track',
+                  'Not Started': 'not-started'
+                };
+                statusKey = statusMap[status] || 'not-started';
+                statusClass = statusKey === 'complete' ? 'completed' : statusKey;
+                statusLabel = STATUS_META[statusKey]?.label || status;
+
+                console.log('[DASHBOARD_ROW]', proj.title, '| Progress:', progress + '%', '| Status:', status);
+              } else {
+                console.log('[DASHBOARD_ROW] No cached data for project:', proj.id, proj.title);
+                statusKey = 'not-started';
+                statusLabel = STATUS_META['not-started']?.label || 'Not Started';
+              }
+
+              return `
+                <div class="dashboard-table-row" onclick="openProject('${escapeAttr(proj.id)}')">
+                  <div>
+                    <div class="dashboard-project-name">${escapeHtml(proj.title)}</div>
+                  </div>
+                  <div><span class="dashboard-status ${statusClass}">${statusLabel}</span></div>
+                  <div>
+                    <div class="dashboard-progress">
+                      <div class="dashboard-progress-bar">
+                        <div class="dashboard-progress-fill" style="width:${progress}%;background:${STATUS_META[statusKey]?.bar || '#0076BC'};"></div>
+                      </div>
+                      <div class="dashboard-progress-text" style="min-width:40px;text-align:right;font-weight:600;color:#0a2540;">${progress}%</div>
+                    </div>
+                  </div>
+                  <div style="font-size:12px;color:#5a6472;">${updatedStr}</div>
+                  <div class="dashboard-project-menu">
+                    <div class="dashboard-actions" onclick="event.stopPropagation(); toggleProjectMenu(event, '${escapeAttr(proj.id)}')">⋮</div>
+                    <div class="dashboard-project-dropdown" id="menu-${proj.id}">
+                      <div class="dashboard-project-dropdown-item" onclick="openEditProjectModal(event, '${escapeAttr(proj.id)}', '${escapeAttr(proj.title)}')">✏️ Rename</div>
+                      <div class="dashboard-project-dropdown-item" onclick="event.stopPropagation(); duplicateProject('${escapeAttr(proj.id)}', '${escapeAttr(proj.title)}')">📋 Duplicate</div>
+                      <div class="dashboard-project-dropdown-item" onclick="event.stopPropagation(); showModal('Download - Coming soon')">⬇️ Download</div>
+                      <div class="dashboard-project-dropdown-item" onclick="event.stopPropagation(); deleteProject('${escapeAttr(proj.id)}', '${escapeAttr(proj.title)}')" style="color:#d32f2f;">🗑️ Delete</div>
+                    </div>
+                  </div>
+                </div>
+              `;
+            }).join('');
+            })()}
+          </div>
+
+          ${myProjects.length > 0 ? (() => {
+            const totalPages = Math.ceil(myProjects.length / PROJECTS_PER_PAGE);
+            const startIdx = (dashboardCurrentPage - 1) * PROJECTS_PER_PAGE + 1;
+            const endIdx = Math.min(dashboardCurrentPage * PROJECTS_PER_PAGE, myProjects.length);
+            let pageButtons = '';
+            for(let i = 1; i <= totalPages; i++){
+              pageButtons += `<button class="dashboard-pagination-btn ${i === dashboardCurrentPage ? 'active' : ''}" onclick="goToDashboardPage(${i})">${i}</button>`;
+            }
+            return `
+            <div class="dashboard-pagination">
+              <div class="dashboard-pagination-text">Showing ${startIdx} to ${endIdx} of ${myProjects.length} projects</div>
+              <div class="dashboard-pagination-controls">
+                <button class="dashboard-pagination-btn" onclick="goToDashboardPage(${dashboardCurrentPage - 1})" ${dashboardCurrentPage === 1 ? 'disabled' : ''}>←</button>
+                ${pageButtons}
+                <button class="dashboard-pagination-btn" onclick="goToDashboardPage(${dashboardCurrentPage + 1})" ${dashboardCurrentPage === Math.ceil(myProjects.length / PROJECTS_PER_PAGE) ? 'disabled' : ''}>→</button>
+              </div>
+            </div>
+            `;
+          })() : ''}
+        </div>
+      </div>
+    </div>
+
+    <div class="dashboard-modal-overlay" id="editProjectModal" onclick="if(event.target === this) closeEditProjectModal()">
+      <div class="dashboard-modal">
+        <div class="dashboard-modal-title">Rename Project</div>
+
+        <input type="hidden" id="editProjectId">
+
+        <div class="dashboard-modal-field">
+          <label class="dashboard-modal-label">Project Name</label>
+          <input type="text" id="editProjectName" class="dashboard-modal-input" placeholder="Enter project name">
+        </div>
+
+        <div class="dashboard-modal-actions">
+          <button class="dashboard-modal-btn secondary" onclick="closeEditProjectModal()">Cancel</button>
+          <button class="dashboard-modal-btn primary" onclick="saveProjectChanges()">Save Changes</button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  // Restore sidebar collapsed state
+  const sidebarCollapsed = localStorage.getItem("dashboardSidebarCollapsed") === "true";
+  if(sidebarCollapsed){
+    const sidebar = document.getElementById("dashboardSidebar");
+    if(sidebar){
+      sidebar.classList.add("collapsed");
+      const toggle = sidebar.querySelector(".dashboard-sidebar-toggle");
+      if(toggle){
+        toggle.textContent = "»";
+      }
+    }
+  }
+
+  // Update sort arrows in table headers
+  setTimeout(() => {
+    const headers = document.querySelectorAll(".dashboard-table-head div");
+    headers.forEach(header => {
+      const arrow = header.querySelector(".sort-arrow");
+      if(arrow && arrow.dataset.field === dashboardSortField){
+        header.classList.add("sorted");
+        arrow.textContent = dashboardSortAsc ? "↑" : "↓";
+      } else {
+        header.classList.remove("sorted");
+        if(arrow) arrow.textContent = "↑";
+      }
+    });
+  }, 0);
+}
+
+function setProjectViewMode(mode){
+  projectViewMode = mode;
+  renderProjectPicker();
+}
+
+function showAuthSpinner(){
+  const spinner = document.getElementById("authLoadingSpinner");
+  const content = document.getElementById("authFormContent");
+  if(spinner && content){
+    spinner.style.display = "block";
+    content.style.display = "none";
+  }
+}
+
+function hideAuthSpinner(){
+  const spinner = document.getElementById("authLoadingSpinner");
+  const content = document.getElementById("authFormContent");
+  if(spinner && content){
+    spinner.style.display = "none";
+    content.style.display = "block";
+  }
+}
+
+async function logout(){
+  await apiFetch('/api/v1/auth/logout', { method: 'POST' });
+  authUser = null;
+  myProjects = [];
+  currentProjectId = null;
+  renderAuthScreen();
+}
+
+async function boot(){
+  // Initialize dark mode from localStorage
+  initializeDarkMode();
+
+  // Add beforeunload handler to flush pending saves on page close/refresh
+  window.addEventListener("beforeunload", (e)=>{
+    if(autosaveTimer && currentProjectId){
+      console.log('[UNLOAD] Flushing pending save on page unload');
+      clearTimeout(autosaveTimer);
+      // Use sendBeacon for best-effort save on unload
+      const payload = JSON.stringify({ swimlanes, projectTitle });
+      navigator.sendBeacon(`/api/v1/projects/${currentProjectId}`, payload);
+    }
+  });
+
+  const me = await apiFetch('/api/v1/auth/me');
+  if(me && me.ok){
+    authUser = await me.json();
+    await maybeImportLocalStorageVersions();
+    await loadProjectList();
+    renderDashboard();
+  } else {
+    renderAuthScreen();
+  }
+}
+
 /* ---------------- rendering: shell ---------------- */
 function render(){
   const app = document.getElementById("app");
@@ -542,11 +2795,15 @@ function render(){
         <div class="proj-title" contenteditable="true" spellcheck="false" onblur="onTitleChange(this.textContent)" onkeydown="if(event.key==='Enter'){event.preventDefault(); this.blur();}">${escapeHtml(projectTitle)}</div>
       </div>
       <div style="display:flex; align-items:center; gap:14px;">
+        <button class="btn" style="background:transparent;color:#fff;border-color:rgba(255,255,255,.2);" onclick="goToDashboard()">← My Projects</button>
         <button class="compact-pill ${compactMode?'active':''}" onclick="toggleCompact()" title="Halve the vertical spacing between timeline rows">${compactMode?"☑":"☐"} Compact</button>
         <div class="hist-controls">
           <button class="hist-btn" title="Undo (Ctrl+Z)" onclick="undo()" ${history.length===0?"disabled":""}>↶</button>
           <button class="hist-btn" title="Redo (Ctrl+Shift+Z)" onclick="redo()" ${future.length===0?"disabled":""}>↷</button>
         </div>
+        <button class="btn app-theme-toggle" style="background:transparent;color:#fff;border-color:rgba(255,255,255,.2);" onclick="toggleDarkMode()" title="Toggle Dark Mode"><span id="appThemeIcon">🌙</span> <span id="appThemeText">Dark</span></button>
+        <button class="btn" style="background:transparent;color:#fff;border-color:rgba(255,255,255,.2);" onclick="setTab('account')" title="Account Settings">⚙</button>
+        <button class="btn" style="background:transparent;color:#fff;border-color:rgba(255,255,255,.2);" onclick="logout()">Log Out</button>
       </div>
     </div>
     <div class="tabstrip">
@@ -563,14 +2820,70 @@ function render(){
   renderToolbar();
   if(activeTab==="data") renderData();
   else if(activeTab==="timeline") renderTimeline();
-  else renderVersions();
+  else if(activeTab==="versions") renderVersions();
+  else if(activeTab==="account") renderAccountSettings();
+
+  // Attach event listeners for version cards
+  setTimeout(() => {
+    // Checkbox listeners
+    const checkboxes = document.querySelectorAll(".version-checkbox");
+    console.log(`[RENDER] Found ${checkboxes.length} checkboxes`);
+    checkboxes.forEach(checkbox => {
+      checkbox.addEventListener("click", (e) => {
+        console.log(`[CHECKBOX] Clicked version ${checkbox.dataset.versionId}`);
+        e.stopPropagation();
+        const versionId = checkbox.dataset.versionId; // Keep as string (UUID)
+        toggleVersionSelection(versionId);
+      });
+    });
+
+    // Menu button listeners
+    document.querySelectorAll(".version-menu-btn").forEach(btn => {
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const versionId = btn.dataset.versionId; // Keep as string (UUID)
+        toggleVersionMenu(versionId);
+      });
+    });
+
+    // Card body listeners
+    document.querySelectorAll(".version-card-body").forEach(card => {
+      card.addEventListener("click", (e) => {
+        const versionId = card.dataset.versionId; // Keep as string (UUID)
+        loadVersion(versionId);
+      });
+    });
+
+    // List item listeners
+    document.querySelectorAll(".version-list-item").forEach(item => {
+      item.addEventListener("click", (e) => {
+        if(e.target.closest(".version-checkbox") || e.target.closest(".menu-trigger")){
+          return;
+        }
+        const versionId = item.dataset.versionId; // Keep as string (UUID)
+        loadVersion(versionId);
+      });
+    });
+
+    // Project selector listeners
+    document.querySelectorAll(".project-selector").forEach(item => {
+      item.addEventListener("click", () => {
+        const projectId = parseInt(item.dataset.projectId);
+        setCurrentProjectAndTab(projectId, 'versions');
+      });
+    });
+  }, 0);
 }
 function setTab(t){ activeTab=t; render(); }
 function toggleCompact(){ compactMode = !compactMode; render(); }
 function renderToolbar(){
   const tb = document.getElementById("toolbar");
   if(activeTab==="versions"){
-    tb.innerHTML = `<button class="btn primary" onclick="openSaveModal()">💾 Save current as version</button>`;
+    tb.innerHTML = `<button class="btn primary" onclick="quickSaveSnapshot()">💾 Save Snapshot</button>`;
+    return;
+  }
+  if(activeTab==="account"){
+    tb.innerHTML = "";
     return;
   }
   tb.innerHTML = `<button class="btn" onclick="addBottomRow('task')">+ Task</button>
@@ -578,7 +2891,12 @@ function renderToolbar(){
                   <button class="btn" onclick="addSwimlane()">+ Swimlane</button>
                   <span class="toolbar-sep"></span>
                   <button class="btn" onclick="openSaveModal()">💾 Save version</button>
-                  <button class="btn" id="pptxBtn" onclick="exportPptx()">⬇ Export PPTX</button>`;
+                  <button class="btn" id="exportBtn" onclick="openExportModal()">⬇ Export</button>
+                  <span class="toolbar-sep"></span>
+                  <div style="display:flex;align-items:center;gap:6px;">
+                    <span class="save-dot" style="width:8px;height:8px;border-radius:50%;background:var(--accent);opacity:1;transition:opacity 0.2s;"></span>
+                    <span class="save-lbl" style="font-size:11px;color:var(--ink-soft);">Saved</span>
+                  </div>`;
 }
 function escapeAttr(s){ return String(s).replace(/"/g,"&quot;"); }
 function escapeHtml(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
@@ -614,48 +2932,89 @@ function toggleVersionMenu(id){
 }
 function renderVersions(){
   const view = document.getElementById("view");
-  const groups = {};
-  versions.forEach(v=>{
-    const g = v.group && v.group.trim() ? v.group.trim() : "Ungrouped";
-    (groups[g] = groups[g] || []).push(v);
-  });
-  const groupNames = Object.keys(groups).sort((a,b)=> a==="Ungrouped"?1: b==="Ungrouped"?-1: a.localeCompare(b));
 
-  let groupsHtml = "";
-  groupNames.forEach(g=>{
-    const list = groups[g].slice().sort((a,b)=> b.savedAt.localeCompare(a.savedAt));
-    const collapsed = collapsedGroups.has(g);
-    const color = groupColor(g);
-    groupsHtml += `
-      <div class="ver-group">
-        <div class="ver-group-head" onclick="toggleGroupCollapse('${escapeAttr(g)}')">
-          <span class="ver-group-dot" style="background:${color}"></span>
-          <span class="ver-group-name">${escapeHtml(g)}</span>
-          <span class="ver-group-count">(${list.length})</span>
-          <span class="ver-group-line"></span>
-          <span class="ver-group-caret ${collapsed?'collapsed':''}">▾</span>
-        </div>
-        ${collapsed ? "" : `<div class="ver-grid">${list.map(v=>versionCardHtml(v)).join("")}</div>`}
-      </div>`;
-  });
+  // Build project list HTML
+  let projectsHtml = myProjects.map(proj => `
+    <div class="ver-project-item project-selector ${proj.id === currentProjectId ? 'active' : ''}" data-project-id="${proj.id}" style="cursor:pointer;">
+      <div style="flex:1;">
+        <div style="font-weight:600; color:var(--ink);">${escapeHtml(proj.title)}</div>
+        <div style="font-size:12px; color:var(--ink-soft);">Updated ${fmtSavedAt(proj.updatedAt)}</div>
+      </div>
+      <div style="color:var(--ink-faint); font-size:12px;">→</div>
+    </div>
+  `).join("");
+
+  // Sort versions based on user preference
+  let sortedVersions = versions.slice();
+  if(versionsSortBy === 'date'){
+    sortedVersions.sort((a,b) => b.savedAt.localeCompare(a.savedAt));
+  } else if(versionsSortBy === 'name'){
+    sortedVersions.sort((a,b) => a.name.localeCompare(b.name));
+  }
+
+  // Render versions as tile or list
+  let versionsHtml = "";
+  if(versionsViewMode === 'tile'){
+    versionsHtml = `<div class="ver-grid">${sortedVersions.map(v=>versionCardHtml(v)).join("")}</div>`;
+  } else {
+    versionsHtml = `<div style="display:flex; flex-direction:column; gap:8px;">
+      ${sortedVersions.map(v=>versionListItemHtml(v)).join("")}
+    </div>`;
+  }
 
   view.innerHTML = `
-    <div class="ver-wrap">
-      ${versions.length===0 ? `<div class="ver-empty">No saved versions yet. Save the current timeline to start building a library by business group.</div>` : groupsHtml}
+    <div style="padding:20px; overflow:visible;">
+      <!-- View controls -->
+      <div style="display:flex; align-items:center; gap:12px; margin-bottom:20px; padding-bottom:16px; border-bottom:1px solid var(--line);">
+        <span style="color:var(--ink-soft); font-size:13px;">View:</span>
+        <button class="btn ${versionsViewMode === 'tile' ? 'active' : ''}" onclick="setVersionsViewMode('tile')" style="padding:6px 12px; ${versionsViewMode === 'tile' ? 'background:var(--accent); color:#fff;' : ''}">⬚ Tile</button>
+        <button class="btn ${versionsViewMode === 'list' ? 'active' : ''}" onclick="setVersionsViewMode('list')" style="padding:6px 12px; ${versionsViewMode === 'list' ? 'background:var(--accent); color:#fff;' : ''}">☰ List</button>
+
+        <span style="color:var(--ink-soft); font-size:13px; margin-left:20px;">Sort by:</span>
+        <select onchange="setVersionsSortBy(this.value)" style="padding:6px 10px; border:1px solid var(--line); border-radius:4px; background:var(--surface); color:var(--ink); font-size:13px;">
+          <option value="date" ${versionsSortBy === 'date' ? 'selected' : ''}>Recent first</option>
+          <option value="name" ${versionsSortBy === 'name' ? 'selected' : ''}>Name (A-Z)</option>
+        </select>
+      </div>
+
+      ${selectedVersions.size > 0 ? `
+        <div style="background:var(--accent-soft); border:1px solid var(--accent); border-radius:8px; padding:15px; margin-bottom:20px; display:flex; align-items:center; gap:10px;">
+          <span style="flex:1; color:var(--ink);">
+            <strong>${selectedVersions.size} version${selectedVersions.size === 1 ? '' : 's'} selected</strong>
+          </span>
+          <button class="btn" onclick="deselectAllVersions()">Deselect all</button>
+          <button class="btn danger" onclick="deleteBulkVersions()">🗑 Delete selected</button>
+        </div>
+      ` : `
+        <div style="color:var(--ink-soft); font-size:12px; margin-bottom:15px; padding:0 10px;">
+          <strong>Tip:</strong> Click the checkbox on any version to select it for bulk delete
+        </div>
+      `}
+
+      ${versions.length===0 ? `<div class="ver-empty">No saved versions yet. Click "Save Snapshot" to create your first snapshot.</div>` : versionsHtml}
     </div>
   `;
+}
+
+async function setCurrentProjectAndTab(projectId, tab){
+  currentProjectId = projectId;
+  await openProject(projectId);
+  activeTab = tab;
+  render();
 }
 function versionCardHtml(v){
   const stats = versionStats(v.data);
   const color = groupColor(v.group);
+  const isSelected = selectedVersions.has(v.id);
   return `
-    <div class="ver-card">
+    <div class="ver-card" style="position:relative;${isSelected ? 'background:var(--accent-soft);' : ''}">
       <div class="ver-card-strip" style="background:${color}"></div>
+      <div class="version-checkbox" data-version-id="${v.id}" style="position:absolute;bottom:8px;right:8px;width:22px;height:22px;border:2px solid ${isSelected ? 'var(--accent)' : 'var(--line-strong)'};background:${isSelected ? 'var(--accent)' : 'var(--surface)'};border-radius:4px;cursor:pointer;z-index:20;display:flex;align-items:center;justify-content:center;font-size:14px;line-height:1;color:#fff;font-weight:700;">${isSelected ? '✓' : ''}</div>
       <div class="ver-card-menu-cell">
-        <button class="menu-trigger ver-menu-trigger" onclick="event.stopPropagation(); toggleVersionMenu(${v.id})" title="More">⋯</button>
+        <button class="menu-trigger ver-menu-trigger version-menu-btn" data-version-id="${v.id}" title="More">⋯</button>
         ${versionMenuKey===v.id ? versionMenuHtml(v) : ""}
       </div>
-      <div class="ver-card-body" onclick="loadVersion(${v.id})" style="cursor:pointer;" title="Open this version">
+      <div class="ver-card-body version-card-body" data-version-id="${v.id}" style="cursor:pointer;" title="Open this version">
         <p class="ver-card-title">${escapeHtml(v.name)}</p>
         <div class="ver-card-meta">Saved ${fmtSavedAt(v.savedAt)}</div>
         <div class="ver-card-stats">
@@ -666,52 +3025,517 @@ function versionCardHtml(v){
       </div>
     </div>`;
 }
+
+function versionListItemHtml(v){
+  const stats = versionStats(v.data);
+  const color = groupColor(v.group);
+  const isSelected = selectedVersions.has(v.id);
+  return `
+    <div style="display:flex; align-items:center; gap:12px; padding:12px; border:1px solid var(--line); border-radius:6px; background:${isSelected ? 'var(--accent-soft)' : 'var(--surface)'}; cursor:pointer; transition:all .12s;" class="version-list-item" data-version-id="${v.id}" style="cursor:pointer;" title="Open this version">
+      <div style="width:4px; height:40px; background:${color}; border-radius:2px; flex-shrink:0;"></div>
+      <div style="flex:1;">
+        <div style="font-weight:600; color:var(--ink); margin-bottom:4px;">${escapeHtml(v.name)}</div>
+        <div style="font-size:12px; color:var(--ink-soft); display:flex; gap:16px;">
+          <span>Saved ${fmtSavedAt(v.savedAt)}</span>
+          <span>🧭 ${stats.phases} swimlane${stats.phases===1?"":"s"}</span>
+          <span>📌 ${stats.milestones}</span>
+          <span>▤ ${stats.tasks}</span>
+        </div>
+      </div>
+      <div class="version-checkbox" data-version-id="${v.id}" style="width:22px;height:22px;border:2px solid ${isSelected ? 'var(--accent)' : 'var(--line-strong)'};background:${isSelected ? 'var(--accent)' : 'var(--surface)'};border-radius:4px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:14px;line-height:1;color:#fff;font-weight:700;">${isSelected ? '✓' : ''}</div>
+      <button class="menu-trigger ver-menu-trigger version-menu-btn" data-version-id="${v.id}" title="More" style="flex-shrink:0;">⋯</button>
+      ${versionMenuKey===v.id ? versionMenuHtml(v) : ""}
+    </div>`;
+}
+function setVersionsViewMode(mode){
+  versionsViewMode = mode;
+  localStorage.setItem('versionsViewMode', mode);
+  render();
+}
+
+function setVersionsSortBy(sortBy){
+  versionsSortBy = sortBy;
+  localStorage.setItem('versionsSortBy', sortBy);
+  render();
+}
+
+function toggleVersionSelection(versionId){
+  console.log(`[TOGGLE] versionId=${versionId}, currently selected=${selectedVersions.has(versionId)}`);
+  if(selectedVersions.has(versionId)){
+    selectedVersions.delete(versionId);
+    console.log(`[TOGGLE] Deselected, now have ${selectedVersions.size} selected`);
+  } else {
+    selectedVersions.add(versionId);
+    console.log(`[TOGGLE] Selected, now have ${selectedVersions.size} selected`);
+  }
+  render();
+}
+
+function selectAllVersions(){
+  versions.forEach(v => selectedVersions.add(v.id));
+  render();
+}
+
+function deselectAllVersions(){
+  selectedVersions.clear();
+  render();
+}
+
+function deleteBulkVersions(){
+  if(selectedVersions.size === 0){
+    showModal("No versions selected");
+    return;
+  }
+
+  const totalToDelete = selectedVersions.size;
+  showDeleteBulkVersionsModal(totalToDelete);
+}
+
+function showDeleteBulkVersionsModal(totalToDelete){
+  const overlay = document.createElement('div');
+  overlay.id = 'modal-overlay';
+  overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:10000;';
+
+  overlay.innerHTML = `
+    <div style="background:#fff;border-radius:12px;padding:24px;max-width:420px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+      <h2 style="margin:0 0 8px 0;font-size:16px;font-weight:700;color:var(--ink);">Delete ${totalToDelete} snapshot${totalToDelete === 1 ? '' : 's'}?</h2>
+      <p style="margin:0 0 16px 0;font-size:13px;color:var(--ink-soft);line-height:1.5;">
+        This action cannot be undone. All selected snapshots will be permanently deleted.
+      </p>
+      <div style="display:flex;gap:8px;justify-content:flex-end;">
+        <button class="btn" onclick="document.getElementById('modal-overlay').remove();" style="padding:8px 16px;">Cancel</button>
+        <button class="btn danger" onclick="confirmDeleteBulkVersions(); document.getElementById('modal-overlay').remove();" style="padding:8px 16px;">Delete</button>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(overlay);
+  overlay.addEventListener('click', (e) => {
+    if(e.target === overlay) overlay.remove();
+  });
+}
+
+async function confirmDeleteBulkVersions(){
+  const totalToDelete = selectedVersions.size;
+  let deleted = 0;
+  for(const versionId of selectedVersions){
+    try {
+      console.log(`[DELETE] Attempting to delete version ${versionId}`);
+      const res = await apiFetch(`/api/v1/projects/${currentProjectId}/versions/${versionId}`, {
+        method: 'DELETE'
+      });
+      console.log(`[DELETE] Response:`, res, `Status:`, res?.status, `OK:`, res?.ok);
+      if(res && (res.status === 204 || res.ok)){
+        deleted++;
+        console.log(`[DELETE] ✓ Deleted version ${versionId}`);
+      } else {
+        console.error(`[DELETE] ✗ Failed to delete version ${versionId}. Status:`, res?.status);
+      }
+    } catch(err){
+      console.error("[DELETE] Exception:", err);
+    }
+  }
+
+  selectedVersions.clear();
+  await loadVersions();
+  showModal(`Deleted ${deleted}/${totalToDelete} snapshot${deleted === 1 ? '' : 's'}`);
+  render();
+}
+
 function versionMenuHtml(v){
   return `<div class="row-menu" onclick="event.stopPropagation()">
-    <button onclick="loadVersion(${v.id})">📂 Open in editor</button>
-    <button onclick="updateVersionWithCurrent(${v.id})">🔄 Overwrite with current</button>
-    <button onclick="duplicateVersion(${v.id})">⧉ Duplicate</button>
-    <button onclick="openEditModal(${v.id})">✎ Rename / move group</button>
+    <button onclick="loadVersion('${v.id}')">📂 Open in editor</button>
+    <button onclick="updateVersionWithCurrent('${v.id}')">🔄 Overwrite with current</button>
+    <button onclick="duplicateVersion('${v.id}')">⧉ Duplicate</button>
+    <button onclick="openEditModal('${v.id}')">✎ Rename / move group</button>
+    <button onclick="openMoveVersionModal('${v.id}')">➔ Move to project</button>
     <hr/>
-    <button class="danger" onclick="deleteVersion(${v.id})">🗑 Delete</button>
+    <button class="danger" onclick="deleteVersion('${v.id}')">🗑 Delete</button>
   </div>`;
 }
 
-function loadVersion(id){
+async function loadVersion(id){
   const v = versions.find(x=>x.id===id);
   if(!v) return;
-  if(!confirm(`Open "${v.name}"? Any unsaved changes to the current timeline will be replaced (use Undo to recover).`)) return;
-  pushHistory();
-  swimlanes = JSON.parse(JSON.stringify(v.data.swimlanes));
-  projectTitle = v.data.projectTitle;
-  versionMenuKey = null;
-  activeTab = "data";
-  saveFlash(); render();
+
+  showLoadVersionModal(id, v.name);
 }
-function duplicateVersion(id){
+
+function showLoadVersionModal(versionId, versionName){
+  const overlay = document.createElement('div');
+  overlay.id = 'modal-overlay';
+  overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:10000;';
+
+  overlay.innerHTML = `
+    <div style="background:#fff;border-radius:12px;padding:24px;max-width:420px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+      <h2 style="margin:0 0 8px 0;font-size:16px;font-weight:700;color:var(--ink);">Load Snapshot?</h2>
+      <p style="margin:0 0 16px 0;font-size:13px;color:var(--ink-soft);line-height:1.5;">
+        Opening <strong>"${escapeHtml(versionName)}"</strong> will replace your current timeline.
+      </p>
+      <div style="display:flex;gap:8px;justify-content:flex-end;">
+        <button class="btn" onclick="document.getElementById('modal-overlay').remove();" style="padding:8px 16px;">Cancel</button>
+        <button class="btn" onclick="loadVersionDirect('${escapeAttr(versionId)}'); document.getElementById('modal-overlay').remove();" style="padding:8px 16px; background:var(--line); color:var(--ink);">Load without saving</button>
+        <button class="btn primary" onclick="saveAndLoadVersion('${escapeAttr(versionId)}'); document.getElementById('modal-overlay').remove();" style="padding:8px 16px;">Save & Load</button>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(overlay);
+  overlay.addEventListener('click', (e) => {
+    if(e.target === overlay) overlay.remove();
+  });
+}
+
+async function loadVersionDirect(id){
+  const res = await apiFetch(`/api/v1/projects/${currentProjectId}/versions/${id}/restore`, {
+    method: 'POST'
+  });
+  if(res && res.ok){
+    const data = await res.json();
+    pushHistory();
+    swimlanes = data.swimlanes;
+    projectTitle = data.projectTitle;
+    versionMenuKey = null;
+    activeTab = "data";
+    render();
+  } else {
+    showModal("Failed to load snapshot");
+  }
+}
+
+async function saveAndLoadVersion(id){
+  await quickSaveSnapshot();
+  await loadVersionDirect(id);
+}
+async function duplicateVersion(id){
   const v = versions.find(x=>x.id===id);
   if(!v) return;
-  const copy = { id: Date.now(), name: v.name + " (copy)", group: v.group, savedAt: new Date().toISOString(), data: JSON.parse(JSON.stringify(v.data)) };
-  versions.push(copy);
-  versionMenuKey = null;
-  persistVersions(); render();
+  const res = await apiFetch(`/api/v1/projects/${currentProjectId}/versions/${id}`);
+  if(res && res.ok){
+    const versionData = await res.json();
+    const createRes = await apiFetch(`/api/v1/projects/${currentProjectId}/versions`, {
+      method: 'POST',
+      body: JSON.stringify({ name: versionData.name + " (copy)", group: versionData.group })
+    });
+    versionMenuKey = null;
+    if(createRes && createRes.ok) await loadVersions();
+    render();
+  }
 }
-function updateVersionWithCurrent(id){
+async function updateVersionWithCurrent(id){
   const v = versions.find(x=>x.id===id);
   if(!v) return;
   if(!confirm(`Overwrite "${v.name}" with the timeline currently open in the editor?`)) return;
-  v.data = { swimlanes: JSON.parse(JSON.stringify(swimlanes)), projectTitle };
-  v.savedAt = new Date().toISOString();
+  const res = await apiFetch(`/api/v1/projects/${currentProjectId}/versions/${id}/overwrite-with-current`, {
+    method: 'POST'
+  });
   versionMenuKey = null;
-  persistVersions(); render();
+  if(res && res.ok) await loadVersions();
+  render();
 }
 function deleteVersion(id){
   const v = versions.find(x=>x.id===id);
   if(!v) return;
-  if(!confirm(`Delete "${v.name}"? This can't be undone.`)) return;
-  versions = versions.filter(x=>x.id!==id);
-  versionMenuKey = null;
-  persistVersions(); render();
+  showConfirmModal(
+    `Delete "${v.name}"? This can't be undone.`,
+    async () => {
+      const res = await apiFetch(`/api/v1/projects/${currentProjectId}/versions/${id}`, {
+        method: 'DELETE'
+      });
+      versionMenuKey = null;
+      if(res && res.status === 204) await loadVersions();
+      render();
+    }
+  );
+}
+
+/* ---------------- account settings tab ---------------- */
+function renderAccountSettings(){
+  const view = document.getElementById("view");
+  const authStatus = authUser ? `✓ Logged in as ${escapeHtml(authUser.email)}` : `✗ Not logged in`;
+  const authStatusColor = authUser ? "var(--st-complete)" : "var(--danger)";
+
+  view.innerHTML = `
+    <div style="max-width:600px; margin:30px auto; padding:0 20px;">
+      <h2 style="color:var(--header); margin-bottom:30px;">Account Settings</h2>
+
+      <div style="background:var(--accent-soft); border:1px solid var(--accent); border-radius:8px; padding:15px; margin-bottom:30px;">
+        <div style="color:${authStatusColor}; font-weight:600;">${authStatus}</div>
+      </div>
+
+      <div style="background:var(--surface); border-radius:8px; padding:20px; margin-bottom:20px; border:1px solid var(--line);">
+        <h3 style="margin-top:0; color:var(--ink);">Import Data from Original App</h3>
+        <p style="color:var(--ink-soft); margin-bottom:15px;">Transfer your saved versions from the standalone HTML file to this app.</p>
+
+        <div style="border:1px solid var(--line); border-radius:6px; padding:15px; background:var(--paper); margin-bottom:15px;">
+          <strong style="color:var(--ink);">Step 1: Export your data</strong>
+          <ol style="color:var(--ink-soft); margin:10px 0;">
+            <li>Open the original file in a new tab: <code style="background:var(--surface); padding:2px 6px; border-radius:3px;">file:///C:/00-Bhushan/Projects/project-timeline-studio/project-timeline-studio.html</code></li>
+            <li>Open browser DevTools (F12), go to Console</li>
+            <li>Paste and run: <code style="background:var(--surface); padding:2px 6px; border-radius:3px; display:inline-block; margin:5px 0;">copy(localStorage.getItem('tlStudio.versions.v1'))</code></li>
+            <li>The data is now copied to clipboard</li>
+          </ol>
+        </div>
+
+        <div style="border:1px solid var(--line); border-radius:6px; padding:15px; background:var(--paper);">
+          <strong style="color:var(--ink);">Step 2: Paste here</strong>
+          <textarea id="importPasteArea" placeholder="Paste the data from Step 1 here..." style="width:100%; height:120px; padding:10px; border:1px solid var(--line); border-radius:4px; font-family:monospace; font-size:12px; margin:10px 0; box-sizing:border-box;"></textarea>
+          <button class="btn primary" onclick="handleManualImport()">Import Versions</button>
+          <div id="importStatus" style="margin-top:10px; color:var(--danger);"></div>
+        </div>
+      </div>
+
+      <div style="background:var(--surface); border-radius:8px; padding:20px; margin-bottom:20px; border:1px solid var(--line);">
+        <h3 style="margin-top:0; color:var(--ink);">Current Email</h3>
+        <div style="color:var(--ink-soft); margin-bottom:20px;">${escapeHtml(authUser.email)}</div>
+        <button class="btn primary" onclick="toggleChangeEmail()">Change Email</button>
+        <div id="changeEmailForm" style="display:none; margin-top:20px; border-top:1px solid var(--line); padding-top:20px;">
+          <div class="modal-field">
+            <label>New Email</label>
+            <input id="newEmailInput" type="email" placeholder="newemail@example.com" />
+          </div>
+          <div class="modal-field">
+            <label>Password (to confirm)</label>
+            <input id="emailChangePasswordInput" type="password" placeholder="••••••••" />
+          </div>
+          <div style="display:flex; gap:10px; margin-top:15px;">
+            <button class="btn primary" onclick="handleChangeEmail()">Update Email</button>
+            <button class="btn" onclick="toggleChangeEmail()">Cancel</button>
+          </div>
+          <div id="emailChangeMsg" style="margin-top:10px; color:var(--danger);"></div>
+        </div>
+      </div>
+
+      <div style="background:var(--surface); border-radius:8px; padding:20px; border:1px solid var(--line);">
+        <h3 style="margin-top:0; color:var(--ink);">Change Password</h3>
+        <button class="btn primary" onclick="toggleChangePassword()">Change Password</button>
+        <div id="changePasswordForm" style="display:none; margin-top:20px; border-top:1px solid var(--line); padding-top:20px;">
+          <div class="modal-field">
+            <label>Current Password</label>
+            <input id="currentPasswordInput" type="password" placeholder="••••••••" />
+          </div>
+          <div class="modal-field">
+            <label>New Password</label>
+            <input id="newPasswordInput" type="password" placeholder="••••••••" />
+            <small style="color:var(--ink-soft);">Min 8 chars, 1 uppercase, 1 number, 1 special char (!@#$%^&*)</small>
+          </div>
+          <div class="modal-field">
+            <label>Confirm New Password</label>
+            <input id="confirmPasswordInput" type="password" placeholder="••••••••" />
+          </div>
+          <div style="display:flex; gap:10px; margin-top:15px;">
+            <button class="btn primary" onclick="handleChangePassword()">Update Password</button>
+            <button class="btn" onclick="toggleChangePassword()">Cancel</button>
+          </div>
+          <div id="passwordChangeMsg" style="margin-top:10px; color:var(--danger);"></div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+async function handleManualImport(){
+  const statusDiv = document.getElementById("importStatus");
+  const pasteArea = document.getElementById("importPasteArea");
+  const pasted = pasteArea.value.trim();
+
+  if(!pasted){
+    statusDiv.textContent = "Please paste the data first";
+    statusDiv.style.color = "var(--danger)";
+    return;
+  }
+
+  let versions;
+  try {
+    versions = JSON.parse(pasted);
+  } catch(e){
+    statusDiv.textContent = "Invalid data format. Make sure you copied the correct text.";
+    statusDiv.style.color = "var(--danger)";
+    console.error("Parse error:", e);
+    return;
+  }
+
+  if(!Array.isArray(versions) || versions.length === 0){
+    statusDiv.textContent = "No versions found in pasted data";
+    statusDiv.style.color = "var(--danger)";
+    return;
+  }
+
+  if(confirm(`Import ${versions.length} version${versions.length === 1 ? '' : 's'}? This will create a new project with your timeline data.`)){
+    await importTimelineData(versions);
+    pasteArea.value = "";
+  }
+}
+
+async function importTimelineData(versions){
+  const statusDiv = document.getElementById("importStatus");
+  statusDiv.textContent = "Importing...";
+  statusDiv.style.color = "var(--ink-soft)";
+
+  try {
+    // Get the first version's data as the project title and swimlanes
+    const firstVersion = versions[0];
+    const projectTitle = firstVersion.data?.projectTitle || "Imported Timeline";
+    let initialSwimlanes = firstVersion.data?.swimlanes || [];
+
+    // Ensure all items are visible
+    initialSwimlanes = initialSwimlanes.map(swimlane => ({
+      ...swimlane,
+      visible: true,
+      children: (swimlane.children || []).map(child => ({ ...child, visible: true }))
+    }));
+
+    // Create new project with initial data
+    const createRes = await apiFetch('/api/v1/projects', {
+      method: 'POST',
+      body: JSON.stringify({ title: projectTitle })
+    });
+
+    if(!createRes || !createRes.ok){
+      statusDiv.style.color = "var(--danger)";
+      statusDiv.textContent = "Failed to create project";
+      return;
+    }
+
+    const newProject = await createRes.json();
+    const projectId = newProject.id;
+
+    // Update project with the first version's swimlanes
+    await apiFetch(`/api/v1/projects/${projectId}`, {
+      method: 'PUT',
+      body: JSON.stringify({
+        swimlanes: initialSwimlanes,
+        projectTitle
+      })
+    }).catch(e => console.warn("Failed to set initial project data:", e));
+
+    // Import each version as a saved snapshot
+    let imported = 0;
+    for(const version of versions){
+      try {
+        // Ensure all items are visible in each version too
+        let versionSwimlanes = version.data?.swimlanes || [];
+        versionSwimlanes = versionSwimlanes.map(swimlane => ({
+          ...swimlane,
+          visible: true,
+          children: (swimlane.children || []).map(child => ({ ...child, visible: true }))
+        }));
+
+        const versionRes = await apiFetch(`/api/v1/projects/${projectId}/versions`, {
+          method: 'POST',
+          body: JSON.stringify({
+            name: version.name || "Version " + (imported + 1),
+            group: version.group || "Imported",
+            data: { swimlanes: versionSwimlanes, projectTitle: version.data?.projectTitle || "Untitled" }
+          })
+        });
+
+        if(versionRes && versionRes.ok){
+          imported++;
+        }
+      } catch(err){
+        console.warn("Failed to import one version:", err);
+      }
+    }
+
+    statusDiv.style.color = "var(--st-complete)";
+    statusDiv.textContent = `✓ Imported ${imported} version${imported === 1 ? '' : 's'}! Reloading...`;
+
+    await new Promise(r => setTimeout(r, 1500));
+    currentProjectId = projectId;
+    await loadProjectList();
+    await openProject(projectId);
+    activeTab = "data";
+    render();
+  } catch(err){
+    console.error("Import error:", err);
+    statusDiv.style.color = "var(--danger)";
+    statusDiv.textContent = "Error during import: " + err.message;
+  }
+}
+
+function toggleChangeEmail(){
+  const form = document.getElementById("changeEmailForm");
+  form.style.display = form.style.display === "none" ? "block" : "none";
+  document.getElementById("emailChangeMsg").textContent = "";
+}
+
+function toggleChangePassword(){
+  const form = document.getElementById("changePasswordForm");
+  form.style.display = form.style.display === "none" ? "block" : "none";
+  document.getElementById("passwordChangeMsg").textContent = "";
+}
+
+async function handleChangeEmail(){
+  const newEmail = document.getElementById("newEmailInput").value;
+  const password = document.getElementById("emailChangePasswordInput").value;
+  const msgDiv = document.getElementById("emailChangeMsg");
+
+  if(!newEmail || !password){
+    msgDiv.textContent = "Please fill in all fields";
+    return;
+  }
+
+  const res = await apiFetch('/api/v1/auth/change-email', {
+    method: 'PUT',
+    body: JSON.stringify({ newEmail, password })
+  });
+
+  if(res && res.ok){
+    msgDiv.style.color = "var(--st-complete)";
+    msgDiv.textContent = "Email changed successfully!";
+    await new Promise(r => setTimeout(r, 1500));
+    authUser.email = newEmail;
+    document.getElementById("newEmailInput").value = "";
+    document.getElementById("emailChangePasswordInput").value = "";
+    toggleChangeEmail();
+    render();
+  } else if(res?.status === 409){
+    msgDiv.textContent = "Email already in use";
+  } else if(res?.status === 401){
+    msgDiv.textContent = "Incorrect password";
+  } else {
+    const err = res ? await res.json() : {};
+    msgDiv.textContent = err.detail || "Failed to change email";
+  }
+}
+
+async function handleChangePassword(){
+  const currentPassword = document.getElementById("currentPasswordInput").value;
+  const newPassword = document.getElementById("newPasswordInput").value;
+  const confirmPassword = document.getElementById("confirmPasswordInput").value;
+  const msgDiv = document.getElementById("passwordChangeMsg");
+
+  if(!currentPassword || !newPassword || !confirmPassword){
+    msgDiv.textContent = "Please fill in all fields";
+    return;
+  }
+
+  if(newPassword !== confirmPassword){
+    msgDiv.textContent = "New passwords don't match";
+    return;
+  }
+
+  const res = await apiFetch('/api/v1/auth/change-password', {
+    method: 'PUT',
+    body: JSON.stringify({ currentPassword, newPassword })
+  });
+
+  if(res && res.ok){
+    msgDiv.style.color = "var(--st-complete)";
+    msgDiv.textContent = "Password changed successfully!";
+    await new Promise(r => setTimeout(r, 1500));
+    document.getElementById("currentPasswordInput").value = "";
+    document.getElementById("newPasswordInput").value = "";
+    document.getElementById("confirmPasswordInput").value = "";
+    toggleChangePassword();
+    render();
+  } else if(res?.status === 401){
+    msgDiv.textContent = "Incorrect current password";
+  } else {
+    const err = res ? await res.json() : {};
+    msgDiv.textContent = err.detail || "Failed to change password";
+  }
 }
 
 /* ---------------- save / edit modal ---------------- */
@@ -719,6 +3543,40 @@ function existingGroups(){
   const set = new Set(versions.map(v=> v.group && v.group.trim() ? v.group.trim() : "Ungrouped"));
   return Array.from(set).sort();
 }
+
+function generateSnapshotName(){
+  const now = new Date();
+  const mm = String(now.getMonth() + 1).padStart(2, '0');
+  const dd = String(now.getDate()).padStart(2, '0');
+  const yy = String(now.getFullYear()).slice(-2);
+  const hh = String(now.getHours()).padStart(2, '0');
+  const min = String(now.getMinutes()).padStart(2, '0');
+  const ss = String(now.getSeconds()).padStart(2, '0');
+  return `${projectTitle} v${mm}${dd}${yy}${hh}${min}${ss}`;
+}
+
+async function quickSaveSnapshot(){
+  try {
+    const name = generateSnapshotName();
+    const payload = { name };
+    const res = await apiFetch(`/api/v1/projects/${currentProjectId}/versions`, {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    });
+    if(res && res.ok) {
+      await loadVersions();
+      showModal("Snapshot saved successfully!");
+      render();
+    } else {
+      const err = res ? await res.json() : {};
+      showModal("Failed to save snapshot: " + (err.detail || "Unknown error"));
+    }
+  } catch(err) {
+    console.error("Save snapshot error:", err);
+    showModal("Error saving snapshot: " + err.message);
+  }
+}
+
 function openSaveModal(){
   modalMode = "save";
   modalEditId = null;
@@ -739,31 +3597,147 @@ function openEditModal(id){
   render();
   setTimeout(()=>{ const el=document.getElementById("modalNameInput"); if(el){ el.focus(); el.select(); } }, 0);
 }
-function closeModal(){ modalMode = null; modalEditId = null; render(); }
+function openExportModal(){
+  modalMode = "export";
+  render();
+}
+function doExport(format){
+  closeModal();
+  if(format === 'excel') exportExcel();
+  else if(format === 'pptx') exportPptx();
+}
+function closeModal(){ modalMode = null; modalEditId = null; modalMoveVersionId = null; render(); }
+function openMoveVersionModal(id){
+  const v = versions.find(x=>x.id===id);
+  if(!v) return;
+  modalMode = "move-version";
+  modalMoveVersionId = id;
+  modalTargetProject = "";
+  versionMenuKey = null;
+  render();
+}
 function updateModalName(val){ modalName = val; }
 function updateModalGroup(val){ modalGroup = val; }
-function confirmModal(){
+function updateModalTargetProject(val){ modalTargetProject = val; render(); }
+async function confirmModal(){
   const name = (modalName||"").trim() || "Untitled version";
   const group = (modalGroup||"").trim();
   if(modalMode==="save"){
-    versions.push({
-      id: Date.now(),
-      name, group,
-      savedAt: new Date().toISOString(),
-      data: { swimlanes: JSON.parse(JSON.stringify(swimlanes)), projectTitle }
-    });
+    try {
+      const res = await apiFetch(`/api/v1/projects/${currentProjectId}/versions`, {
+        method: 'POST',
+        body: JSON.stringify({ name, group: group || null })
+      });
+      if(res && res.ok) {
+        await loadVersions();
+        showModal("Version saved successfully!");
+      } else {
+        const err = res ? await res.json() : {};
+        showModal("Failed to save version: " + (err.detail || "Unknown error"));
+        console.error("Save version error:", err);
+      }
+    } catch(err) {
+      console.error("Save version error:", err);
+      showModal("Error saving version: " + err.message);
+    }
   } else if(modalMode==="edit" && modalEditId!=null){
-    const v = versions.find(x=>x.id===modalEditId);
-    if(v){ v.name = name; v.group = group; }
+    try {
+      const res = await apiFetch(`/api/v1/projects/${currentProjectId}/versions/${modalEditId}`, {
+        method: 'PUT',
+        body: JSON.stringify({ name, group: group || null })
+      });
+      if(res && res.ok) {
+        await loadVersions();
+        alert("Version updated successfully!");
+      } else {
+        const err = res ? await res.json() : {};
+        alert("Failed to update version: " + (err.detail || "Unknown error"));
+      }
+    } catch(err) {
+      console.error("Update version error:", err);
+      alert("Error updating version: " + err.message);
+    }
   }
-  persistVersions();
   modalMode = null; modalEditId = null;
   activeTab = "versions";
   render();
 }
+
+async function confirmMoveVersion(){
+  if(!modalTargetProject || !modalMoveVersionId) return;
+  try {
+    const version = versions.find(x=>x.id===modalMoveVersionId);
+    const res = await apiFetch(`/api/v1/projects/${currentProjectId}/versions/${modalMoveVersionId}/move`, {
+      method: 'POST',
+      body: JSON.stringify({ targetProjectId: modalTargetProject })
+    });
+    if(res && res.ok) {
+      await loadVersions();
+      const targetProj = myProjects.find(p=>p.id===modalTargetProject)?.title || "the target project";
+      showModal(`Moved "${version?.name || 'Untitled'}" to ${targetProj}`);
+    } else {
+      const err = res ? await res.json() : {};
+      alert("Failed to move version: " + (err.detail || "Unknown error"));
+      console.error("Move version error:", err);
+    }
+  } catch(err) {
+    console.error("Move version error:", err);
+    alert("Error moving version: " + err.message);
+  }
+  modalMode = null; modalMoveVersionId = null; modalTargetProject = "";
+  activeTab = "versions";
+  render();
+}
+
 function renderModal(){
   const dl = existingGroups().map(g=>`<option value="${escapeAttr(g)}"></option>`).join("");
   const isEdit = modalMode==="edit";
+  const isMove = modalMode==="move-version";
+  const isExport = modalMode==="export";
+
+  if(isExport){
+    return `
+      <div class="modal-overlay" onclick="if(event.target===this) closeModal()">
+        <div class="modal-card">
+          <p class="modal-title">Export timeline</p>
+          <p class="modal-sub">Choose a format to export your project timeline and tasks.</p>
+          <div class="modal-actions" style="justify-content:center;gap:16px;">
+            <button class="btn primary" onclick="doExport('excel')" style="flex:1;">📊 Export to Excel</button>
+            <button class="btn primary" onclick="doExport('pptx')" style="flex:1;">📑 Export to PowerPoint</button>
+          </div>
+          <div class="modal-actions">
+            <button class="btn" onclick="closeModal()">Cancel</button>
+          </div>
+        </div>
+      </div>`;
+  }
+
+  if(isMove){
+    const currentVersion = versions.find(x=>x.id===modalMoveVersionId);
+    const currentProjName = myProjects.find(p=>p.id===currentProjectId)?.title || "Current Project";
+    const availableProjects = myProjects.filter(p=>p.id!==currentProjectId);
+
+    return `
+      <div class="modal-overlay" onclick="if(event.target===this) closeModal()">
+        <div class="modal-card">
+          <p class="modal-title">Move version to another project</p>
+          <p class="modal-sub">Move "${currentVersion?.name || 'Untitled'}" from ${currentProjName} to a different project.</p>
+          <div class="modal-field">
+            <label>Target project</label>
+            <select onchange="updateModalTargetProject(this.value)">
+              <option value="">Select a project...</option>
+              ${availableProjects.map(p=>`<option value="${escapeAttr(p.id)}" ${modalTargetProject === p.id ? 'selected' : ''}>${escapeHtml(p.title)}</option>`).join("")}
+            </select>
+            <div class="modal-hint">Choose which project you'd like to move this version to.</div>
+          </div>
+          <div class="modal-actions">
+            <button class="btn" onclick="closeModal()">Cancel</button>
+            <button class="btn primary" onclick="confirmMoveVersion()" ${!modalTargetProject ? 'disabled' : ''}>Move version</button>
+          </div>
+        </div>
+      </div>`;
+  }
+
   return `
     <div class="modal-overlay" onclick="if(event.target===this) closeModal()">
       <div class="modal-card">
@@ -788,6 +3762,65 @@ function renderModal(){
 }
 
 /* ---------------- rendering: DATA TAB ---------------- */
+function initColumnResizing(){
+  const table = document.querySelector('table.data');
+  if(!table) return;
+
+  const headers = table.querySelectorAll('thead th');
+  headers.forEach((th, idx) => {
+    if(idx === headers.length - 1) return; // Skip last column
+
+    th.addEventListener('mousedown', (e) => {
+      if(e.offsetX < th.offsetWidth - 10) return; // Only on the resize handle
+
+      const startX = e.clientX;
+      const startWidth = th.offsetWidth;
+      const colIndex = idx;
+
+      const onMouseMove = (e) => {
+        const diff = e.clientX - startX;
+        const newWidth = Math.max(40, startWidth + diff); // Min 40px
+        th.style.width = newWidth + 'px';
+
+        // Also set width on body cells of the same column
+        table.querySelectorAll(`tbody tr`).forEach(row => {
+          const cells = row.querySelectorAll('td');
+          if(cells[colIndex]) cells[colIndex].style.width = newWidth + 'px';
+        });
+      };
+
+      const onMouseUp = () => {
+        document.removeEventListener('mousemove', onMouseMove);
+        document.removeEventListener('mouseup', onMouseUp);
+        // Save column widths to localStorage
+        saveColumnWidths();
+      };
+
+      document.addEventListener('mousemove', onMouseMove);
+      document.addEventListener('mouseup', onMouseUp);
+    });
+  });
+}
+
+function saveColumnWidths(){
+  const headers = document.querySelectorAll('table.data thead th');
+  const widths = Array.from(headers).map(h => h.style.width || h.offsetWidth + 'px');
+  localStorage.setItem('dataTableColumnWidths', JSON.stringify(widths));
+}
+
+function loadColumnWidths(){
+  const widths = localStorage.getItem('dataTableColumnWidths');
+  if(!widths) return;
+
+  try{
+    const parsed = JSON.parse(widths);
+    const headers = document.querySelectorAll('table.data thead th');
+    headers.forEach((h, i) => {
+      if(parsed[i]) h.style.width = parsed[i];
+    });
+  }catch(e){ console.warn('Failed to load column widths:', e); }
+}
+
 function renderData(){
   const view = document.getElementById("view");
   let rowsHtml = "";
@@ -798,28 +3831,79 @@ function renderData(){
   });
 
   view.innerHTML = `
-    <div class="data-wrap">
+    <div class="data-wrap ${compactMode ? 'compact' : ''}">
       <table class="data">
         <thead>
           <tr>
             <th class="drag-cell"></th>
-            <th style="width:26px"></th>
+            <th></th>
             <th>Title</th>
-            <th style="width:150px">Type</th>
-            <th style="width:90px">Duration</th>
-            <th style="width:150px">Start</th>
-            <th style="width:150px">End</th>
-            <th style="width:60px">%</th>
-            <th style="width:130px">Assigned to</th>
-            <th style="width:140px">Status</th>
-            <th style="width:34px"></th>
-            <th style="width:34px"></th>
+            <th>Type</th>
+            <th>Duration</th>
+            <th>Start</th>
+            <th>End</th>
+            <th>%</th>
+            <th>Assigned to</th>
+            <th>Status</th>
+            <th></th>
+            <th></th>
           </tr>
         </thead>
         <tbody>${rowsHtml}</tbody>
       </table>
     </div>
   `;
+
+  // Initialize column resizing after rendering
+  setTimeout(() => {
+    loadColumnWidths();
+    initColumnResizing();
+    enhanceDateInputs();
+  }, 0);
+}
+
+function enhanceDateInputs(){
+  const dateInputs = document.querySelectorAll('input.date-in');
+  dateInputs.forEach(input => {
+    input.addEventListener('paste', (e) => {
+      e.preventDefault();
+      const pastedText = (e.clipboardData || window.clipboardData).getData('text').trim();
+
+      // Try to parse various date formats
+      let parsedDate = null;
+
+      // Format: YYYY-MM-DD
+      if(/^\d{4}-\d{2}-\d{2}$/.test(pastedText)){
+        parsedDate = pastedText;
+      }
+      // Format: MM/DD/YYYY
+      else if(/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(pastedText)){
+        const [m, d, y] = pastedText.split('/');
+        const month = String(m).padStart(2, '0');
+        const day = String(d).padStart(2, '0');
+        parsedDate = `${y}-${month}-${day}`;
+      }
+      // Format: M/D/YYYY
+      else if(/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(pastedText)){
+        const parts = pastedText.split('/');
+        const month = String(parts[0]).padStart(2, '0');
+        const day = String(parts[1]).padStart(2, '0');
+        parsedDate = `${parts[2]}-${month}-${day}`;
+      }
+      // Format: MMDDYYYY
+      else if(/^\d{8}$/.test(pastedText)){
+        const m = pastedText.substring(0, 2);
+        const d = pastedText.substring(2, 4);
+        const y = pastedText.substring(4, 8);
+        parsedDate = `${y}-${m}-${d}`;
+      }
+
+      if(parsedDate){
+        input.value = parsedDate;
+        input.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+    });
+  });
 }
 
 function typeIconSvg(type, color){
@@ -853,8 +3937,23 @@ function typeSelect(row, slId, rowId, isPhase){
   </select>`;
 }
 function statusSelect(row, slId, rowId, isPhase){
-  return `<select class="status-sel" style="background:${STATUS_META[row.status]?.color || 'var(--st-notstarted)'}" onchange="onStatusChange(${slId}, ${rowId}, ${isPhase}, this.value)">
-    ${Object.entries(STATUS_META).map(([k,m])=>`<option value="${k}" ${row.status===k?"selected":""}>${m.label}</option>`).join("")}
+  // Calculate status instead of using stored value
+  const calculatedStatus = calculateTaskStatus(row);
+
+  // Map calculated status to STATUS_META keys
+  const statusMap = {
+    'Complete': 'complete',
+    'On Track': 'on-track',
+    'At Risk': 'at-risk',
+    'Off Track': 'off-track',
+    'Not Started': 'not-started'
+  };
+
+  const statusKey = statusMap[calculatedStatus] || 'not-started';
+  const color = STATUS_META[statusKey]?.color || 'var(--st-notstarted)';
+
+  return `<select class="status-sel" style="background:${color}" onchange="onStatusChange(${slId}, ${rowId}, ${isPhase}, this.value)" title="Auto-calculated based on progress">
+    ${Object.entries(STATUS_META).map(([k,m])=>`<option value="${k}" ${statusKey===k?"selected":""}>${m.label}</option>`).join("")}
   </select>`;
 }
 
@@ -975,6 +4074,34 @@ function moveRow(src, target, after){
 
 function swimlaneHeaderRow(sl, p){
   const slId = sl.id, rowId = p.id;
+  // Calculate swimlane percent from children
+  const childPercent = sl.children.length > 0
+    ? Math.round(sl.children.reduce((sum, c) => sum + (c.percent || 0), 0) / sl.children.length)
+    : 0;
+  // Calculate swimlane status using same logic as tasks (percent vs planned progress)
+  const actual = childPercent;
+  const planned = calculatePlannedProgress(p.start, p.end);
+
+  let calculatedStatus = 'Not Started';
+  if(actual === 100) {
+    calculatedStatus = 'Complete';
+  } else if(actual === 0){
+    const startDate = new Date(p.start);
+    if(!isNaN(startDate.getTime()) && startDate > new Date()) {
+      calculatedStatus = 'Not Started';
+    } else {
+      // Started but at 0% - apply variance logic
+      if(actual >= planned - 10) calculatedStatus = 'On Track';
+      else if(actual >= planned - 20) calculatedStatus = 'At Risk';
+      else calculatedStatus = 'Off Track';
+    }
+  } else {
+    // Between 0-100%: apply variance logic
+    if(actual >= planned - 10) calculatedStatus = 'On Track';
+    else if(actual >= planned - 20) calculatedStatus = 'At Risk';
+    else calculatedStatus = 'Off Track';
+  }
+
   return `<tr class="swimlane-header ${p.visible? "":"hidden-row"}"
       ondragover="onRowDragOver(event, ${slId}, ${rowId}, true)"
       ondrop="onRowDrop(event, ${slId}, ${rowId}, true)">
@@ -985,9 +4112,9 @@ function swimlaneHeaderRow(sl, p){
     <td class="dur">${durationLabel(p.start,p.end)}</td>
     <td><input type="date" class="date-in" value="${p.start}" onchange="onFieldChange(${slId}, ${rowId}, true, 'start', this.value)" /></td>
     <td><input type="date" class="date-in" value="${p.end}" onchange="onFieldChange(${slId}, ${rowId}, true, 'end', this.value)" /></td>
-    <td><input type="number" class="pct-in" min="0" max="100" value="${p.percent}" onchange="onFieldChange(${slId}, ${rowId}, true, 'percent', parseInt(this.value)||0)" /></td>
+    <td><span class="pct-display" style="font-weight:600; color:var(--ink);">${childPercent}%</span></td>
     <td><input class="assign-in" value="${escapeAttr(p.assignedTo)}" onchange="onFieldChange(${slId}, ${rowId}, true, 'assignedTo', this.value)" /></td>
-    <td>${statusSelect(p, slId, rowId, true)}</td>
+    <td><span class="status-display" style="font-weight:600; color:var(--ink);">${calculatedStatus}</span></td>
     <td><button class="icon-btn del" onclick="deleteRow(${slId}, ${rowId}, true)" title="Delete swimlane">🗑</button></td>
     ${menuCell(slId, rowId, true, p)}
   </tr>`;
@@ -1148,18 +4275,79 @@ function renderTimeline(){
 
   // task/phase rows (non milestone)
   const barRows = barRowsForWidth;
+
+  // Helper to get swimlane's children from the swimlanes array
+  function getSwimlanChildren(swimlaneId){
+    const sl = swimlanes.find(s => s.id === swimlaneId);
+    return sl ? (sl.children || []) : [];
+  }
+
+  // Helper to calculate swimlane status based on child task completion % vs planned progress
+  function getSwimlaneDerivedStatus(rowObj){
+    const childRows = getSwimlanChildren(rowObj.swimlaneId);
+    if(childRows.length === 0) return 'not-started';
+
+    // Calculate swimlane actual % from children
+    const actual = childRows.length > 0
+      ? Math.round(childRows.reduce((sum, c) => sum + (c.percent || 0), 0) / childRows.length)
+      : 0;
+    const planned = calculatePlannedProgress(rowObj.row.start, rowObj.row.end);
+
+    if(actual === 100) return 'complete';
+
+    if(actual === 0){
+      const startDate = new Date(rowObj.row.start);
+      if(!isNaN(startDate.getTime()) && startDate > new Date()) return 'not-started';
+    }
+
+    if(actual >= planned - 10) return 'on-track';
+    if(actual >= planned - 20) return 'at-risk';
+    return 'off-track';
+  }
+
+  function getSwimlaneDerivedCompletion(rowObj){
+    const childRows = getSwimlanChildren(rowObj.swimlaneId);
+    if(childRows.length === 0) return 0;
+
+    const totalCompletion = childRows.reduce((sum, child) => sum + (child.percent || 0), 0);
+    return Math.max(0, Math.min(100, totalCompletion / childRows.length));
+  }
+
   const rowsHtml = barRows.map(r=>{
     const row=r.row;
     const s=parseD(row.start), e=parseD(row.end);
     const left = pctOf(s), right = pctOf(e);
     const width = Math.max(right-left, 0.6);
     const isPhase = row.type==="phase";
-    const meta = STATUS_META[row.status] || STATUS_META["not-started"];
-    const barColor = isPhase ? "var(--phase)" : meta.bar;
-    const trackColor = isPhase ? "var(--phase-track)" : meta.track;
-    const fillPct = Math.max(0, Math.min(100, row.percent||0));
+
+    // Calculate status dynamically instead of using stored value
+    let statusKey = "not-started";
+    if(isPhase){
+      const derivedStatus = getSwimlaneDerivedStatus(r);
+      statusKey = derivedStatus;
+    } else {
+      const calculatedStatus = calculateTaskStatus(row);
+      const statusMap = {
+        'Complete': 'complete',
+        'On Track': 'on-track',
+        'At Risk': 'at-risk',
+        'Off Track': 'off-track',
+        'Not Started': 'not-started'
+      };
+      statusKey = statusMap[calculatedStatus] || 'not-started';
+    }
+
+    const meta = STATUS_META[statusKey] || STATUS_META["not-started"];
+    const barColor = isPhase ? meta.bar : meta.bar;
+    const trackColor = isPhase ? meta.track : meta.track;
+    // For swimlanes, use derived completion %; for tasks, use stored %
+    const fillPct = isPhase ? getSwimlaneDerivedCompletion(r) : Math.max(0, Math.min(100, row.percent||0));
+
+    // Add indentation for tasks (not phases)
+    const labelIndentPx = isPhase ? 0 : 16;
+
     return `<div class="tl-row">
-      <div class="tl-row-label ${isPhase?"phase-lbl":""}" style="width:${labelColPx}px; flex:0 0 ${labelColPx}px;">
+      <div class="tl-row-label ${isPhase?"phase-lbl":""}" style="width:${labelColPx}px; flex:0 0 ${labelColPx}px; padding-left:${labelIndentPx}px;">
         <span class="lbl-text">${escapeAttr(row.title)}</span><span class="lbl-fill"></span>
       </div>
       <div class="tl-row-track">
@@ -1167,7 +4355,6 @@ function renderTimeline(){
         <div class="tl-bar-wrap ${isPhase?"phase":""}" style="left:${left}%; width:${width}%;">
           <div class="tl-bar-track" style="background:${trackColor};"></div>
           <div class="tl-bar-fill" style="width:${fillPct}%; background:${barColor};"></div>
-          ${isPhase ? `<div class="tl-bar-label-inside" style="color:#fff;">${escapeAttr(row.title)}</div>` : ""}
           <div class="tl-bar-caption left">${durationLabel(row.start,row.end)}</div>
           <div class="tl-bar-caption right">${fmtShort(s)} – ${fmtShort(e)}</div>
         </div>
@@ -1208,6 +4395,96 @@ function renderTimeline(){
       </div>
     </div>
   `;
+}
+
+/* ---------------- EXCEL export ---------------- */
+async function exportExcel(){
+  const rows = allRows().filter(r=>r.row.visible);
+  if(rows.length===0){
+    alert("There's nothing visible to export. Toggle the eye icon on the Data tab to show items first.");
+    return;
+  }
+
+  const btn = document.getElementById("exportBtn");
+  if(btn){ btn.disabled = true; btn.textContent = "Exporting…"; }
+
+  try {
+    // Prepare data for CSV/Excel
+    const csvRows = [];
+
+    // Add title
+    csvRows.push([projectTitle]);
+    csvRows.push([]);
+
+    // Add headers
+    csvRows.push(["Swimlane / Task", "Type", "Start Date", "End Date", "Duration", "Progress %", "Status", "Assigned To", "Notes"]);
+
+    // Add data
+    swimlanes.forEach(sl => {
+      if(sl.phase && sl.phase.visible){
+        const p = sl.phase;
+        const childPercent = sl.children.length > 0
+          ? Math.round(sl.children.reduce((sum, c) => sum + (c.percent || 0), 0) / sl.children.length)
+          : 0;
+        csvRows.push([
+          p.title,
+          p.type,
+          p.start,
+          p.end,
+          durationLabel(p.start, p.end),
+          childPercent + "%",
+          p.status || "not-started",
+          p.assignedTo || "",
+          p.note || ""
+        ]);
+      }
+
+      sl.children.forEach(c => {
+        if(c.visible){
+          csvRows.push([
+            "  " + c.title,  // Indented to show it's a child
+            c.type,
+            c.start,
+            c.end,
+            durationLabel(c.start, c.end),
+            c.percent + "%",
+            c.status || "not-started",
+            c.assignedTo || "",
+            c.note || ""
+          ]);
+        }
+      });
+    });
+
+    // Convert to CSV
+    const csv = csvRows.map(row =>
+      row.map(cell => {
+        const str = String(cell || "");
+        // Escape quotes and wrap in quotes if contains comma
+        if(str.includes(",") || str.includes('"') || str.includes("\n")){
+          return '"' + str.replace(/"/g, '""') + '"';
+        }
+        return str;
+      }).join(",")
+    ).join("\n");
+
+    // Create blob and download
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", pptxFileSafeName(projectTitle) + ".csv");
+    link.style.visibility = "hidden";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+  } catch(err){
+    console.error('Export error:', err);
+    alert("Export failed: " + err.message);
+  } finally {
+    if(btn){ btn.disabled = false; btn.textContent = "⬇ Export"; }
+  }
 }
 
 /* ---------------- PPTX export ---------------- */
@@ -1269,7 +4546,7 @@ async function exportPptx(){
     pres.layout = "TL_WIDE";
 
     /* ---- single Gantt slide — every row scaled to fit on one slide ---- */
-    const chartX = 2.9, chartW = 9.9, chartTop = 1.05, headerH = 0.3;
+    const chartX = 3.1, chartW = 9.7, chartTop = 1.05, headerH = 0.3;
     const bottomMargin = 0.25;
     const availH = 7.5 - chartTop - headerH - bottomMargin;
     // PPTX export always uses the compact (halved) row spacing, regardless of the
@@ -1304,8 +4581,11 @@ async function exportPptx(){
       const isPhase = row.type==="phase";
       const s = parseD(row.start), e = parseD(row.end);
       const labelSize = Math.max(5, (isPhase ? 11 : 10)*fontScale);
-      slide.addText(escapeAttrText(row.title), {
-        x:0.35, y:y, w:chartX-0.5, h:rowH, fontSize:labelSize, bold:isPhase, color:PPTX_HEX.ink, valign:"middle", fontFace:"Segoe UI"
+      // Truncate long titles to avoid overflow into timeline
+      const maxChars = Math.max(15, Math.floor(40 * (chartX-0.7) / 2.4));
+      const displayTitle = row.title.length > maxChars ? row.title.substring(0, maxChars) + "…" : row.title;
+      slide.addText(escapeAttr(displayTitle), {
+        x:0.35, y:y, w:chartX-0.7, h:rowH, fontSize:labelSize, bold:isPhase, color:PPTX_HEX.ink, valign:"middle", fontFace:"Segoe UI", wrap:false
       });
 
       if(row.type==="phase" || row.type==="task"){
@@ -1348,12 +4628,12 @@ async function exportPptx(){
     console.error(err);
     alert("Something went wrong generating the PowerPoint file. Please try again.");
   } finally {
-    if(btn){ btn.disabled = false; btn.textContent = "⬇ Export PPTX"; }
+    if(btn){ btn.disabled = false; btn.textContent = "⬇ Export"; }
   }
 }
 function escapeAttrText(s){ return String(s); }
 
-render();
+boot();
 </script>
 </body>
 </html>
