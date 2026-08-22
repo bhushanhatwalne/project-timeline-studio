@@ -1,0 +1,19 @@
+{
+  "name": "timeline-studio",
+  "version": "1.0.0",
+  "description": "Timeline Studio - Project Management with Monolithic App",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js"
+  },
+  "keywords": [],
+  "author": "Bhushan",
+  "license": "MIT",
+  "dependencies": {
+    "dotenv": "^16.3.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
+  }
+}
