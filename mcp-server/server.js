@@ -3,10 +3,13 @@ import { SSEServerTransport } from '@modelcontextprotocol/sdk/server/sse.js';
 import { CallToolRequestSchema, ListToolsRequestSchema } from '@modelcontextprotocol/sdk/types.js';
 import express from 'express';
 import cors from 'cors';
+import cookieParser from 'cookie-parser';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { createRequire } from 'module';
 
+const require = createRequire(import.meta.url);
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const projectRoot = path.resolve(__dirname, '..');
 const localHtmlPath = path.join(projectRoot, 'project-timeline-studio.html');
@@ -16,6 +19,9 @@ if (!fs.existsSync(storageDir)) {
   fs.mkdirSync(storageDir, { recursive: true });
 }
 
+// Load env vars for local dev (Render injects these directly in production)
+require('dotenv').config({ path: path.join(projectRoot, 'server', '.env') });
+
 // Read local HTML directly from disk for MCP tools
 function getHtmlContent() {
   if (fs.existsSync(localHtmlPath)) {
@@ -24,8 +30,26 @@ function getHtmlContent() {
   throw new Error('project-timeline-studio.html file not found in project root.');
 }
 
+// ===== Backend: auth + projects + versions (CommonJS, shared with server/) =====
+const runMigrations = require('../server/src/runMigrations.js');
+const authRoutes = require('../server/src/routes/auth.routes.js');
+const projectRoutes = require('../server/src/routes/projects.routes.js');
+const versionRoutes = require('../server/src/routes/versions.routes.js');
+
 const app = express();
+app.set('trust proxy', 1);
 app.use(cors());
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
+
+app.use('/api/v1/auth', authRoutes);
+app.use('/api/v1/projects', projectRoutes);
+app.use('/api/v1/projects/:projectId/versions', versionRoutes);
+
+app.get('/api/v1/health', (req, res) => {
+  res.json({ status: 'ok' });
+});
 
 // Serve static assets from project root
 app.use(express.static(projectRoot));
@@ -244,7 +268,27 @@ app.post('/message', async (req, res) => {
   }
 });
 
-const PORT = process.env.PORT || 3001;
-app.listen(PORT, () => {
-  console.log(`Timeline Studio App & MCP Server running on port ${PORT}`);
+// Catch-all for SPA-style navigation (must be last)
+app.get('/*splat', (req, res) => {
+  if (fs.existsSync(localHtmlPath)) {
+    res.sendFile(localHtmlPath);
+  } else {
+    res.status(404).send('project-timeline-studio.html not found');
+  }
 });
+
+const PORT = process.env.PORT || 3001;
+
+(async () => {
+  try {
+    console.log('[MIGRATIONS] Running database migrations...');
+    await runMigrations();
+    console.log('[MIGRATIONS] ✓ Completed');
+  } catch (err) {
+    console.error('[MIGRATIONS] ✗ Failed (continuing to start server):', err.message);
+  }
+
+  app.listen(PORT, () => {
+    console.log(`Timeline Studio App & MCP Server running on port ${PORT}`);
+  });
+})();

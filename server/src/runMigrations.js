@@ -13,7 +13,12 @@ async function runMigrations() {
       if (!file.endsWith('.sql')) continue;
 
       const filePath = path.join(migrationsDir, file);
-      const sql = fs.readFileSync(filePath, 'utf8');
+      const sql = fs.readFileSync(filePath, 'utf8').trim();
+
+      if (!sql) {
+        console.log(`[MIGRATIONS] Skipping empty file ${file}`);
+        continue;
+      }
 
       console.log(`[MIGRATIONS] Running ${file}...`);
       await pool.query(sql);
