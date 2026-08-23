@@ -273,7 +273,7 @@ app.get('/sse', async (req, res) => {
 app.post('/message', async (req, res) => {
   const transport = sessions.get(req.query.sessionId);
   if (transport) {
-    await transport.handlePostMessage(req, res);
+    await transport.handlePostMessage(req, res, req.body);
   } else {
     res.status(400).send('SSE session not initialized');
   }
