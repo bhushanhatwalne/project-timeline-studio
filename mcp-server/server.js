@@ -1,6 +1,8 @@
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { SSEServerTransport } from '@modelcontextprotocol/sdk/server/sse.js';
 import { CallToolRequestSchema, ListToolsRequestSchema } from '@modelcontextprotocol/sdk/types.js';
+import { mcpAuthRouter, getOAuthProtectedResourceMetadataUrl } from '@modelcontextprotocol/sdk/server/auth/router.js';
+import { requireBearerAuth } from '@modelcontextprotocol/sdk/server/auth/middleware/bearerAuth.js';
 import express from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
@@ -35,6 +37,12 @@ const runMigrations = require('../server/src/runMigrations.js');
 const authRoutes = require('../server/src/routes/auth.routes.js');
 const projectRoutes = require('../server/src/routes/projects.routes.js');
 const versionRoutes = require('../server/src/routes/versions.routes.js');
+const { createOAuthProvider } = require('./oauthProvider.cjs');
+
+// Render sets RENDER_EXTERNAL_URL to the service's public HTTPS URL. Fall back
+// to localhost for local dev (the SDK allows http:// only for localhost).
+const PUBLIC_URL = process.env.PUBLIC_URL || process.env.RENDER_EXTERNAL_URL || `http://localhost:${process.env.PORT || 3001}`;
+const issuerUrl = new URL(PUBLIC_URL);
 
 const app = express();
 app.set('trust proxy', 1);
@@ -46,6 +54,12 @@ app.use(cookieParser());
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/projects', projectRoutes);
 app.use('/api/v1/projects/:projectId/versions', versionRoutes);
+
+// ===== MCP OAuth: gates /sse and /message behind a Timeline Studio login =====
+const oauthProvider = createOAuthProvider();
+app.use(mcpAuthRouter({ provider: oauthProvider, issuerUrl, scopesSupported: [] }));
+const resourceMetadataUrl = getOAuthProtectedResourceMetadataUrl(issuerUrl);
+const requireMcpAuth = requireBearerAuth({ verifier: oauthProvider, resourceMetadataUrl });
 
 app.get('/api/v1/health', (req, res) => {
   res.json({ status: 'ok' });
@@ -260,7 +274,7 @@ function createMcpServer() {
 // MCP SSE Endpoints — one Server + transport per connected client, keyed by sessionId
 const sessions = new Map();
 
-app.get('/sse', async (req, res) => {
+app.get('/sse', requireMcpAuth, async (req, res) => {
   const transport = new SSEServerTransport('/message', res);
   const server = createMcpServer();
   sessions.set(transport.sessionId, transport);
@@ -270,7 +284,7 @@ app.get('/sse', async (req, res) => {
   await server.connect(transport);
 });
 
-app.post('/message', async (req, res) => {
+app.post('/message', requireMcpAuth, async (req, res) => {
   const transport = sessions.get(req.query.sessionId);
   if (transport) {
     await transport.handlePostMessage(req, res, req.body);
@@ -301,5 +315,6 @@ const PORT = process.env.PORT || 3001;
 
   app.listen(PORT, () => {
     console.log(`Timeline Studio App & MCP Server running on port ${PORT}`);
+    console.log(`MCP OAuth issuer: ${issuerUrl.href}`);
   });
 })();
