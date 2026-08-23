@@ -2,7 +2,27 @@
 // Login is backed by the SAME users table and JWT/refresh-token infra as the
 // main app (server/src/routes/auth.routes.js), so an MCP client authenticates
 // with the user's existing Timeline Studio email + password.
-const { randomUUID, createHash } = require('crypto');
+//
+// This file must stay ESM (not .cjs): InvalidTokenError has to be the SAME
+// class object that bearerAuth.js's `instanceof` check uses, and that only
+// happens if both resolve the SDK's "import" condition (the esm build).
+// Requiring the SDK from a .cjs file resolves the "require" condition (the
+// cjs build) instead — a different class object, which silently breaks the
+// instanceof check and turns every invalid-token 401 into a 500.
+import { randomUUID, createHash } from 'crypto';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { createRequire } from 'module';
+import { InvalidTokenError, InvalidGrantError } from '@modelcontextprotocol/sdk/server/auth/errors.js';
+
+const require = createRequire(import.meta.url);
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+// Self-contained env loading: this module may be evaluated (via static ESM
+// import) before server.js's own dotenv call runs, so server/src/config.js
+// must not be the first thing to read process.env.
+require('dotenv').config({ path: path.join(__dirname, '..', 'server', '.env') });
+
 const pool = require('../server/src/db.js');
 const { comparePassword } = require('../server/src/utils/password.js');
 const { signAccessToken, signRefreshToken, verifyAccessToken, verifyRefreshToken } = require('../server/src/utils/jwt.js');
@@ -123,19 +143,19 @@ class TimelineStudioOAuthProvider {
 
   async challengeForAuthorizationCode(client, authorizationCode) {
     const codeData = this.codes.get(authorizationCode);
-    if (!codeData) throw new Error('Invalid authorization code');
+    if (!codeData) throw new InvalidGrantError('Invalid authorization code');
     return codeData.params.codeChallenge;
   }
 
   async exchangeAuthorizationCode(client, authorizationCode) {
     const codeData = this.codes.get(authorizationCode);
-    if (!codeData) throw new Error('Invalid authorization code');
+    if (!codeData) throw new InvalidGrantError('Invalid authorization code');
     if (codeData.client.client_id !== client.client_id) {
-      throw new Error('Authorization code was not issued to this client');
+      throw new InvalidGrantError('Authorization code was not issued to this client');
     }
     this.codes.delete(authorizationCode);
     if (Date.now() - codeData.createdAt > AUTH_CODE_TTL_MS) {
-      throw new Error('Authorization code expired');
+      throw new InvalidGrantError('Authorization code expired');
     }
 
     const accessToken = signAccessToken(codeData.userId, codeData.email);
@@ -153,17 +173,17 @@ class TimelineStudioOAuthProvider {
 
   async exchangeRefreshToken(client, refreshToken) {
     const payload = verifyRefreshToken(refreshToken);
-    if (!payload) throw new Error('Invalid or expired refresh token');
+    if (!payload) throw new InvalidGrantError('Invalid or expired refresh token');
 
     const refreshTokenHash = createHash('sha256').update(refreshToken).digest('hex');
     const tokenResult = await pool.query(
       'SELECT id FROM refresh_tokens WHERE user_id = $1 AND token_hash = $2 AND revoked_at IS NULL AND expires_at > now()',
       [payload.sub, refreshTokenHash]
     );
-    if (tokenResult.rows.length === 0) throw new Error('Refresh token is invalid or revoked');
+    if (tokenResult.rows.length === 0) throw new InvalidGrantError('Refresh token is invalid or revoked');
 
     const userResult = await pool.query('SELECT email FROM users WHERE id = $1', [payload.sub]);
-    if (userResult.rows.length === 0) throw new Error('User not found');
+    if (userResult.rows.length === 0) throw new InvalidGrantError('User not found');
 
     await pool.query('UPDATE refresh_tokens SET revoked_at = now() WHERE id = $1', [tokenResult.rows[0].id]);
 
@@ -181,7 +201,7 @@ class TimelineStudioOAuthProvider {
 
   async verifyAccessToken(token) {
     const payload = verifyAccessToken(token);
-    if (!payload) throw new Error('Invalid or expired access token');
+    if (!payload) throw new InvalidTokenError('Invalid or expired access token');
     return {
       token,
       clientId: 'timeline-studio-mcp',
@@ -201,8 +221,6 @@ class TimelineStudioOAuthProvider {
   }
 }
 
-function createOAuthProvider() {
+export function createOAuthProvider() {
   return new TimelineStudioOAuthProvider();
 }
-
-module.exports = { createOAuthProvider };

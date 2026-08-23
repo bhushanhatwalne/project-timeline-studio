@@ -3,6 +3,7 @@ import { SSEServerTransport } from '@modelcontextprotocol/sdk/server/sse.js';
 import { CallToolRequestSchema, ListToolsRequestSchema } from '@modelcontextprotocol/sdk/types.js';
 import { mcpAuthRouter, getOAuthProtectedResourceMetadataUrl } from '@modelcontextprotocol/sdk/server/auth/router.js';
 import { requireBearerAuth } from '@modelcontextprotocol/sdk/server/auth/middleware/bearerAuth.js';
+import { createOAuthProvider } from './oauthProvider.js';
 import express from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
@@ -37,7 +38,6 @@ const runMigrations = require('../server/src/runMigrations.js');
 const authRoutes = require('../server/src/routes/auth.routes.js');
 const projectRoutes = require('../server/src/routes/projects.routes.js');
 const versionRoutes = require('../server/src/routes/versions.routes.js');
-const { createOAuthProvider } = require('./oauthProvider.cjs');
 const { listOpenProjects } = require('./projectTools.cjs');
 
 // Render sets RENDER_EXTERNAL_URL to the service's public HTTPS URL. Fall back
