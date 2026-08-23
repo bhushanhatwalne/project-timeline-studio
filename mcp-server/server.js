@@ -38,6 +38,7 @@ const authRoutes = require('../server/src/routes/auth.routes.js');
 const projectRoutes = require('../server/src/routes/projects.routes.js');
 const versionRoutes = require('../server/src/routes/versions.routes.js');
 const { createOAuthProvider } = require('./oauthProvider.cjs');
+const { listOpenProjects } = require('./projectTools.cjs');
 
 // Render sets RENDER_EXTERNAL_URL to the service's public HTTPS URL. Fall back
 // to localhost for local dev (the SDK allows http:// only for localhost).
@@ -79,6 +80,11 @@ app.get('/', (req, res) => {
 
 // Tools Definition
 const tools = [
+  {
+    name: 'list_open_projects',
+    description: "List the signed-in user's open (not fully complete) projects, each with a derived overall status and its current ongoing task.",
+    inputSchema: { type: 'object', properties: {} },
+  },
   {
     name: 'read_html',
     description: 'Read the current Timeline Studio HTML file',
@@ -154,10 +160,17 @@ function createMcpServer() {
 
   server.setRequestHandler(ListToolsRequestSchema, async () => ({ tools }));
 
-  server.setRequestHandler(CallToolRequestSchema, async (request) => {
+  server.setRequestHandler(CallToolRequestSchema, async (request, extra) => {
     const { name, arguments: args = {} } = request.params;
 
   try {
+    if (name === 'list_open_projects') {
+      const userId = extra?.authInfo?.extra?.userId;
+      if (!userId) throw new Error('Missing authenticated user context');
+      const projects = await listOpenProjects(userId);
+      return { content: [{ type: 'text', text: JSON.stringify(projects, null, 2) }] };
+    }
+
     if (name === 'read_html') {
       const content = getHtmlContent();
       return { content: [{ type: 'text', text: `HTML file size: ${content.length} bytes\n\nFirst 2000 chars:\n\n${content.substring(0, 2000)}...` }] };
