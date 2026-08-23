@@ -63,16 +63,6 @@ app.get('/', (req, res) => {
   }
 });
 
-// Initialize MCP Server
-const server = new Server({
-  name: 'timeline-studio-mcp',
-  version: '1.0.0',
-}, {
-  capabilities: {
-    tools: {},
-  },
-});
-
 // Tools Definition
 const tools = [
   {
@@ -136,10 +126,22 @@ const tools = [
   },
 ];
 
-server.setRequestHandler(ListToolsRequestSchema, async () => ({ tools }));
+// Each SSE connection gets its own Server instance — the SDK's Server.connect()
+// throws "Already connected to a transport" if reused across connections.
+function createMcpServer() {
+  const server = new Server({
+    name: 'timeline-studio-mcp',
+    version: '1.0.0',
+  }, {
+    capabilities: {
+      tools: {},
+    },
+  });
 
-server.setRequestHandler(CallToolRequestSchema, async (request) => {
-  const { name, arguments: args = {} } = request.params;
+  server.setRequestHandler(ListToolsRequestSchema, async () => ({ tools }));
+
+  server.setRequestHandler(CallToolRequestSchema, async (request) => {
+    const { name, arguments: args = {} } = request.params;
 
   try {
     if (name === 'read_html') {
@@ -250,17 +252,26 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
   } catch (error) {
     return { content: [{ type: 'text', text: `Error: ${error.message}` }] };
   }
-});
+  });
 
-// MCP SSE Endpoints
-let transport;
+  return server;
+}
+
+// MCP SSE Endpoints — one Server + transport per connected client, keyed by sessionId
+const sessions = new Map();
 
 app.get('/sse', async (req, res) => {
-  transport = new SSEServerTransport('/message', res);
+  const transport = new SSEServerTransport('/message', res);
+  const server = createMcpServer();
+  sessions.set(transport.sessionId, transport);
+  res.on('close', () => {
+    sessions.delete(transport.sessionId);
+  });
   await server.connect(transport);
 });
 
 app.post('/message', async (req, res) => {
+  const transport = sessions.get(req.query.sessionId);
   if (transport) {
     await transport.handlePostMessage(req, res);
   } else {
