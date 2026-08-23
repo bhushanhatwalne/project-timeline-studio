@@ -93,15 +93,21 @@ function renderLoginPage({ client, params, error }) {
 </html>`;
 }
 
+// Persisted to Postgres (not an in-memory Map): Render restarts/redeploys the
+// process often, and an in-memory store would silently invalidate every
+// client mcp-remote had already registered, breaking its cached refresh
+// tokens with "invalid_client" until it re-registers and the user logs in
+// again.
 class McpClientsStore {
-  constructor() {
-    this.clients = new Map();
-  }
   async getClient(clientId) {
-    return this.clients.get(clientId);
+    const result = await pool.query('SELECT metadata FROM mcp_oauth_clients WHERE client_id = $1', [clientId]);
+    return result.rows[0]?.metadata;
   }
   async registerClient(clientMetadata) {
-    this.clients.set(clientMetadata.client_id, clientMetadata);
+    await pool.query(
+      'INSERT INTO mcp_oauth_clients (client_id, metadata) VALUES ($1, $2) ON CONFLICT (client_id) DO UPDATE SET metadata = EXCLUDED.metadata',
+      [clientMetadata.client_id, JSON.stringify(clientMetadata)]
+    );
     return clientMetadata;
   }
 }
