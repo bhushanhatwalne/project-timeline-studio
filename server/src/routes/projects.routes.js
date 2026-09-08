@@ -8,6 +8,7 @@ const router = express.Router();
 
 const CreateProjectSchema = z.object({
   title: z.string().min(1).max(255),
+  swimlanes: z.array(z.any()).default([]),
 });
 
 const UpdateProjectSchema = z.object({
@@ -56,11 +57,11 @@ router.post('/', authMiddleware, async (req, res) => {
       });
     }
 
-    const { title } = parsed.data;
+    const { title, swimlanes } = parsed.data;
 
     const result = await pool.query(
       'INSERT INTO projects (user_id, title, swimlanes) VALUES ($1, $2, $3) RETURNING id, title, swimlanes, updated_at',
-      [req.user.id, title, JSON.stringify([])]
+      [req.user.id, title, JSON.stringify(swimlanes)]
     );
 
     const project = result.rows[0];
