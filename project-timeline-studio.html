@@ -453,7 +453,10 @@
   html.dark-mode .dashboard-sidebar{background:linear-gradient(135deg,#0a1628 0%,#0d1f35 100%);box-shadow:2px 0 16px rgba(0,0,0,.3);}
   .dashboard-sidebar-header{display:flex;align-items:center;justify-content:space-between;padding:28px 20px;border-bottom:1px solid rgba(255,255,255,.06);flex-shrink:0;transition:border-color 300ms ease;}
   .dashboard-sidebar-content{flex:1;overflow-y:auto;padding:0;}
-  .dashboard-sidebar-footer{flex-shrink:0;padding:20px;display:flex;justify-content:flex-end;border-top:1px solid rgba(255,255,255,.08);background:rgba(0,0,0,.1);}
+  .dashboard-sidebar-footer{flex-shrink:0;padding:20px;display:flex;align-items:center;justify-content:space-between;gap:8px;border-top:1px solid rgba(255,255,255,.08);background:rgba(0,0,0,.1);}
+  .dashboard-sidebar-version{font-size:11px;color:rgba(255,255,255,.45);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .dashboard-sidebar.collapsed .dashboard-sidebar-footer{justify-content:center;}
+  .dashboard-sidebar.collapsed .dashboard-sidebar-version{display:none;}
   .dashboard-sidebar-toggle{background:rgba(255,255,255,.1);border:none;color:#fff;width:40px;height:40px;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:18px;transition:all 250ms cubic-bezier(.4,.0,.2,1);flex-shrink:0;font-weight:bold;}
   .dashboard-sidebar-toggle:hover{background:rgba(255,255,255,.15);transform:scale(1.05);}
   .dashboard-sidebar.collapsed{width:80px;overflow:visible;}
@@ -639,6 +642,7 @@ let dragSrc = null; // {slId, rowId, isPhase} of the row currently being dragged
 let compactMode = false; // when true, halves the vertical spacing between timeline rows
 
 /* Auth state */
+let appBuildInfo = null; // {version, commit} of the running server build
 let authUser = null; // {id, email, displayName} once logged in
 let myProjects = []; // [{id, title, createdAt, updatedAt}] for picker
 let currentProjectId = null; // currently open project
@@ -2504,6 +2508,7 @@ async function renderDashboard(){
         </div>
 
         <div class="dashboard-sidebar-footer">
+          <div class="dashboard-sidebar-version" id="sidebarVersion" title="Build version">${escapeHtml(formatBuildInfo())}</div>
           <button class="dashboard-sidebar-toggle" onclick="toggleDashboardSidebar()" style="background:#0a2540 !important;border:none !important;color:#fff !important;width:40px !important;height:40px !important;display:flex !important;align-items:center !important;justify-content:center !important;font-size:20px !important;">←</button>
         </div>
       </div>
@@ -2759,9 +2764,28 @@ async function logout(){
   renderAuthScreen();
 }
 
+async function loadBuildInfo(){
+  try{
+    const res = await apiFetch('/api/v1/version');
+    if(res && res.ok){
+      appBuildInfo = await res.json();
+      const el = document.getElementById('sidebarVersion');
+      if(el) el.textContent = formatBuildInfo();
+    }
+  } catch(err){
+    console.warn('[VERSION] Failed to load build info:', err);
+  }
+}
+
+function formatBuildInfo(){
+  if(!appBuildInfo) return 'v…';
+  return `v${appBuildInfo.version}${appBuildInfo.commit ? ' · ' + appBuildInfo.commit : ''}`;
+}
+
 async function boot(){
   // Initialize dark mode from localStorage
   initializeDarkMode();
+  loadBuildInfo(); // fire-and-forget; sidebar falls back gracefully until it resolves
 
   // Add beforeunload handler to flush pending saves on page close/refresh
   window.addEventListener("beforeunload", (e)=>{

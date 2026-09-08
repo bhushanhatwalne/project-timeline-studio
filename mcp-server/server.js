@@ -39,6 +39,7 @@ const authRoutes = require('../server/src/routes/auth.routes.js');
 const projectRoutes = require('../server/src/routes/projects.routes.js');
 const versionRoutes = require('../server/src/routes/versions.routes.js');
 const { listOpenProjects } = require('./projectTools.cjs');
+const buildInfo = require('../server/src/utils/version.js');
 
 // Render sets RENDER_EXTERNAL_URL to the service's public HTTPS URL. Fall back
 // to localhost for local dev (the SDK allows http:// only for localhost).
@@ -64,6 +65,10 @@ const requireMcpAuth = requireBearerAuth({ verifier: oauthProvider, resourceMeta
 
 app.get('/api/v1/health', (req, res) => {
   res.json({ status: 'ok' });
+});
+
+app.get('/api/v1/version', (req, res) => {
+  res.json(buildInfo);
 });
 
 // Serve static assets from project root

@@ -17,6 +17,10 @@ console.log('[INIT] ✓ database loaded');
 console.log('[INIT] Running database migrations...');
 const runMigrations = require('./runMigrations');
 
+console.log('[INIT] Loading build info...');
+const buildInfo = require('./utils/version');
+console.log(`[INIT] ✓ build ${buildInfo.version} (${buildInfo.commit})`);
+
 console.log('[INIT] Loading routes...');
 let authRoutes, projectRoutes, versionRoutes;
 try {
@@ -84,6 +88,10 @@ app.get('/api/v1/health', (req, res) => {
   res.json({ status: 'ok' });
 });
 console.log('[INIT] ✓ Health check route added');
+
+app.get('/api/v1/version', (req, res) => {
+  res.json(buildInfo);
+});
 
 // Serve static frontend
 console.log('[INIT] Configuring static file serving...');
