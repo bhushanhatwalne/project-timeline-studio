@@ -3,7 +3,7 @@ const { z } = require('zod');
 const pool = require('../db');
 const { hashPassword, comparePassword } = require('../utils/password');
 const { signAccessToken, signRefreshToken, verifyRefreshToken } = require('../utils/jwt');
-const { sendPasswordResetEmail, sendVerificationEmail } = require('../utils/email');
+const { sendPasswordResetEmail } = require('../utils/email');
 const config = require('../config');
 const authMiddleware = require('../middleware/auth');
 
@@ -41,31 +41,6 @@ function clearAuthCookies(res) {
   res.clearCookie('refresh_token');
 }
 
-// Generates a 6-digit email verification code, stores its hash, and emails it
-// (racing a 6s timeout so registration/resend never hangs on a slow SMTP call).
-async function issueVerificationCode(userId, email) {
-  const code = Math.floor(100000 + Math.random() * 900000).toString();
-  const codeHash = require('crypto').createHash('sha256').update(code).digest('hex');
-  const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
-
-  await pool.query(
-    'INSERT INTO email_verification_tokens (user_id, token_hash, expires_at) VALUES ($1, $2, $3)',
-    [userId, codeHash, expiresAt]
-  );
-
-  let emailSent = false;
-  try {
-    const emailPromise = sendVerificationEmail(email, code);
-    const timeoutPromise = new Promise((resolve) => setTimeout(() => resolve(false), 6000));
-    emailSent = await Promise.race([emailPromise, timeoutPromise]);
-  } catch (err) {
-    console.error('[VERIFY-EMAIL] Email send error:', err.message);
-    emailSent = false;
-  }
-
-  return { code, emailSent };
-}
-
 // POST /api/v1/auth/register
 router.post('/register', async (req, res) => {
   try {
@@ -100,10 +75,18 @@ router.post('/register', async (req, res) => {
     );
 
     const user = result.rows[0];
+    const accessToken = signAccessToken(user.id, user.email);
+    const refreshToken = signRefreshToken(user.id);
 
-    // Account is created but stays unverified (email_verified_at NULL) until
-    // the user confirms the code — no session cookies are issued yet.
-    const { code, emailSent } = await issueVerificationCode(user.id, user.email);
+    // Store refresh token hash
+    const refreshTokenHash = require('crypto').createHash('sha256').update(refreshToken).digest('hex');
+    const expiresAt = new Date(Date.now() + config.refreshTokenTTL * 1000);
+    await pool.query(
+      'INSERT INTO refresh_tokens (user_id, token_hash, expires_at) VALUES ($1, $2, $3)',
+      [user.id, refreshTokenHash, expiresAt]
+    );
+
+    setAuthCookies(res, accessToken, refreshToken);
 
     res.status(201).json({
       user: {
@@ -112,11 +95,6 @@ router.post('/register', async (req, res) => {
         displayName: user.display_name,
         createdAt: user.created_at,
       },
-      verificationRequired: true,
-      message: emailSent
-        ? 'Verification code sent to your email'
-        : 'Verification code generated (email service unavailable)',
-      verificationCode: !emailSent ? code : undefined,
     });
   } catch (err) {
     console.error('Error in register:', err);
@@ -144,7 +122,7 @@ router.post('/login', async (req, res) => {
 
     const { email, password } = parsed.data;
 
-    const result = await pool.query('SELECT id, email, password_hash, display_name, email_verified_at FROM users WHERE email = $1', [email]);
+    const result = await pool.query('SELECT id, email, password_hash, display_name FROM users WHERE email = $1', [email]);
     if (result.rows.length === 0) {
       return res.status(401).json({
         type: 'https://api.timeline.studio/errors#unauthorized',
@@ -162,15 +140,6 @@ router.post('/login', async (req, res) => {
         title: 'Unauthorized',
         status: 401,
         detail: 'Invalid email or password',
-      });
-    }
-
-    if (!user.email_verified_at) {
-      return res.status(403).json({
-        type: 'https://api.timeline.studio/errors#email_not_verified',
-        title: 'Email Not Verified',
-        status: 403,
-        detail: 'Please verify your email before logging in',
       });
     }
 
@@ -199,139 +168,6 @@ router.post('/login', async (req, res) => {
     });
   } catch (err) {
     console.error('Error in login:', err);
-    res.status(500).json({
-      type: 'https://api.timeline.studio/errors#internal_error',
-      title: 'Internal Server Error',
-      status: 500,
-      detail: 'An unexpected error occurred',
-    });
-  }
-});
-
-// POST /api/v1/auth/verify-email
-router.post('/verify-email', async (req, res) => {
-  try {
-    const schema = z.object({
-      email: z.string().email(),
-      code: z.string().length(6),
-    });
-
-    const parsed = schema.safeParse(req.body);
-    if (!parsed.success) {
-      return res.status(400).json({
-        type: 'https://api.timeline.studio/errors#validation_error',
-        title: 'Validation Error',
-        status: 400,
-        detail: parsed.error.errors[0]?.message || 'Invalid input',
-      });
-    }
-
-    const { email, code } = parsed.data;
-
-    const userResult = await pool.query('SELECT id, email, display_name, email_verified_at FROM users WHERE email = $1', [email]);
-    if (userResult.rows.length === 0) {
-      return res.status(401).json({
-        type: 'https://api.timeline.studio/errors#unauthorized',
-        title: 'Unauthorized',
-        status: 401,
-        detail: 'Invalid email or verification code',
-      });
-    }
-
-    const user = userResult.rows[0];
-    const codeHash = require('crypto').createHash('sha256').update(code).digest('hex');
-
-    const tokenResult = await pool.query(
-      'SELECT id FROM email_verification_tokens WHERE user_id = $1 AND token_hash = $2 AND expires_at > now() AND used_at IS NULL',
-      [user.id, codeHash]
-    );
-
-    if (tokenResult.rows.length === 0) {
-      return res.status(401).json({
-        type: 'https://api.timeline.studio/errors#unauthorized',
-        title: 'Unauthorized',
-        status: 401,
-        detail: 'Invalid or expired verification code',
-      });
-    }
-
-    await pool.query('UPDATE email_verification_tokens SET used_at = now() WHERE id = $1', [tokenResult.rows[0].id]);
-    if (!user.email_verified_at) {
-      await pool.query('UPDATE users SET email_verified_at = now() WHERE id = $1', [user.id]);
-    }
-
-    const accessToken = signAccessToken(user.id, user.email);
-    const refreshToken = signRefreshToken(user.id);
-
-    const refreshTokenHash = require('crypto').createHash('sha256').update(refreshToken).digest('hex');
-    const expiresAt = new Date(Date.now() + config.refreshTokenTTL * 1000);
-    await pool.query(
-      'INSERT INTO refresh_tokens (user_id, token_hash, expires_at) VALUES ($1, $2, $3)',
-      [user.id, refreshTokenHash, expiresAt]
-    );
-
-    await pool.query('UPDATE users SET last_login_at = now() WHERE id = $1', [user.id]);
-
-    setAuthCookies(res, accessToken, refreshToken);
-
-    res.json({
-      user: {
-        id: user.id,
-        email: user.email,
-        displayName: user.display_name,
-      },
-    });
-  } catch (err) {
-    console.error('Error in verify-email:', err);
-    res.status(500).json({
-      type: 'https://api.timeline.studio/errors#internal_error',
-      title: 'Internal Server Error',
-      status: 500,
-      detail: 'An unexpected error occurred',
-    });
-  }
-});
-
-// POST /api/v1/auth/resend-verification
-router.post('/resend-verification', async (req, res) => {
-  try {
-    const schema = z.object({
-      email: z.string().email(),
-    });
-
-    const parsed = schema.safeParse(req.body);
-    if (!parsed.success) {
-      return res.status(400).json({
-        type: 'https://api.timeline.studio/errors#validation_error',
-        title: 'Validation Error',
-        status: 400,
-        detail: 'Invalid email',
-      });
-    }
-
-    const { email } = parsed.data;
-    const userResult = await pool.query('SELECT id, email, email_verified_at FROM users WHERE email = $1', [email]);
-
-    // Don't reveal whether the account exists or is already verified
-    if (userResult.rows.length === 0 || userResult.rows[0].email_verified_at) {
-      return res.status(200).json({
-        success: true,
-        message: 'If this account needs verification, a new code has been sent',
-      });
-    }
-
-    const user = userResult.rows[0];
-    const { emailSent, code } = await issueVerificationCode(user.id, user.email);
-
-    res.status(200).json({
-      success: true,
-      message: emailSent
-        ? 'Verification code sent to your email'
-        : 'Verification code generated (email service unavailable)',
-      verificationCode: !emailSent ? code : undefined,
-    });
-  } catch (err) {
-    console.error('Error in resend-verification:', err);
     res.status(500).json({
       type: 'https://api.timeline.studio/errors#internal_error',
       title: 'Internal Server Error',
