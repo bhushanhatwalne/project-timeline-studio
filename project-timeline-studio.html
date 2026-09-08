@@ -538,13 +538,13 @@
   html.dark-mode .dashboard-theme-toggle:hover{background:#1f2937;}
   .dashboard-table{width:100%;background:#fff;transition:background 300ms ease;border-collapse:collapse;}
   html.dark-mode .dashboard-table{background:#161e2e;}
-  .dashboard-table-head{display:grid;grid-template-columns:2fr 1fr 1.5fr 1.5fr 0.5fr;gap:0;padding:0;background:#f8f9fb;border-bottom:1px solid #cbd5e1;transition:all 300ms ease;}
+  .dashboard-table-head{display:grid;grid-template-columns:0.3fr 2fr 1fr 1.5fr 1.5fr 0.5fr;gap:0;padding:0;background:#f8f9fb;border-bottom:1px solid #cbd5e1;transition:all 300ms ease;}
   html.dark-mode .dashboard-table-head{background:#1a2332;border-bottom-color:#475569;}
   .dashboard-table-head div{padding:16px 24px;font-weight:600;font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:.6px;text-align:left;cursor:pointer;user-select:none;transition:color 200ms ease;}
   html.dark-mode .dashboard-table-head div{color:#94a3b8;}
   .dashboard-table-head div:last-child{text-align:right;}
   .dashboard-table-head div:hover{color:#0076BC;}
-  .dashboard-table-row{display:grid;grid-template-columns:2fr 1fr 1.5fr 1.5fr 0.5fr;gap:0;border-bottom:1px solid #e2e8f0;transition:background 200ms;align-items:center;}
+  .dashboard-table-row{display:grid;grid-template-columns:0.3fr 2fr 1fr 1.5fr 1.5fr 0.5fr;gap:0;border-bottom:1px solid #e2e8f0;transition:background 200ms;align-items:center;}
   html.dark-mode .dashboard-table-row{border-bottom-color:#334155;}
   .dashboard-table-row:hover{background:#f8fafc;}
   html.dark-mode .dashboard-table-row:hover{background:#1f2937;}
@@ -650,6 +650,7 @@ let projectDataCache = {}; // cache for project swimlanes data
 let dashboardSortField = 'updated'; // current sort field
 let dashboardSortAsc = false; // sort ascending
 let dashboardCurrentPage = 1; // current page for pagination
+let selectedProjects = new Set(); // ids of projects selected for bulk export
 const PROJECTS_PER_PAGE = 5; // projects per page
 
 /* API wrapper with auth */
@@ -1321,6 +1322,7 @@ function reRenderDashboardTable(){
 
     return `
       <div class="dashboard-table-row" onclick="openProject('${escapeAttr(proj.id)}')" style="display:${displayStyle};">
+        <div onclick="event.stopPropagation();"><input type="checkbox" ${selectedProjects.has(proj.id) ? 'checked' : ''} onclick="toggleProjectSelect('${escapeAttr(proj.id)}')"></div>
         <div>
           <div class="dashboard-project-name">${escapeHtml(proj.title)}</div>
         </div>
@@ -1339,7 +1341,7 @@ function reRenderDashboardTable(){
           <div class="dashboard-project-dropdown" id="menu-${proj.id}">
             <div class="dashboard-project-dropdown-item" onclick="openEditProjectModal(event, '${escapeAttr(proj.id)}', '${escapeAttr(proj.title)}')">✏️ Rename</div>
             <div class="dashboard-project-dropdown-item" onclick="event.stopPropagation(); duplicateProject('${escapeAttr(proj.id)}', '${escapeAttr(proj.title)}')">📋 Duplicate</div>
-            <div class="dashboard-project-dropdown-item" onclick="event.stopPropagation(); showModal('Download - Coming soon')">⬇️ Download</div>
+            <div class="dashboard-project-dropdown-item" onclick="event.stopPropagation(); exportProjects(['${escapeAttr(proj.id)}'], '${escapeAttr(proj.title)}')">⬇️ Export</div>
             <div class="dashboard-project-dropdown-item" onclick="event.stopPropagation(); deleteProject('${escapeAttr(proj.id)}', '${escapeAttr(proj.title)}')" style="color:#d32f2f;">🗑️ Delete</div>
           </div>
         </div>
@@ -1347,8 +1349,12 @@ function reRenderDashboardTable(){
     `;
   }).join('');
 
+  const toolbar = document.getElementById('projectBulkToolbar');
+  if(toolbar) toolbar.innerHTML = buildProjectBulkToolbarHtml();
+
   tableBody.innerHTML = `
     <div class="dashboard-table-head">
+      <div style="cursor:auto;" onclick="event.stopPropagation();"><input type="checkbox" id="selectAllProjectsCheckbox" title="Select all" onclick="toggleSelectAllProjects()"></div>
       <div onclick="sortDashboardProjects('name')">Project<span class="sort-arrow" data-field="name">↑</span></div>
       <div onclick="sortDashboardProjects('status')">Status<span class="sort-arrow" data-field="status">↑</span></div>
       <div onclick="sortDashboardProjects('progress')">Progress<span class="sort-arrow" data-field="progress">↑</span></div>
@@ -1357,6 +1363,9 @@ function reRenderDashboardTable(){
     </div>
     ${contentHtml}
   `;
+
+  const selectAllCb = document.getElementById('selectAllProjectsCheckbox');
+  if(selectAllCb) selectAllCb.checked = myProjects.length > 0 && myProjects.every(p => selectedProjects.has(p.id));
 
   setTimeout(() => {
     const headers = document.querySelectorAll(".dashboard-table-head div");
@@ -1410,6 +1419,159 @@ async function duplicateProject(projectId, projectTitle){
   } catch(err){
     console.error('[DUPLICATE_PROJECT] Error duplicating project:', err);
     showModal('Error duplicating project: ' + err.message);
+  }
+}
+
+/* ---------------- project export / import (portable JSON, importable by any user) ---------------- */
+const PROJECT_EXPORT_FORMAT = 'timeline-studio-export';
+const PROJECT_EXPORT_FORMAT_VERSION = 1;
+
+function toggleProjectSelect(projectId){
+  if(selectedProjects.has(projectId)) selectedProjects.delete(projectId);
+  else selectedProjects.add(projectId);
+  reRenderDashboardTable();
+}
+
+function toggleSelectAllProjects(){
+  const cb = document.getElementById('selectAllProjectsCheckbox');
+  if(cb && cb.checked) myProjects.forEach(p => selectedProjects.add(p.id));
+  else selectedProjects.clear();
+  reRenderDashboardTable();
+}
+
+function clearProjectSelection(){
+  selectedProjects.clear();
+  reRenderDashboardTable();
+}
+
+function buildProjectBulkToolbarHtml(){
+  if(selectedProjects.size === 0){
+    return `<div style="color:#8a94a0;font-size:12px;margin-bottom:12px;padding:0 4px;">
+      <strong>Tip:</strong> Check the box next to a project to select it for bulk export.
+    </div>`;
+  }
+  return `<div style="background:#eaf4fb;border:1px solid #0076BC;border-radius:8px;padding:12px 16px;margin-bottom:12px;display:flex;align-items:center;gap:10px;">
+    <span style="flex:1;color:#0a2540;"><strong>${selectedProjects.size} project${selectedProjects.size === 1 ? '' : 's'} selected</strong></span>
+    <button class="btn" onclick="clearProjectSelection()">Deselect all</button>
+    <button class="btn" style="background:#0076BC;color:#fff;border-color:#0076BC;" onclick="exportSelectedProjects()">⬇ Export selected</button>
+  </div>`;
+}
+
+async function exportProjects(ids, downloadNameHint){
+  if(!ids || ids.length === 0){
+    showModal('No projects to export.');
+    return;
+  }
+  try{
+    const projectsOut = [];
+    for(const id of ids){
+      // The dashboard preloads every project's data for status/progress calc; reuse it when present
+      let data = projectDataCache[id];
+      if(!data){
+        const res = await apiFetch(`/api/v1/projects/${id}`);
+        if(!res || !res.ok){
+          console.warn('[EXPORT] Failed to load project', id);
+          continue;
+        }
+        data = await res.json();
+      }
+      projectsOut.push({
+        title: data.projectTitle || data.title || 'Untitled Project',
+        swimlanes: data.swimlanes || []
+      });
+    }
+
+    if(projectsOut.length === 0){
+      showModal('Failed to export: could not load project data.');
+      return;
+    }
+
+    const bundle = {
+      format: PROJECT_EXPORT_FORMAT,
+      formatVersion: PROJECT_EXPORT_FORMAT_VERSION,
+      exportedAt: new Date().toISOString(),
+      projects: projectsOut
+    };
+
+    const blob = new Blob([JSON.stringify(bundle, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const namePart = (downloadNameHint || (projectsOut.length === 1 ? 'project' : `${projectsOut.length}-projects`))
+      .replace(/[^a-z0-9]+/gi, '-').toLowerCase().replace(/^-+|-+$/g, '') || 'export';
+    const dateStamp = new Date().toISOString().slice(0, 10);
+
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `timeline-studio-export-${namePart}-${dateStamp}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  } catch(err){
+    console.error('[EXPORT] Error exporting projects:', err);
+    showModal('Error exporting projects: ' + err.message);
+  }
+}
+
+function exportSelectedProjects(){
+  exportProjects(Array.from(selectedProjects));
+}
+
+function exportAllProjects(){
+  if(myProjects.length === 0){
+    showModal('No projects to export.');
+    return;
+  }
+  exportProjects(myProjects.map(p => p.id));
+}
+
+function triggerImportProjects(){
+  const input = document.getElementById('importProjectsInput');
+  if(input) input.click();
+}
+
+async function handleImportProjectsFile(event){
+  const file = event.target.files && event.target.files[0];
+  event.target.value = ''; // allow re-selecting the same file later
+  if(!file) return;
+
+  try{
+    const text = await file.text();
+    const bundle = JSON.parse(text);
+
+    if(!bundle || bundle.format !== PROJECT_EXPORT_FORMAT || !Array.isArray(bundle.projects)){
+      showModal('This file is not a valid Timeline Studio export.');
+      return;
+    }
+
+    const existingTitles = new Set(myProjects.map(p => (p.title || '').toLowerCase()));
+    let imported = 0;
+    let failed = 0;
+
+    for(const proj of bundle.projects){
+      if(!proj || typeof proj.title !== 'string' || !Array.isArray(proj.swimlanes)){
+        failed++;
+        continue;
+      }
+
+      let title = proj.title.trim() || 'Untitled Project';
+      if(existingTitles.has(title.toLowerCase())) title = `${title} (Imported)`;
+      existingTitles.add(title.toLowerCase());
+
+      const createRes = await apiFetch('/api/v1/projects', {
+        method: 'POST',
+        body: JSON.stringify({ title, swimlanes: proj.swimlanes })
+      });
+
+      if(createRes && createRes.ok) imported++;
+      else failed++;
+    }
+
+    await loadProjectList();
+    await renderDashboard();
+    showModal(`Imported ${imported} project${imported === 1 ? '' : 's'}.${failed > 0 ? ` ${failed} failed.` : ''}`);
+  } catch(err){
+    console.error('[IMPORT] Error importing projects:', err);
+    showModal('Error importing file: ' + err.message + '. Make sure it is a valid Timeline Studio export (.json).');
   }
 }
 
@@ -2517,6 +2679,11 @@ async function renderDashboard(){
         <div class="dashboard-topbar">
           <div style="display:flex;align-items:center;gap:24px;flex:1;">
             <button onclick="addNewProject()" style="padding:8px 16px;background:#0076BC;color:white;border:none;border-radius:6px;cursor:pointer;font-weight:600;">+ New Project</button>
+            <div style="display:flex;gap:8px;">
+              <button onclick="exportAllProjects()" title="Export all projects to a file" style="padding:8px 14px;background:transparent;color:#0a2540;border:1px solid #cbd5e1;border-radius:6px;cursor:pointer;font-weight:600;">⬇ Export All</button>
+              <button onclick="triggerImportProjects()" title="Import projects from a Timeline Studio export file" style="padding:8px 14px;background:transparent;color:#0a2540;border:1px solid #cbd5e1;border-radius:6px;cursor:pointer;font-weight:600;">⬆ Import</button>
+              <input type="file" id="importProjectsInput" accept="application/json,.json" style="display:none;" onchange="handleImportProjectsFile(event)">
+            </div>
             <div class="dashboard-search">
               <span style="color:#8a94a0;">🔍</span>
               <input type="text" id="dashboardSearchInput" placeholder="Search by name, status, or progress (e.g., '>50%', 'on track')..." style="width:100%;" oninput="onDashboardSearch()">
@@ -2577,8 +2744,11 @@ async function renderDashboard(){
           </div>
 
 
+          <div id="projectBulkToolbar">${buildProjectBulkToolbarHtml()}</div>
+
           <div class="dashboard-table">
             <div class="dashboard-table-head">
+              <div style="cursor:auto;" onclick="event.stopPropagation();"><input type="checkbox" id="selectAllProjectsCheckbox" title="Select all" ${myProjects.length > 0 && myProjects.every(p => selectedProjects.has(p.id)) ? 'checked' : ''} onclick="toggleSelectAllProjects()"></div>
               <div onclick="sortDashboardProjects('name')">Project<span class="sort-arrow" data-field="name">↑</span></div>
               <div onclick="sortDashboardProjects('status')">Status<span class="sort-arrow" data-field="status">↑</span></div>
               <div onclick="sortDashboardProjects('progress')">Progress<span class="sort-arrow" data-field="progress">↑</span></div>
@@ -2634,6 +2804,7 @@ async function renderDashboard(){
 
               return `
                 <div class="dashboard-table-row" onclick="openProject('${escapeAttr(proj.id)}')">
+                  <div onclick="event.stopPropagation();"><input type="checkbox" ${selectedProjects.has(proj.id) ? 'checked' : ''} onclick="toggleProjectSelect('${escapeAttr(proj.id)}')"></div>
                   <div>
                     <div class="dashboard-project-name">${escapeHtml(proj.title)}</div>
                   </div>
@@ -2652,7 +2823,7 @@ async function renderDashboard(){
                     <div class="dashboard-project-dropdown" id="menu-${proj.id}">
                       <div class="dashboard-project-dropdown-item" onclick="openEditProjectModal(event, '${escapeAttr(proj.id)}', '${escapeAttr(proj.title)}')">✏️ Rename</div>
                       <div class="dashboard-project-dropdown-item" onclick="event.stopPropagation(); duplicateProject('${escapeAttr(proj.id)}', '${escapeAttr(proj.title)}')">📋 Duplicate</div>
-                      <div class="dashboard-project-dropdown-item" onclick="event.stopPropagation(); showModal('Download - Coming soon')">⬇️ Download</div>
+                      <div class="dashboard-project-dropdown-item" onclick="event.stopPropagation(); exportProjects(['${escapeAttr(proj.id)}'], '${escapeAttr(proj.title)}')">⬇️ Export</div>
                       <div class="dashboard-project-dropdown-item" onclick="event.stopPropagation(); deleteProject('${escapeAttr(proj.id)}', '${escapeAttr(proj.title)}')" style="color:#d32f2f;">🗑️ Delete</div>
                     </div>
                   </div>
