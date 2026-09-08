@@ -1885,13 +1885,13 @@ function renderAuthScreen(){
               <div id="authFormContent">
                 <div class="auth-form-group">
                   <label class="auth-form-label">Email</label>
-                  <input id="authEmail" type="email" class="auth-form-input" placeholder="name@yourcompany.com" />
+                  <input id="authEmail" type="email" class="auth-form-input" placeholder="name@yourcompany.com" onkeydown="if(event.key==='Enter'){event.preventDefault(); submitAuthForm();}" />
                 </div>
 
                 <div class="auth-form-group">
                   <label class="auth-form-label">Password</label>
                   <div class="auth-password-wrapper">
-                    <input id="authPassword" type="password" class="auth-form-input" placeholder="Enter your password" />
+                    <input id="authPassword" type="password" class="auth-form-input" placeholder="Enter your password" onkeydown="if(event.key==='Enter'){event.preventDefault(); submitAuthForm();}" />
                     <button type="button" class="auth-password-toggle" onclick="togglePasswordVisibility()" tabindex="-1">
                       <svg id="authPasswordIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
@@ -1903,7 +1903,7 @@ function renderAuthScreen(){
 
                 <div class="auth-form-group" id="authNameField" style="display:none;">
                   <label class="auth-form-label">Display Name (optional)</label>
-                  <input id="authName" type="text" class="auth-form-input" placeholder="John Doe" />
+                  <input id="authName" type="text" class="auth-form-input" placeholder="John Doe" onkeydown="if(event.key==='Enter'){event.preventDefault(); submitAuthForm();}" />
                 </div>
 
                 <div class="auth-form-row">
@@ -2052,6 +2052,15 @@ function renderAuthScreen(){
     swReg.style.display = "none";
     logBtn.style.display = "none";
     swLog.style.display = "inline-flex";
+  };
+
+  window.submitAuthForm = ()=>{
+    // Whichever action button is currently visible reflects the active mode (login vs register)
+    if(regBtn.style.display !== "none"){
+      handleRegister();
+    } else {
+      handleLogin();
+    }
   };
 
   window.handleRegister = async ()=>{
