@@ -1824,6 +1824,29 @@ const ICON_TRENDUP = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
 const ICON_AWARD = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="6.5"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></svg>';
 const ICON_CHEVRON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>';
 
+async function completePostAuthSetup(){
+  await loadProjectList();
+  currentProjectId = myProjects[0]?.id;
+  if(!currentProjectId){
+    const createRes = await apiFetch('/api/v1/projects', {
+      method: 'POST',
+      body: JSON.stringify({ title: 'My First Project' })
+    });
+    if(createRes && createRes.ok){
+      const newProj = await createRes.json();
+      currentProjectId = newProj.id;
+      await loadProjectList();
+    } else {
+      console.error('Failed to create first project:', createRes?.status);
+      hideAuthSpinner();
+      showModal('Account created but could not create first project. Please try again.');
+      return;
+    }
+  }
+  await loadProjectList();
+  renderDashboard();
+}
+
 function renderAuthScreen(){
   const app = document.getElementById("app");
   app.innerHTML = `
@@ -1921,6 +1944,24 @@ function renderAuthScreen(){
                   <button class="btn-primary" onclick="handleRegister()" style="display:none;" id="registerBtn">Create Account</button>
                 </div>
               </div>
+
+              <div id="authVerifyStep" style="display:none;">
+                <p style="color:#5a6472;font-size:13px;margin-bottom:16px;">
+                  We sent a 6-digit verification code to <strong id="authVerifyEmailLabel"></strong>. Enter it below to confirm your account.
+                </p>
+                <div id="authVerifyError" style="display:none;background:#fee;color:#c33;padding:10px;border-radius:6px;margin-bottom:12px;font-size:12px;"></div>
+                <div class="auth-form-group">
+                  <label class="auth-form-label">Verification Code</label>
+                  <input id="authVerifyCode" type="text" class="auth-form-input" placeholder="000000" maxlength="6" />
+                </div>
+                <div class="auth-form-actions">
+                  <button class="btn-secondary" onclick="cancelVerifyStep()">Back to Login</button>
+                  <button class="btn-primary" id="authVerifyBtn" onclick="handleVerifyEmail()">Verify &amp; Continue</button>
+                </div>
+                <p style="text-align:center;margin-top:14px;font-size:12px;">
+                  Didn't get a code? <a class="auth-form-link" onclick="handleResendVerification()">Resend code</a>
+                </p>
+              </div>
             </div>
           </div>
         </div>
@@ -2016,6 +2057,8 @@ function renderAuthScreen(){
     document.head.appendChild(style);
   }
 
+  let pendingVerifyEmail = ''; // email awaiting a verification code, shared by the verify-step closures below
+
   const regBtn = document.getElementById("registerBtn");
   const logBtn = document.getElementById("loginBtn");
   const swReg = document.getElementById("switchToRegisterBtn");
@@ -2069,27 +2112,13 @@ function renderAuthScreen(){
 
       if(res && res.ok){
         const data = await res.json();
-        authUser = data.user;
-        await loadProjectList();
-        currentProjectId = myProjects[0]?.id;
-        if(!currentProjectId){
-          const createRes = await apiFetch('/api/v1/projects', {
-            method: 'POST',
-            body: JSON.stringify({ title: 'My First Project' })
-          });
-          if(createRes && createRes.ok){
-            const newProj = await createRes.json();
-            currentProjectId = newProj.id;
-            await loadProjectList();
-          } else {
-            console.error('Failed to create first project:', createRes?.status);
-            hideAuthSpinner();
-            showModal('Account created but could not create first project. Please try again.');
-            return;
-          }
+        hideAuthSpinner();
+        if(data.verificationCode){
+          alert("Verification Code: " + data.verificationCode + "\n\n📧 Email not configured\n\nEnter this code on the next screen to confirm your account.");
+        } else {
+          alert("✓ Verification code sent to your email!\n\nCheck your inbox for the 6-digit code.");
         }
-        await loadProjectList();
-        renderDashboard();
+        showVerifyStep(email);
       } else if(res?.status === 409){
         hideAuthSpinner();
         showModal('Email already registered.');
@@ -2102,6 +2131,77 @@ function renderAuthScreen(){
       hideAuthSpinner();
       console.error('Registration error:', err);
       showModal('Registration error: ' + err.message);
+    }
+  };
+
+  window.showVerifyStep = (email)=>{
+    pendingVerifyEmail = email;
+    document.getElementById("authVerifyEmailLabel").textContent = email;
+    document.getElementById("authFormContent").style.display = "none";
+    document.getElementById("authVerifyStep").style.display = "block";
+    document.getElementById("authFormTitle").textContent = "Verify Your Email";
+    document.getElementById("authVerifyCode").value = "";
+    document.getElementById("authVerifyError").style.display = "none";
+  };
+
+  window.cancelVerifyStep = ()=>{
+    document.getElementById("authVerifyStep").style.display = "none";
+    document.getElementById("authFormContent").style.display = "block";
+    switchToLogin();
+  };
+
+  window.handleVerifyEmail = async ()=>{
+    const code = document.getElementById("authVerifyCode").value.trim();
+    const errorDiv = document.getElementById("authVerifyError");
+    errorDiv.style.display = "none";
+
+    if(!code || code.length !== 6){
+      errorDiv.textContent = "Please enter the 6-digit code from your email";
+      errorDiv.style.display = "block";
+      return;
+    }
+
+    showAuthSpinner();
+
+    try {
+      const res = await apiFetch('/api/v1/auth/verify-email', {
+        method: 'POST',
+        body: JSON.stringify({ email: pendingVerifyEmail, code })
+      });
+
+      if(res && res.ok){
+        const data = await res.json();
+        authUser = data.user;
+        await completePostAuthSetup();
+      } else {
+        hideAuthSpinner();
+        const errData = res ? await res.json() : {};
+        errorDiv.textContent = errData.detail || 'Invalid or expired code. Please try again.';
+        errorDiv.style.display = "block";
+      }
+    } catch(err){
+      hideAuthSpinner();
+      console.error('Verify email error:', err);
+      errorDiv.textContent = 'Error: ' + err.message;
+      errorDiv.style.display = "block";
+    }
+  };
+
+  window.handleResendVerification = async ()=>{
+    try {
+      const res = await apiFetch('/api/v1/auth/resend-verification', {
+        method: 'POST',
+        body: JSON.stringify({ email: pendingVerifyEmail })
+      });
+      const data = res ? await res.json() : {};
+      if(data.verificationCode){
+        alert("Verification Code: " + data.verificationCode + "\n\n📧 Email not configured\n\nEnter this code above to confirm your account.");
+      } else {
+        alert("✓ A new verification code has been sent to " + pendingVerifyEmail);
+      }
+    } catch(err){
+      console.error('Resend verification error:', err);
+      alert("Error resending code: " + err.message);
     }
   };
 
@@ -2122,6 +2222,14 @@ function renderAuthScreen(){
         authUser = data.user;
         await loadProjectList();
         renderDashboard();
+      } else if(res?.status === 403){
+        const errData = await res.json();
+        hideAuthSpinner();
+        if(errData.type && errData.type.includes('email_not_verified')){
+          showVerifyStep(email);
+        } else {
+          showModal(errData.detail || 'Login failed.');
+        }
       } else {
         hideAuthSpinner();
         showModal('Login failed. Please check your email/password.');
@@ -2911,20 +3019,28 @@ function setProjectViewMode(mode){
 
 function showAuthSpinner(){
   const spinner = document.getElementById("authLoadingSpinner");
-  const content = document.getElementById("authFormContent");
-  if(spinner && content){
-    spinner.style.display = "block";
-    content.style.display = "none";
-  }
+  const authForm = document.getElementById("authForm");
+  if(!spinner || !authForm) return;
+  // Remember whichever panel (login/register fields, or the verify-code step) was visible,
+  // so hideAuthSpinner() can restore the right one instead of always the login form.
+  ['authFormContent', 'authVerifyStep'].forEach(id => {
+    const el = document.getElementById(id);
+    if(el && el.style.display !== 'none'){
+      authForm.dataset.activePanel = id;
+      el.style.display = 'none';
+    }
+  });
+  spinner.style.display = "block";
 }
 
 function hideAuthSpinner(){
   const spinner = document.getElementById("authLoadingSpinner");
-  const content = document.getElementById("authFormContent");
-  if(spinner && content){
-    spinner.style.display = "none";
-    content.style.display = "block";
-  }
+  const authForm = document.getElementById("authForm");
+  if(!spinner || !authForm) return;
+  spinner.style.display = "none";
+  const activeId = authForm.dataset.activePanel || 'authFormContent';
+  const el = document.getElementById(activeId);
+  if(el) el.style.display = "block";
 }
 
 async function logout(){

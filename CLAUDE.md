@@ -61,7 +61,8 @@ project-timeline-studio/
 │       ├── middleware/{auth,ownership}.js
 │       ├── routes/{auth,projects,versions}.routes.js
 │       ├── utils/{jwt,password,email,run-migration}.js
-│       └── migrations/001_init.sql, 002_add_password_reset_tokens.sql, 003_add_mcp_oauth_clients.sql
+│       └── migrations/001_init.sql, 002_add_password_reset_tokens.sql, 003_add_mcp_oauth_clients.sql,
+│           004_add_email_verification.sql
 ├── mcp-server/                          (app + API + MCP, ESM — what production runs)
 │   ├── server.js                        (Express app, MCP SSE, mounts server/ routes, port 3001)
 │   ├── oauthProvider.js                 (OAuth 2.1 authorization server — must stay ESM)
@@ -170,19 +171,32 @@ The server is the source of truth for project data. localStorage now holds only 
 
 ### Auth — `/api/v1/auth`
 ```
-POST   /register          { email, password, displayName? } → 201 + httpOnly cookies
-POST   /login             { email, password }               → 200 + cookies
-POST   /refresh           (refresh_token cookie)            → rotates both tokens
-POST   /logout            (auth)                            → revokes refresh token, clears cookies
-GET    /me                (auth)                            → { id, email, displayName }
-PUT    /change-password   (auth) { currentPassword, newPassword }
-PUT    /change-email      (auth) { newEmail, password }
-POST   /forgot-password   { email }                          → emails a 6-digit code (15 min TTL)
-POST   /reset-password    { email, token, newPassword }
+POST   /register             { email, password, displayName? } → 201, no cookies yet — account is
+                                                                   created unverified; a 6-digit code
+                                                                   is emailed (15 min TTL)
+POST   /verify-email         { email, code }                    → 200 + cookies (this is the real
+                                                                   "login" for a new account)
+POST   /resend-verification  { email }                          → re-sends the code; always 200,
+                                                                   doesn't reveal if the email exists
+POST   /login                { email, password }                → 200 + cookies, or 403
+                                                                   `#email_not_verified` if unconfirmed
+POST   /refresh               (refresh_token cookie)             → rotates both tokens
+POST   /logout                (auth)                             → revokes refresh token, clears cookies
+GET    /me                    (auth)                             → { id, email, displayName }
+PUT    /change-password       (auth) { currentPassword, newPassword }
+PUT    /change-email          (auth) { newEmail, password }
+POST   /forgot-password       { email }                          → emails a 6-digit code (15 min TTL)
+POST   /reset-password        { email, token, newPassword }
 ```
 Password policy (zod): min 8 chars, ≥1 uppercase, ≥1 digit, ≥1 of `!@#$%^&*`.
 Access token TTL 15 min, refresh 30 days; both are `httpOnly` cookies (`secure` in production,
 `sameSite=lax`). Refresh tokens are stored as SHA-256 hashes and rotated on use.
+
+**Email verification**: `users.email_verified_at` gates both `/login` and the MCP OAuth `/authorize`
+login page (`mcp-server/oauthProvider.js`, which queries the same `users` table independently — if you
+touch verification logic, update both places). Accounts that existed before this feature shipped were
+grandfathered in by migration 004 (`email_verified_at` backfilled from `created_at`), so only newly
+registered accounts are actually forced through the code step.
 
 ### Projects — `/api/v1/projects`
 ```
@@ -297,15 +311,20 @@ not from this blueprint. Update or delete `render.yaml` rather than trusting it.
 
 ## Database Schema (actual)
 ```sql
-users              (id uuid pk, email unique, password_hash, display_name, created_at, last_login_at)
-projects           (id uuid pk, user_id fk→users, title, swimlanes jsonb, created_at, updated_at)
-versions           (id uuid pk, project_id fk→projects, name, business_group, project_title,
-                    swimlanes jsonb, saved_at)
-refresh_tokens     (id uuid pk, user_id fk→users, token_hash, expires_at, revoked_at, created_at)
-mcp_oauth_clients  (client_id pk, metadata jsonb, created_at)
+users                     (id uuid pk, email unique, password_hash, display_name, created_at,
+                           last_login_at, email_verified_at)
+projects                  (id uuid pk, user_id fk→users, title, swimlanes jsonb, created_at, updated_at)
+versions                  (id uuid pk, project_id fk→projects, name, business_group, project_title,
+                           swimlanes jsonb, saved_at)
+refresh_tokens            (id uuid pk, user_id fk→users, token_hash, expires_at, revoked_at, created_at)
+mcp_oauth_clients         (client_id pk, metadata jsonb, created_at)
+email_verification_tokens (id uuid pk, user_id fk→users, token_hash, expires_at, used_at, created_at)
 ```
-Indexes on `projects.user_id`, `versions.project_id`, `refresh_tokens.user_id`. All FKs cascade on
-user/project delete.
+Indexes on `projects.user_id`, `versions.project_id`, `refresh_tokens.user_id`,
+`email_verification_tokens.user_id`. All FKs cascade on user/project delete.
+
+`email_verified_at` is nullable — NULL means unconfirmed. Migration `004_add_email_verification.sql`
+backfills it to `created_at` for every pre-existing row, so the gate only bites new registrations.
 
 ⚠️ **`password_reset_tokens` has no migration.** `002_add_password_reset_tokens.sql` is an empty file
 (`runMigrations()` skips empty files), but `auth.routes.js` inserts into and selects from

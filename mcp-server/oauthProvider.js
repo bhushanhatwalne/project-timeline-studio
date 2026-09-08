@@ -129,12 +129,17 @@ class TimelineStudioOAuthProvider {
     const email = typeof req.body?.email === 'string' ? req.body.email.trim().toLowerCase() : '';
     const password = typeof req.body?.password === 'string' ? req.body.password : '';
 
-    const result = await pool.query('SELECT id, email, password_hash FROM users WHERE email = $1', [email]);
+    const result = await pool.query('SELECT id, email, password_hash, email_verified_at FROM users WHERE email = $1', [email]);
     const user = result.rows[0];
     const passwordMatch = user ? await comparePassword(password, user.password_hash) : false;
 
     if (!user || !passwordMatch) {
       res.status(401).send(renderLoginPage({ client, params, error: 'Invalid email or password' }));
+      return;
+    }
+
+    if (!user.email_verified_at) {
+      res.status(403).send(renderLoginPage({ client, params, error: 'Please verify your email (check your inbox) before connecting an MCP client' }));
       return;
     }
 

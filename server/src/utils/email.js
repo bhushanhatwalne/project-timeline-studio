@@ -91,7 +91,51 @@ async function sendPasswordResetEmail(userEmail, resetToken) {
   }
 }
 
+async function sendVerificationEmail(userEmail, code) {
+  const emailTransporter = initializeEmailTransporter();
+
+  if (!emailTransporter) {
+    console.warn('[EMAIL] ⚠️ Email not configured. Verification code will be displayed in browser.');
+    return false;
+  }
+
+  try {
+    console.log('[EMAIL] Attempting to send verification email to:', userEmail);
+
+    const mailOptions = {
+      from: process.env.EMAIL_USER,
+      to: userEmail,
+      subject: 'Timeline Studio - Verify Your Email',
+      html: `
+        <h2>Confirm Your Email</h2>
+        <p>Welcome to Timeline Studio! Enter this code to confirm your email address.</p>
+        <p><strong>Your verification code is:</strong></p>
+        <h1 style="background:#f0f0f0;padding:20px;border-radius:8px;text-align:center;font-family:monospace;letter-spacing:5px;">${code}</h1>
+        <p>This code will expire in <strong>15 minutes</strong>.</p>
+        <p>If you didn't create a Timeline Studio account, please ignore this email.</p>
+        <hr>
+        <p style="font-size:12px;color:#666;">Timeline Studio - Project Planning & Gantt Charts</p>
+      `,
+      text: `Verification Code: ${code}\n\nThis code will expire in 15 minutes.\n\nIf you didn't create a Timeline Studio account, please ignore this email.`,
+    };
+
+    const info = await Promise.race([
+      emailTransporter.sendMail(mailOptions),
+      new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Email send timeout after 5 seconds')), 5000)
+      )
+    ]);
+
+    console.log('[EMAIL] ✓ Verification email sent, MessageID:', info.messageId);
+    return true;
+  } catch (err) {
+    console.error('[EMAIL] ✗ Failed to send verification email to', userEmail, '-', err.message);
+    return false;
+  }
+}
+
 module.exports = {
   initializeEmailTransporter,
   sendPasswordResetEmail,
+  sendVerificationEmail,
 };

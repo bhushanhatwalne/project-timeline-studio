@@ -65,7 +65,9 @@ Go to **https://timeline-studio-nvjh.onrender.com**
    - at least 1 uppercase letter
    - at least 1 number
    - at least 1 special character from `! @ # $ % ^ & *`
-3. Click **Create Account** — you're logged in immediately and land on the Dashboard
+3. Click **Create Account** — we email a **6-digit verification code** to that address
+4. Enter the code on the next screen and click **Verify & Continue** to confirm your account and land
+   on the Dashboard (valid for 15 minutes; use **Resend code** if it expires or doesn't arrive)
 
 Forgot your password later? Click **Forgot password?** on the login screen, enter your email, and
 you'll receive a **6-digit reset code** valid for 15 minutes.
@@ -291,14 +293,24 @@ Skip this if you don't need password reset locally.
 curl http://localhost:3001/api/v1/health
 # {"status":"ok"}
 
-curl -i -c cookies.txt -X POST http://localhost:3001/api/v1/auth/register \
+curl -i -X POST http://localhost:3001/api/v1/auth/register \
   -H "Content-Type: application/json" \
   -d '{"email":"test@example.com","password":"TestPass123!","displayName":"Test User"}'
+```
+
+Registration no longer logs you in directly — the account is created unverified and a 6-digit code is
+emailed to it. Without `EMAIL_USER`/`EMAIL_PASSWORD` configured, the code comes back in the response
+body instead (`verificationCode`) so local testing still works:
+
+```bash
+curl -i -c cookies.txt -X POST http://localhost:3001/api/v1/auth/verify-email \
+  -H "Content-Type: application/json" \
+  -d '{"email":"test@example.com","code":"<the 6-digit code>"}'
 
 curl -i -b cookies.txt http://localhost:3001/api/v1/auth/me
 ```
 
-A `201` on register and `200` on `/me` means the backend is healthy.
+A `201` on register, `200` on `/verify-email`, and `200` on `/me` means the backend is healthy.
 
 ---
 
@@ -508,8 +520,10 @@ Cookie-based auth (`httpOnly` access + refresh tokens). All project and version 
 the authenticated owner.
 
 ```
-POST   /api/v1/auth/register             { email, password, displayName? }
-POST   /api/v1/auth/login                { email, password }
+POST   /api/v1/auth/register             { email, password, displayName? }  → unverified, no cookies yet
+POST   /api/v1/auth/verify-email         { email, code }                    → confirms + logs in
+POST   /api/v1/auth/resend-verification  { email }
+POST   /api/v1/auth/login                { email, password }                → 403 if unverified
 POST   /api/v1/auth/refresh
 POST   /api/v1/auth/logout
 GET    /api/v1/auth/me
