@@ -31,10 +31,20 @@ function calculatePlannedProgress(start, end) {
   }
 }
 
+// Parses a "YYYY-MM-DD" date string as the end of that LOCAL calendar day.
+// Deliberately avoids `new Date(dateStr)` (which parses as UTC midnight) —
+// comparing that against a local `new Date()` shifts the due date by a day
+// in any timezone behind UTC, marking same-day milestones overdue too early.
+function endOfLocalDay(dateStr) {
+  const parts = typeof dateStr === 'string' ? dateStr.split('-').map(Number) : null;
+  if (!parts || parts.length !== 3 || parts.some((n) => isNaN(n))) return null;
+  const [y, m, d] = parts;
+  return new Date(y, m - 1, d, 23, 59, 59, 999);
+}
+
 function calculateTaskStatus(task) {
   try {
     const actual = task.percent || 0;
-    const planned = calculatePlannedProgress(task.start, task.end);
 
     if (actual === 100) return 'Complete';
 
@@ -43,6 +53,15 @@ function calculateTaskStatus(task) {
       if (!isNaN(startDate.getTime()) && startDate > new Date()) return 'Not Started';
     }
 
+    // Milestones are a single-point event, not a span — don't call one off track just because
+    // today is on-or-before the due date; only once the due date has fully elapsed.
+    if (task.type === 'milestone' || task.type === 'major') {
+      const endOfDueDay = endOfLocalDay(task.end);
+      if (endOfDueDay && new Date() <= endOfDueDay) return 'On Track';
+      return 'Off Track';
+    }
+
+    const planned = calculatePlannedProgress(task.start, task.end);
     if (actual >= planned - 10) return 'On Track';
     if (actual >= planned - 20) return 'At Risk';
     return 'Off Track';
