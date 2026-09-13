@@ -1,14 +1,15 @@
 // Project-data MCP tools — read-only queries against the same Postgres data
 // the Timeline Studio app itself uses, scoped to the authenticated user.
 //
-// Status is NOT read from the stored row.status field — the app itself
-// ignores that field for display and instead recomputes status live from
-// percent-complete vs. a date-based "planned progress", via
-// calculateTaskStatus/calculateProjectStatus in project-timeline-studio.html.
-// This mirrors that logic exactly so the tool matches what the app shows.
+// Status is mostly NOT read from the stored row.status field — the app recomputes
+// it live from percent-complete vs. a date-based "planned progress". The one
+// exception is 'on-hold', a manual override the user sets via the Data tab's status
+// dropdown, which is read directly. See calculateTaskStatus/calculateProjectStatus
+// in project-timeline-studio.html — this mirrors that logic exactly so the tool
+// matches what the app shows.
 const pool = require('../server/src/db.js');
 
-const TASK_URGENCY = ['Off Track', 'At Risk', 'On Track'];
+const TASK_URGENCY = ['On Hold', 'Off Track', 'At Risk', 'On Track'];
 
 function parseSwimlanes(raw) {
   if (!raw) return [];
@@ -48,6 +49,11 @@ function calculateTaskStatus(task) {
 
     if (actual === 100) return 'Complete';
 
+    // Manual override set via the Data tab's status dropdown (stored as the
+    // STATUS_META key 'on-hold') — takes priority over the derived schedule logic
+    // below until the user picks a different status.
+    if (task.status === 'on-hold') return 'On Hold';
+
     if (actual === 0) {
       const startDate = new Date(task.start);
       if (!isNaN(startDate.getTime()) && startDate > new Date()) return 'Not Started';
@@ -78,6 +84,7 @@ function calculateProjectStatus(swimlanes) {
   let hasAtRiskTask = false;
   let hasIncompleteTask = false;
   const today = new Date();
+  const scheduledTasks = []; // flattened task children (phases excluded) for the On Hold rule below
 
   swimlanes.forEach((swimlane) => {
     (swimlane.children || []).forEach((child) => {
@@ -88,10 +95,23 @@ function calculateProjectStatus(swimlanes) {
 
       const percent = child.percent || 0;
       if (percent > 0 || new Date(child.start) <= today) hasStartedTask = true;
+
+      scheduledTasks.push({ start: new Date(child.start), status: taskStatus });
     });
   });
 
   if (!hasStartedTask) return 'Not Started';
+
+  // On Hold rule: among activities that have started (schedule-sorted, Not Started
+  // dropped), if the one with the LATEST start date is On Hold, the whole project
+  // reads as On Hold — mirrors calculateProjectStatus in project-timeline-studio.html.
+  const startedTasks = scheduledTasks
+    .filter((t) => t.status !== 'Not Started' && !isNaN(t.start.getTime()))
+    .sort((a, b) => a.start - b.start);
+  if (startedTasks.length > 0 && startedTasks[startedTasks.length - 1].status === 'On Hold') {
+    return 'On Hold';
+  }
+
   if (hasOffTrackTask) return 'Off Track';
   if (hasAtRiskTask) return 'At Risk';
   if (hasIncompleteTask) return 'On Track';

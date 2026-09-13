@@ -138,17 +138,24 @@ modal state.
 6. `apiFetch()` wraps `fetch` with `credentials: 'include'`, a 15 s abort timeout, and a **single**
    401 → `POST /api/v1/auth/refresh` → retry; a second 401 clears `authUser` and shows the login screen.
 
-### Status Is Derived, Not Stored
+### Status Is Derived, Not Stored (with one manual override)
 This is the single most important behavioral rule. `row.status` exists in the data and in the
 `<select>` on the Data tab, but **display status is recomputed live** from `percent` vs. date-based
-planned progress:
+planned progress — **except `On Hold`**, which is a genuine manual override: picking it in the
+Data tab's status dropdown stores the STATUS_META key `on-hold` on the row, and
+`calculateTaskStatus` reads that value directly (before any of the derived checks below) and keeps
+returning `On Hold` until the user picks a different status.
 
 - `calculatePlannedProgress(start, end)` → 0 before start, 100 after end, else % of elapsed days
-- `calculateTaskStatus(task)` → `Complete` (100%) | `Not Started` (0% and start in the future) |
-  `On Track` (actual ≥ planned − 10) | `At Risk` (actual ≥ planned − 20) | `Off Track`
-- `calculateProjectStatus(swimlanes)` → `Not Started` if nothing started; else `Off Track` if any task
-  is off track, `At Risk` if any is at risk, `On Track` if any incomplete, else `Complete`.
-  **Only task children count — swimlane phase rows are excluded.**
+- `calculateTaskStatus(task)` → `On Hold` if `task.status === 'on-hold'`; else `Complete` (100%) |
+  `Not Started` (0% and start in the future) | `On Track` (actual ≥ planned − 10) |
+  `At Risk` (actual ≥ planned − 20) | `Off Track`
+- `calculateProjectStatus(swimlanes)` → `Not Started` if nothing started; else `On Hold` if the
+  started (non-`Not Started`) task with the **latest scheduled start date** is `On Hold`; else
+  `Off Track` if any task is off track, `At Risk` if any is at risk, `On Track` if any incomplete,
+  else `Complete`. **Only task children count — swimlane phase rows are excluded.** "Latest" means
+  furthest-out start date, not most-recently-edited, so the result is schedule-driven and
+  predictable regardless of edit order.
 - `calculateProjectProgress()` averages task `percent`
 
 `mcp-server/projectTools.cjs` **duplicates this logic on purpose** so `list_open_projects` matches what

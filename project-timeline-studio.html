@@ -39,6 +39,8 @@
     --st-risk-track:#F7DAD5;
     --st-behind:#D98324;
     --st-behind-track:#F6E3CC;
+    --st-onhold:#8E44AD;
+    --st-onhold-track:#EAD9F2;
     --icon-teal:#1b6577;
     --font-display: Georgia, 'Iowan Old Style', 'Times New Roman', serif;
     --font-body: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
@@ -579,6 +581,7 @@
   .dashboard-status.completed{background:#D4F4DD;color:#0d6d42;border:1px solid #a8e6b8;}
   .dashboard-status.off-track{background:#F5C6C1;color:#9d2c2a;border:1px solid #f4a49f;}
   .dashboard-status.not-started{background:#E8E8E8;color:#666;border:1px solid #d3d3d3;}
+  .dashboard-status.on-hold{background:#EAD9F2;color:#6c3483;border:1px solid #d2a6e6;}
   .dashboard-progress{display:flex;align-items:center;gap:8px;width:100%;}
   .dashboard-progress-bar{flex:1;height:6px;background:#e2e8f0;border-radius:3px;overflow:hidden;min-width:60px;transition:background 300ms ease;}
   html.dark-mode .dashboard-progress-bar{background:#334155;}
@@ -917,7 +920,8 @@ const STATUS_META = {
   "on-track": {label:"🟢 On Track", color:"#0076BC", bar:"#0099D8", track:"#D4E4F7"},
   "complete": {label:"🟢 Complete", color:"#1B7A45", bar:"#1B7A45", track:"#D4F4DD"},
   "at-risk": {label:"🟡 At Risk", color:"#D98324", bar:"#E8A855", track:"#FDEBD8"},
-  "off-track": {label:"🔴 Off Track", color:"#C0392B", bar:"#E74C3C", track:"#F5C6C1"}
+  "off-track": {label:"🔴 Off Track", color:"#C0392B", bar:"#E74C3C", track:"#F5C6C1"},
+  "on-hold": {label:"⏸ On Hold", color:"var(--st-onhold)", bar:"var(--st-onhold)", track:"var(--st-onhold-track)"}
 };
 
 /* ---------------- mutations ---------------- */
@@ -1266,7 +1270,8 @@ function computeDashboardProjectRow(proj){
       'On Track': 'on-track',
       'At Risk': 'at-risk',
       'Off Track': 'off-track',
-      'Not Started': 'not-started'
+      'Not Started': 'not-started',
+      'On Hold': 'on-hold'
     };
     statusKey = statusMap[status] || 'not-started';
     statusClass = statusKey === 'complete' ? 'completed' : statusKey;
@@ -1394,7 +1399,7 @@ function sortDashboardProjects(field){
       valB = new Date(b.updatedAt).getTime();
       return dashboardSortAsc ? valA - valB : valB - valA;
     } else if(field === 'status'){
-      const statusOrder = {'Off Track': 0, 'At Risk': 1, 'On Track': 2, 'Complete': 3, 'Not Started': 4};
+      const statusOrder = {'Off Track': 0, 'On Hold': 1, 'At Risk': 2, 'On Track': 3, 'Complete': 4, 'Not Started': 5};
       const statusA = calculateProjectStatus(projectDataCache[a.id]) || 'Not Started';
       const statusB = calculateProjectStatus(projectDataCache[b.id]) || 'Not Started';
       const orderA = statusOrder[statusA] ?? 5;
@@ -1736,6 +1741,12 @@ function calculateTaskStatus(task){
     // 🟢 Complete: If Actual % = 100%
     if(actual === 100) return 'Complete';
 
+    // ⏸ On Hold is the one manual override in an otherwise fully-derived status
+    // system: the user sets it explicitly via the Data tab's status dropdown (stored
+    // as the STATUS_META key 'on-hold'), and it stays in effect — overriding the
+    // schedule-variance logic below — until they pick a different status.
+    if(task.status === 'on-hold') return 'On Hold';
+
     // ⚪ Not Started: If Actual % = 0% AND Start Date > Today
     if(actual === 0){
       const startDate = new Date(task.start);
@@ -1811,6 +1822,7 @@ function calculateProjectStatus(projectData){
     let hasAtRiskTask = false;
     let hasIncompleteTask = false;
     const today = new Date();
+    const scheduledTasks = []; // flattened task children (phases excluded) for the On Hold rule below
 
     projectData.swimlanes.forEach(swimlane => {
       try{
@@ -1826,6 +1838,8 @@ function calculateProjectStatus(projectData){
 
             const percent = child.percent || 0;
             if(percent > 0 || new Date(child.start) <= today) hasStartedTask = true;
+
+            scheduledTasks.push({ start: new Date(child.start), status: taskStatus });
           });
         }
       }catch(e){
@@ -1836,6 +1850,20 @@ function calculateProjectStatus(projectData){
     // If no task has started yet, return Not Started
     if(!hasStartedTask){
       return 'Not Started';
+    }
+
+    // On Hold rule: sort activities by scheduled start date, drop any still Not
+    // Started, and look at the one with the LATEST start date among what's left.
+    // "Latest" is schedule-driven (furthest-out start date), not most-recently-
+    // edited, so the result is predictable regardless of edit order. If that
+    // activity is On Hold, the whole project reads as On Hold; once it isn't
+    // (recalculated fresh on every render), this falls through to the normal
+    // Off Track/At Risk/On Track/Complete scoring below.
+    const startedTasks = scheduledTasks
+      .filter(t => t.status !== 'Not Started' && !isNaN(t.start.getTime()))
+      .sort((a, b) => a.start - b.start);
+    if(startedTasks.length > 0 && startedTasks[startedTasks.length - 1].status === 'On Hold'){
+      return 'On Hold';
     }
 
     // If any task is Off Track, project is Off Track
@@ -4054,13 +4082,14 @@ function statusSelect(row, slId, rowId, isPhase){
     'On Track': 'on-track',
     'At Risk': 'at-risk',
     'Off Track': 'off-track',
-    'Not Started': 'not-started'
+    'Not Started': 'not-started',
+    'On Hold': 'on-hold'
   };
 
   const statusKey = statusMap[calculatedStatus] || 'not-started';
   const color = STATUS_META[statusKey]?.color || 'var(--st-notstarted)';
 
-  return `<select class="status-sel" style="background:${color}" onchange="onStatusChange(${slId}, ${rowId}, ${isPhase}, this.value)" title="Auto-calculated based on progress">
+  return `<select class="status-sel" style="background:${color}" onchange="onStatusChange(${slId}, ${rowId}, ${isPhase}, this.value)" title="Auto-calculated based on progress — pick On Hold to override">
     ${Object.entries(STATUS_META).map(([k,m])=>`<option value="${k}" ${statusKey===k?"selected":""}>${m.label}</option>`).join("")}
   </select>`;
 }
@@ -4440,7 +4469,8 @@ function renderTimeline(){
         'On Track': 'on-track',
         'At Risk': 'at-risk',
         'Off Track': 'off-track',
-        'Not Started': 'not-started'
+        'Not Started': 'not-started',
+        'On Hold': 'on-hold'
       };
       statusKey = statusMap[calculatedStatus] || 'not-started';
     }
@@ -4499,6 +4529,7 @@ function renderTimeline(){
           <div class="legend-item"><svg width="16" height="10"><rect width="16" height="10" rx="2" fill="var(--st-notstarted-bar)"/></svg> Future</div>
           <div class="legend-item"><svg width="16" height="10"><rect width="16" height="10" rx="2" fill="var(--st-behind)"/></svg> Behind Schedule</div>
           <div class="legend-item"><svg width="16" height="10"><rect width="16" height="10" rx="2" fill="var(--st-risk)"/></svg> At Risk</div>
+          <div class="legend-item"><svg width="16" height="10"><rect width="16" height="10" rx="2" fill="var(--st-onhold)"/></svg> On Hold</div>
         </div>
       </div>
     </div>
