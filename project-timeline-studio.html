@@ -924,6 +924,21 @@ const STATUS_META = {
   "on-hold": {label:"⏸ On Hold", color:"var(--st-onhold)", bar:"var(--st-onhold)", track:"var(--st-onhold-track)"}
 };
 
+// Maps a calculateTaskStatus()/calculateProjectStatus() display string ('On Track',
+// 'On Hold', ...) to its STATUS_META key. Single source of truth for what used to be
+// duplicated across the dashboard, the Data tab dropdown, and the Timeline tab.
+function statusToKey(status){
+  const map = {
+    'Complete': 'complete',
+    'On Track': 'on-track',
+    'At Risk': 'at-risk',
+    'Off Track': 'off-track',
+    'Not Started': 'not-started',
+    'On Hold': 'on-hold'
+  };
+  return map[status] || 'not-started';
+}
+
 /* ---------------- mutations ---------------- */
 function blankChild(type, baseStart){
   return {
@@ -1265,15 +1280,7 @@ function computeDashboardProjectRow(proj){
     progress = calculateProjectProgress(cachedData);
     status = calculateProjectStatus(cachedData);
 
-    const statusMap = {
-      'Complete': 'complete',
-      'On Track': 'on-track',
-      'At Risk': 'at-risk',
-      'Off Track': 'off-track',
-      'Not Started': 'not-started',
-      'On Hold': 'on-hold'
-    };
-    statusKey = statusMap[status] || 'not-started';
+    statusKey = statusToKey(status);
     statusClass = statusKey === 'complete' ? 'completed' : statusKey;
     statusLabel = STATUS_META[statusKey]?.label || status;
   }
@@ -4075,18 +4082,7 @@ function typeSelect(row, slId, rowId, isPhase){
 function statusSelect(row, slId, rowId, isPhase){
   // Calculate status instead of using stored value
   const calculatedStatus = calculateTaskStatus(row);
-
-  // Map calculated status to STATUS_META keys
-  const statusMap = {
-    'Complete': 'complete',
-    'On Track': 'on-track',
-    'At Risk': 'at-risk',
-    'Off Track': 'off-track',
-    'Not Started': 'not-started',
-    'On Hold': 'on-hold'
-  };
-
-  const statusKey = statusMap[calculatedStatus] || 'not-started';
+  const statusKey = statusToKey(calculatedStatus);
   const color = STATUS_META[statusKey]?.color || 'var(--st-notstarted)';
 
   return `<select class="status-sel" style="background:${color}" onchange="onStatusChange(${slId}, ${rowId}, ${isPhase}, this.value)" title="Auto-calculated based on progress — pick On Hold to override">
@@ -4386,7 +4382,11 @@ function renderTimeline(){
     levelRightEdgePct[level] = p + halfPct;
     maxLevel = Math.max(maxLevel, level);
     const topOffset = level*LEVEL_GAP;
-    const color = r.row.type==="major" ? "var(--major)" : "var(--milestone)";
+    // Color follows status (same STATUS_META used for task bars), so an On Hold
+    // milestone matches an On Hold task; shape still distinguishes milestone vs.
+    // major milestone.
+    const statusKey = statusToKey(calculateTaskStatus(r.row));
+    const color = STATUS_META[statusKey].color;
     const shape = r.row.type==="major"
       ? `<svg width="16" height="16" viewBox="0 0 14 14"><polygon points="7,1 8.7,5.1 13,5.4 9.7,8.2 10.8,12.5 7,10.1 3.2,12.5 4.3,8.2 1,5.4 5.3,5.1" fill="${color}"/></svg>`
       : `<svg width="14" height="14" viewBox="0 0 14 14"><rect x="3" y="3" width="8" height="8" fill="${color}" transform="rotate(45 7 7)"/></svg>`;
@@ -4463,16 +4463,7 @@ function renderTimeline(){
       const derivedStatus = getSwimlaneDerivedStatus(r);
       statusKey = derivedStatus;
     } else {
-      const calculatedStatus = calculateTaskStatus(row);
-      const statusMap = {
-        'Complete': 'complete',
-        'On Track': 'on-track',
-        'At Risk': 'at-risk',
-        'Off Track': 'off-track',
-        'Not Started': 'not-started',
-        'On Hold': 'on-hold'
-      };
-      statusKey = statusMap[calculatedStatus] || 'not-started';
+      statusKey = statusToKey(calculateTaskStatus(row));
     }
 
     const meta = STATUS_META[statusKey] || STATUS_META["not-started"];
