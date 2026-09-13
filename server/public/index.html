@@ -829,9 +829,10 @@ let autosaveTimer = null;
 function saveFlash(){
   const dot = document.querySelector(".save-dot");
   const lbl = document.querySelector(".save-lbl");
-  if(!dot) return;
-  lbl.textContent = "Saving…";
-  dot.style.opacity = .3;
+  if(dot && lbl){
+    lbl.textContent = "Saving…";
+    dot.style.opacity = .3;
+  }
   clearTimeout(autosaveTimer);
   console.log('[SAVE] Scheduled save in 800ms for project:', currentProjectId);
   autosaveTimer = setTimeout(async ()=>{
@@ -3084,12 +3085,7 @@ function renderToolbar(){
                   <button class="btn" onclick="addSwimlane()">+ Swimlane</button>
                   <span class="toolbar-sep"></span>
                   <button class="btn" onclick="openSaveModal()">💾 Save version</button>
-                  <button class="btn" id="exportBtn" onclick="openExportModal()">⬇ Export</button>
-                  <span class="toolbar-sep"></span>
-                  <div style="display:flex;align-items:center;gap:6px;">
-                    <span class="save-dot" style="width:8px;height:8px;border-radius:50%;background:var(--accent);opacity:1;transition:opacity 0.2s;"></span>
-                    <span class="save-lbl" style="font-size:11px;color:var(--ink-soft);">Saved</span>
-                  </div>`;
+                  <button class="btn" id="exportBtn" onclick="openExportModal()">⬇ Export</button>`;
 }
 function escapeAttr(s){ return String(s).replace(/"/g,"&quot;"); }
 function escapeHtml(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
