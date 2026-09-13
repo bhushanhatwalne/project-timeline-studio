@@ -2720,7 +2720,6 @@ async function renderDashboard(){
             <div class="dashboard-sidebar-item" data-emoji="📈" data-tooltip="Reports" onclick="showModal('Reports')"><i class="fa-solid fa-chart-pie"></i><span>Reports</span></div>
             <div class="dashboard-sidebar-item" data-emoji="👥" data-tooltip="Team" onclick="showModal('Team')"><i class="fa-solid fa-people-group"></i><span>Team</span></div>
             <div class="dashboard-sidebar-item" data-emoji="🔗" data-tooltip="Integrations" onclick="showModal('Integrations')"><i class="fa-solid fa-link"></i><span>Integrations</span></div>
-            <div class="dashboard-sidebar-item" data-emoji="⚙️" data-tooltip="Settings" onclick="showModal('Settings')"><i class="fa-solid fa-gear"></i><span>Settings</span></div>
           </div>
         </div>
         </div>
@@ -2940,7 +2939,7 @@ function renderUserMenuHtml(opts = {}){
       </div>
       <div class="dashboard-user-dropdown" id="userMenuDropdown">
         <div class="dashboard-user-dropdown-item" onclick="showModal('My Account - Coming soon')">👤 My Account</div>
-        <div class="dashboard-user-dropdown-item" onclick="showModal('Settings - Coming soon')">⚙️ User Settings</div>
+        <div class="dashboard-user-dropdown-item" onclick="setTab('account')">⚙️ User Settings</div>
         <div class="dashboard-user-dropdown-item" onclick="showModal('Help - Coming soon')">❓ Help</div>
         <div class="dashboard-user-dropdown-item logout" onclick="handleLogout()">🚪 Log Out</div>
       </div>
@@ -2992,7 +2991,6 @@ function render(){
           <button class="hist-btn" title="Redo (Ctrl+Shift+Z)" onclick="redo()" ${future.length===0?"disabled":""}>↷</button>
         </div>
         <button class="btn app-theme-toggle" style="background:transparent;color:#fff;border-color:rgba(255,255,255,.2);" onclick="toggleDarkMode()" title="Toggle Dark Mode"><span id="appThemeIcon">🌙</span> <span id="appThemeText">Dark</span></button>
-        <button class="btn" style="background:transparent;color:#fff;border-color:rgba(255,255,255,.2);" onclick="setTab('account')" title="Account Settings">⚙</button>
         ${renderUserMenuHtml()}
       </div>
     </div>
