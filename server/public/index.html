@@ -41,7 +41,7 @@
     --st-behind-track:#F6E3CC;
     --icon-teal:#1b6577;
     --font-display: Georgia, 'Iowan Old Style', 'Times New Roman', serif;
-    --font-body: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    --font-body: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
     --font-mono: ui-monospace, 'SFMono-Regular', 'IBM Plex Mono', Menlo, Consolas, monospace;
     /* Dark mode variables */
     --dm-paper:#0b0f17;
@@ -68,6 +68,7 @@
   }
   *{box-sizing:border-box;}
   html,body{margin:0;padding:0;background:var(--paper);color:var(--ink);font-family:'Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;}
+  button,input,select,textarea{font-family:inherit;}
   /* Custom Scrollbar */
   ::-webkit-scrollbar{width:6px;}
   ::-webkit-scrollbar-track{background:transparent;}
@@ -533,10 +534,11 @@
   html.dark-mode .dashboard-filter{background:#1a2332;border-color:#475569;color:#cbd5e1;}
   .dashboard-filter:hover{border-color:#0076BC;color:#0076BC;background:#f8fafc;}
   html.dark-mode .dashboard-filter:hover{background:#1f2937;}
-  .dashboard-theme-toggle{padding:10px 14px;background:#fff;border:1px solid #cbd5e1;border-radius:8px;font-size:13px;color:#64748b;cursor:pointer;font-weight:500;transition:all 200ms;display:flex;align-items:center;gap:6px;}
-  html.dark-mode .dashboard-theme-toggle{background:#1a2332;border-color:#475569;color:#cbd5e1;}
-  .dashboard-theme-toggle:hover{border-color:#0076BC;color:#0076BC;background:#f8fafc;}
-  html.dark-mode .dashboard-theme-toggle:hover{background:#1f2937;}
+  .theme-switch{border:none;background:transparent;padding:0;margin:0;cursor:pointer;display:inline-flex;align-items:center;}
+  .theme-switch-track{position:relative;width:50px;height:26px;border-radius:999px;background:#cbd5e1;transition:background 200ms ease;}
+  html.dark-mode .theme-switch-track{background:var(--accent);}
+  .theme-switch-thumb{position:absolute;top:2px;left:2px;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.3);display:flex;align-items:center;justify-content:center;font-size:12px;line-height:1;transition:left 200ms ease;}
+  html.dark-mode .theme-switch-thumb{left:26px;}
   .dashboard-table{width:100%;background:#fff;transition:background 300ms ease;border-collapse:collapse;}
   html.dark-mode .dashboard-table{background:#161e2e;}
   .dashboard-table-head{display:grid;grid-template-columns:0.3fr 2fr 1fr 1.5fr 1.5fr 0.5fr;gap:0;padding:0;background:#f8f9fb;border-bottom:1px solid #cbd5e1;transition:all 300ms ease;}
@@ -2481,19 +2483,22 @@ function toggleDarkMode(){
 
 function updateThemeToggleButton(){
   const isDarkMode = document.documentElement.classList.contains("dark-mode");
+  const title = isDarkMode ? "Switch to Light Mode" : "Switch to Dark Mode";
   // Update dashboard theme toggle
   const themeIcon = document.getElementById("themeIcon");
-  const themeText = document.getElementById("themeText");
-  if(themeIcon && themeText){
-    themeIcon.textContent = isDarkMode ? "☀️" : "🌙";
-    themeText.textContent = isDarkMode ? "Light" : "Dark";
+  if(themeIcon) themeIcon.textContent = isDarkMode ? "☀️" : "🌙";
+  const themeToggleBtn = document.getElementById("themeToggleBtn");
+  if(themeToggleBtn){
+    themeToggleBtn.setAttribute("aria-checked", isDarkMode ? "true" : "false");
+    themeToggleBtn.title = title;
   }
   // Update app page theme toggle
   const appThemeIcon = document.getElementById("appThemeIcon");
-  const appThemeText = document.getElementById("appThemeText");
-  if(appThemeIcon && appThemeText){
-    appThemeIcon.textContent = isDarkMode ? "☀️" : "🌙";
-    appThemeText.textContent = isDarkMode ? "Light" : "Dark";
+  if(appThemeIcon) appThemeIcon.textContent = isDarkMode ? "☀️" : "🌙";
+  const appThemeToggleBtn = document.getElementById("appThemeToggleBtn");
+  if(appThemeToggleBtn){
+    appThemeToggleBtn.setAttribute("aria-checked", isDarkMode ? "true" : "false");
+    appThemeToggleBtn.title = title;
   }
 }
 
@@ -2740,9 +2745,8 @@ async function renderDashboard(){
             </div>
           </div>
           <div class="dashboard-topbar-right">
-            <button class="dashboard-theme-toggle" id="themeToggleBtn" onclick="toggleDarkMode()">
-              <span id="themeIcon">🌙</span>
-              <span id="themeText">Dark</span>
+            <button class="theme-switch" id="themeToggleBtn" role="switch" aria-checked="false" title="Switch to Dark Mode" onclick="toggleDarkMode()">
+              <span class="theme-switch-track"><span class="theme-switch-thumb" id="themeIcon">🌙</span></span>
             </button>
             ${renderUserMenuHtml({light:true})}
           </div>
@@ -2836,6 +2840,7 @@ async function renderDashboard(){
       </div>
     </div>
   `;
+  updateThemeToggleButton();
 
   // Restore sidebar collapsed state
   const sidebarCollapsed = localStorage.getItem("dashboardSidebarCollapsed") === "true";
@@ -2939,7 +2944,6 @@ function renderUserMenuHtml(opts = {}){
       </div>
       <div class="dashboard-user-dropdown" id="userMenuDropdown">
         <div class="dashboard-user-dropdown-item" onclick="setTab('account')">👤 My Account</div>
-        <div class="dashboard-user-dropdown-item" onclick="showModal('Help - Coming soon')">❓ Help</div>
         <div class="dashboard-user-dropdown-item logout" onclick="handleLogout()">🚪 Log Out</div>
       </div>
     </div>
@@ -2984,14 +2988,16 @@ function render(){
         <div class="proj-title" contenteditable="true" spellcheck="false" onblur="onTitleChange(this.textContent)" onkeydown="if(event.key==='Enter'){event.preventDefault(); this.blur();}">${escapeHtml(projectTitle)}</div>`}
       </div>
       <div style="display:flex; align-items:center; gap:14px;">
-        <button class="btn" style="background:transparent;color:#fff;border-color:rgba(255,255,255,.2);" onclick="goToDashboard()">← Dashboard</button>
+        <button class="btn" style="background:transparent;color:#fff;border-color:rgba(255,255,255,.2);" onclick="goToDashboard()">Dashboard</button>
         ${isAccountTab ? "" : `
         <button class="compact-pill ${compactMode?'active':''}" onclick="toggleCompact()" title="Halve the vertical spacing between timeline rows">${compactMode?"☑":"☐"} Compact</button>
         <div class="hist-controls">
           <button class="hist-btn" title="Undo (Ctrl+Z)" onclick="undo()" ${history.length===0?"disabled":""}>↶</button>
           <button class="hist-btn" title="Redo (Ctrl+Shift+Z)" onclick="redo()" ${future.length===0?"disabled":""}>↷</button>
         </div>`}
-        <button class="btn app-theme-toggle" style="background:transparent;color:#fff;border-color:rgba(255,255,255,.2);" onclick="toggleDarkMode()" title="Toggle Dark Mode"><span id="appThemeIcon">🌙</span> <span id="appThemeText">Dark</span></button>
+        <button class="theme-switch" id="appThemeToggleBtn" role="switch" aria-checked="false" title="Switch to Dark Mode" onclick="toggleDarkMode()">
+          <span class="theme-switch-track"><span class="theme-switch-thumb" id="appThemeIcon">🌙</span></span>
+        </button>
         ${renderUserMenuHtml()}
       </div>
     </div>
@@ -3012,6 +3018,7 @@ function render(){
   else if(activeTab==="timeline") renderTimeline();
   else if(activeTab==="versions") renderVersions();
   else if(activeTab==="account") renderAccountSettings();
+  updateThemeToggleButton();
 
   // Attach event listeners for version cards
   setTimeout(() => {
