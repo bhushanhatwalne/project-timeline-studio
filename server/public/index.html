@@ -1281,10 +1281,10 @@ function buildDashboardTableRowHtml(proj){
           <div class="dashboard-progress-bar">
             <div class="dashboard-progress-fill" style="width:${progress}%;background:${STATUS_META[statusKey]?.bar || '#0076BC'};"></div>
           </div>
-          <div class="dashboard-progress-text" style="min-width:40px;text-align:right;font-weight:600;color:#0a2540;">${progress}%</div>
+          <div class="dashboard-progress-text" style="min-width:40px;text-align:right;font-weight:600;">${progress}%</div>
         </div>
       </div>
-      <div style="font-size:12px;color:#5a6472;">${updatedStr}</div>
+      <div style="font-size:12px;color:#8a94a0;">${updatedStr}</div>
       <div class="dashboard-project-menu">
         <div class="dashboard-actions" onclick="event.stopPropagation(); toggleProjectMenu(event, '${escapeAttr(proj.id)}')">⋮</div>
         <div class="dashboard-project-dropdown" id="menu-${proj.id}">
@@ -2004,7 +2004,7 @@ function renderAuthScreen(){
 
           <div id="forgotPasswordLoading" style="display:none;text-align:center;padding:20px;">
             <div style="border:3px solid #e0e0e0;border-top:3px solid #0076BC;border-radius:50%;width:40px;height:40px;animation:spin 1s linear infinite;margin:0 auto;"></div>
-            <p style="margin-top:12px;color:#666;font-size:12px;">Sending reset code...</p>
+            <p style="margin-top:12px;color:var(--ink-soft);font-size:12px;">Sending reset code...</p>
           </div>
 
           <div id="forgotPasswordStep2" style="display:none;">
@@ -2026,7 +2026,7 @@ function renderAuthScreen(){
 
           <div id="forgotPasswordSuccess" style="display:none;">
             <p style="text-align:center;margin:16px 0;color:#0076BC;font-weight:600;font-size:16px;">✓ Password reset successfully!</p>
-            <p style="text-align:center;color:#666;font-size:12px;margin-bottom:16px;">You can now log in with your new password.</p>
+            <p style="text-align:center;color:var(--ink-soft);font-size:12px;margin-bottom:16px;">You can now log in with your new password.</p>
             <div class="modal-actions">
               <button onclick="closeForgotPasswordModal()" style="background:#0076BC;color:white;border:none;padding:8px 16px;border-radius:6px;cursor:pointer;font-weight:600;width:100%;">Back to Login</button>
             </div>
