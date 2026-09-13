@@ -2938,8 +2938,7 @@ function renderUserMenuHtml(opts = {}){
         </div>
       </div>
       <div class="dashboard-user-dropdown" id="userMenuDropdown">
-        <div class="dashboard-user-dropdown-item" onclick="showModal('My Account - Coming soon')">👤 My Account</div>
-        <div class="dashboard-user-dropdown-item" onclick="setTab('account')">⚙️ User Settings</div>
+        <div class="dashboard-user-dropdown-item" onclick="setTab('account')">👤 My Account</div>
         <div class="dashboard-user-dropdown-item" onclick="showModal('Help - Coming soon')">❓ Help</div>
         <div class="dashboard-user-dropdown-item logout" onclick="handleLogout()">🚪 Log Out</div>
       </div>
@@ -3452,28 +3451,6 @@ function renderAccountSettings(){
       </div>
 
       <div style="background:var(--surface); border-radius:8px; padding:20px; margin-bottom:20px; border:1px solid var(--line);">
-        <h3 style="margin-top:0; color:var(--ink);">Import Data from Original App</h3>
-        <p style="color:var(--ink-soft); margin-bottom:15px;">Transfer your saved versions from the standalone HTML file to this app.</p>
-
-        <div style="border:1px solid var(--line); border-radius:6px; padding:15px; background:var(--paper); margin-bottom:15px;">
-          <strong style="color:var(--ink);">Step 1: Export your data</strong>
-          <ol style="color:var(--ink-soft); margin:10px 0;">
-            <li>Open the original file in a new tab: <code style="background:var(--surface); padding:2px 6px; border-radius:3px;">file:///C:/00-Bhushan/Projects/project-timeline-studio/project-timeline-studio.html</code></li>
-            <li>Open browser DevTools (F12), go to Console</li>
-            <li>Paste and run: <code style="background:var(--surface); padding:2px 6px; border-radius:3px; display:inline-block; margin:5px 0;">copy(localStorage.getItem('tlStudio.versions.v1'))</code></li>
-            <li>The data is now copied to clipboard</li>
-          </ol>
-        </div>
-
-        <div style="border:1px solid var(--line); border-radius:6px; padding:15px; background:var(--paper);">
-          <strong style="color:var(--ink);">Step 2: Paste here</strong>
-          <textarea id="importPasteArea" placeholder="Paste the data from Step 1 here..." style="width:100%; height:120px; padding:10px; border:1px solid var(--line); border-radius:4px; font-family:monospace; font-size:12px; margin:10px 0; box-sizing:border-box;"></textarea>
-          <button class="btn primary" onclick="handleManualImport()">Import Versions</button>
-          <div id="importStatus" style="margin-top:10px; color:var(--danger);"></div>
-        </div>
-      </div>
-
-      <div style="background:var(--surface); border-radius:8px; padding:20px; margin-bottom:20px; border:1px solid var(--line);">
         <h3 style="margin-top:0; color:var(--ink);">Current Email</h3>
         <div style="color:var(--ink-soft); margin-bottom:20px;">${escapeHtml(authUser.email)}</div>
         <button class="btn primary" onclick="toggleChangeEmail()">Change Email</button>
@@ -3520,126 +3497,6 @@ function renderAccountSettings(){
       </div>
     </div>
   `;
-}
-
-async function handleManualImport(){
-  const statusDiv = document.getElementById("importStatus");
-  const pasteArea = document.getElementById("importPasteArea");
-  const pasted = pasteArea.value.trim();
-
-  if(!pasted){
-    statusDiv.textContent = "Please paste the data first";
-    statusDiv.style.color = "var(--danger)";
-    return;
-  }
-
-  let versions;
-  try {
-    versions = JSON.parse(pasted);
-  } catch(e){
-    statusDiv.textContent = "Invalid data format. Make sure you copied the correct text.";
-    statusDiv.style.color = "var(--danger)";
-    console.error("Parse error:", e);
-    return;
-  }
-
-  if(!Array.isArray(versions) || versions.length === 0){
-    statusDiv.textContent = "No versions found in pasted data";
-    statusDiv.style.color = "var(--danger)";
-    return;
-  }
-
-  if(confirm(`Import ${versions.length} version${versions.length === 1 ? '' : 's'}? This will create a new project with your timeline data.`)){
-    await importTimelineData(versions);
-    pasteArea.value = "";
-  }
-}
-
-async function importTimelineData(versions){
-  const statusDiv = document.getElementById("importStatus");
-  statusDiv.textContent = "Importing...";
-  statusDiv.style.color = "var(--ink-soft)";
-
-  try {
-    // Get the first version's data as the project title and swimlanes
-    const firstVersion = versions[0];
-    const projectTitle = firstVersion.data?.projectTitle || "Imported Timeline";
-    let initialSwimlanes = firstVersion.data?.swimlanes || [];
-
-    // Ensure all items are visible
-    initialSwimlanes = initialSwimlanes.map(swimlane => ({
-      ...swimlane,
-      visible: true,
-      children: (swimlane.children || []).map(child => ({ ...child, visible: true }))
-    }));
-
-    // Create new project with initial data
-    const createRes = await apiFetch('/api/v1/projects', {
-      method: 'POST',
-      body: JSON.stringify({ title: projectTitle })
-    });
-
-    if(!createRes || !createRes.ok){
-      statusDiv.style.color = "var(--danger)";
-      statusDiv.textContent = "Failed to create project";
-      return;
-    }
-
-    const newProject = await createRes.json();
-    const projectId = newProject.id;
-
-    // Update project with the first version's swimlanes
-    await apiFetch(`/api/v1/projects/${projectId}`, {
-      method: 'PUT',
-      body: JSON.stringify({
-        swimlanes: initialSwimlanes,
-        projectTitle
-      })
-    }).catch(e => console.warn("Failed to set initial project data:", e));
-
-    // Import each version as a saved snapshot
-    let imported = 0;
-    for(const version of versions){
-      try {
-        // Ensure all items are visible in each version too
-        let versionSwimlanes = version.data?.swimlanes || [];
-        versionSwimlanes = versionSwimlanes.map(swimlane => ({
-          ...swimlane,
-          visible: true,
-          children: (swimlane.children || []).map(child => ({ ...child, visible: true }))
-        }));
-
-        const versionRes = await apiFetch(`/api/v1/projects/${projectId}/versions`, {
-          method: 'POST',
-          body: JSON.stringify({
-            name: version.name || "Version " + (imported + 1),
-            group: version.group || "Imported",
-            data: { swimlanes: versionSwimlanes, projectTitle: version.data?.projectTitle || "Untitled" }
-          })
-        });
-
-        if(versionRes && versionRes.ok){
-          imported++;
-        }
-      } catch(err){
-        console.warn("Failed to import one version:", err);
-      }
-    }
-
-    statusDiv.style.color = "var(--st-complete)";
-    statusDiv.textContent = `✓ Imported ${imported} version${imported === 1 ? '' : 's'}! Reloading...`;
-
-    await new Promise(r => setTimeout(r, 1500));
-    currentProjectId = projectId;
-    await loadProjectList();
-    await openProject(projectId);
-    activeTab = "data";
-    render();
-  } catch(err){
-    console.error("Import error:", err);
-    statusDiv.style.color = "var(--danger)";
-    statusDiv.textContent = "Error during import: " + err.message;
-  }
 }
 
 function toggleChangeEmail(){
