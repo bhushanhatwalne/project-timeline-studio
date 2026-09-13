@@ -519,8 +519,10 @@
   .dashboard-sidebar-section{margin-top:12px;padding:12px 0 0;}
   .dashboard-sidebar-label{font-size:10px;font-weight:700;text-transform:uppercase;color:rgba(255,255,255,.45);margin-bottom:10px;padding:0 14px;letter-spacing:.8px;}
   .dashboard-stats{display:grid;grid-template-columns:repeat(5,1fr);gap:18px;margin-bottom:32px;}
-  .dashboard-stat-card{background:#fff;padding:24px;border-radius:12px;border:1px solid #e2e8f0;border-left:4px solid transparent;transition:all 200ms;cursor:default;box-shadow:0 1px 2px rgba(0,0,0,.04);}
+  .dashboard-stat-card{background:#fff;padding:24px;border-radius:12px;border:1px solid #e2e8f0;border-left:4px solid transparent;transition:all 200ms;cursor:pointer;box-shadow:0 1px 2px rgba(0,0,0,.04);}
   html.dark-mode .dashboard-stat-card{background:#161e2e;border-color:#334155;box-shadow:0 1px 2px rgba(0,0,0,.3);}
+  .dashboard-stat-card.active{border-color:#0076BC;box-shadow:0 0 0 2px rgba(0,118,188,.35);}
+  html.dark-mode .dashboard-stat-card.active{border-color:#0099D8;box-shadow:0 0 0 2px rgba(0,153,216,.4);}
   .dashboard-stat-card:hover{border-color:#cbd5e1;box-shadow:0 2px 4px rgba(0,0,0,.06);}
   html.dark-mode .dashboard-stat-card:hover{border-color:#475569;box-shadow:0 2px 4px rgba(0,0,0,.2);}
   .dashboard-stat-card.total-projects{background:linear-gradient(135deg,#E8F4FF 0%,#f0f8ff 100%);border-left-color:#0076BC;}
@@ -667,6 +669,7 @@ let dashboardSortField = 'updated'; // current sort field
 let dashboardSortAsc = false; // sort ascending
 let dashboardCurrentPage = 1; // current page for pagination
 let dashboardSearchQuery = ''; // live search box text, filters myProjects before pagination
+let dashboardStatusFilter = null; // 'on-track'|'at-risk'|'off-track'|'not-started'|null, set by clicking a stat tile
 let selectedProjects = new Set(); // ids of projects selected for bulk export
 const PROJECTS_PER_PAGE = 5; // projects per page
 
@@ -1145,6 +1148,7 @@ async function goToDashboard(){
     projectDataCache = {};
     dashboardCurrentPage = 1;
     dashboardSearchQuery = '';
+    dashboardStatusFilter = null;
     console.log('[DASHBOARD] About to call renderDashboard()');
     await renderDashboard();
     console.log('[DASHBOARD] renderDashboard() completed successfully');
@@ -1272,12 +1276,18 @@ function computeDashboardProjectRow(proj){
   return { updatedStr, progress, status, statusClass, statusLabel, statusKey };
 }
 
-// myProjects filtered by dashboardSearchQuery, evaluated against the SAME computed
-// status/progress used for display, not just the raw title — so "on track" or ">50%" match too.
+// myProjects filtered by dashboardSearchQuery (evaluated against the SAME computed
+// status/progress used for display, not just the raw title — so "on track" or ">50%"
+// match too) and by dashboardStatusFilter (an exact status-key match set by clicking
+// one of the dashboard stat tiles).
 function getFilteredDashboardProjects(){
+  let list = myProjects;
+  if(dashboardStatusFilter){
+    list = list.filter(proj => computeDashboardProjectRow(proj).statusKey === dashboardStatusFilter);
+  }
   const query = dashboardSearchQuery.toLowerCase().trim();
-  if(!query) return myProjects;
-  return myProjects.filter(proj => {
+  if(!query) return list;
+  return list.filter(proj => {
     const row = computeDashboardProjectRow(proj);
     return matchesSearchQuery((proj.title || "").toLowerCase(), (row.status || "").toLowerCase(), row.progress, query);
   });
@@ -1338,8 +1348,30 @@ function buildDashboardPaginationHtml(filteredCount){
 function onDashboardSearch(){
   const searchInput = document.getElementById("dashboardSearchInput");
   dashboardSearchQuery = searchInput?.value || "";
+  dashboardStatusFilter = null; // typing a free-text search clears any tile filter
   dashboardCurrentPage = 1;
+  syncDashboardStatTileActiveState();
   reRenderDashboardTable();
+}
+
+// Clicking a stat tile filters the table below to that exact status; clicking the
+// same tile again (or "Total Projects") clears the filter. Mutually exclusive with
+// the free-text search box so the two filters never silently fight each other.
+function filterDashboardByStatus(statusKey){
+  dashboardStatusFilter = (dashboardStatusFilter === statusKey) ? null : statusKey;
+  dashboardSearchQuery = "";
+  const searchInput = document.getElementById("dashboardSearchInput");
+  if(searchInput) searchInput.value = "";
+  dashboardCurrentPage = 1;
+  syncDashboardStatTileActiveState();
+  reRenderDashboardTable();
+}
+
+function syncDashboardStatTileActiveState(){
+  document.querySelectorAll(".dashboard-stat-card").forEach(card => {
+    const key = card.dataset.statusFilter;
+    card.classList.toggle("active", key ? dashboardStatusFilter === key : !dashboardStatusFilter);
+  });
 }
 
 function sortDashboardProjects(field){
@@ -1396,7 +1428,7 @@ function reRenderDashboardTable(){
     </div>
   ` : filteredProjects.length === 0 ? `
     <div style="padding:40px;text-align:center;color:#8a94a0;">
-      <p>No projects match your search.</p>
+      <p>${dashboardStatusFilter && !dashboardSearchQuery.trim() ? 'No projects match this status.' : 'No projects match your search.'}</p>
     </div>
   ` : paginatedProjects.map(buildDashboardTableRowHtml).join('');
 
@@ -2770,27 +2802,27 @@ async function renderDashboard(){
           <div class="dashboard-section-title">All Projects</div>
 
           <div class="dashboard-stats">
-            <div class="dashboard-stat-card total-projects">
+            <div class="dashboard-stat-card total-projects ${!dashboardStatusFilter ? 'active' : ''}" onclick="filterDashboardByStatus(null)" title="Show all projects">
               <div class="dashboard-stat-label">Total Projects</div>
               <div class="dashboard-stat-value">${totalProjects}</div>
               <div class="dashboard-stat-meta">All time</div>
             </div>
-            <div class="dashboard-stat-card on-track">
+            <div class="dashboard-stat-card on-track ${dashboardStatusFilter==='on-track' ? 'active' : ''}" data-status-filter="on-track" onclick="filterDashboardByStatus('on-track')" title="Filter to On Track projects">
               <div class="dashboard-stat-label">On Track</div>
               <div class="dashboard-stat-value">${onTrackCount}</div>
               <div class="dashboard-stat-meta">${totalProjects > 0 ? Math.round((onTrackCount/totalProjects)*100) : 0}% of projects</div>
             </div>
-            <div class="dashboard-stat-card at-risk">
+            <div class="dashboard-stat-card at-risk ${dashboardStatusFilter==='at-risk' ? 'active' : ''}" data-status-filter="at-risk" onclick="filterDashboardByStatus('at-risk')" title="Filter to At Risk projects">
               <div class="dashboard-stat-label">At Risk</div>
               <div class="dashboard-stat-value">${atRiskCount}</div>
               <div class="dashboard-stat-meta">${totalProjects > 0 ? Math.round((atRiskCount/totalProjects)*100) : 0}% of projects</div>
             </div>
-            <div class="dashboard-stat-card off-track">
+            <div class="dashboard-stat-card off-track ${dashboardStatusFilter==='off-track' ? 'active' : ''}" data-status-filter="off-track" onclick="filterDashboardByStatus('off-track')" title="Filter to Off Track projects">
               <div class="dashboard-stat-label">Off Track</div>
               <div class="dashboard-stat-value">${offTrackCount}</div>
               <div class="dashboard-stat-meta">${totalProjects > 0 ? Math.round((offTrackCount/totalProjects)*100) : 0}% of projects</div>
             </div>
-            <div class="dashboard-stat-card not-started">
+            <div class="dashboard-stat-card not-started ${dashboardStatusFilter==='not-started' ? 'active' : ''}" data-status-filter="not-started" onclick="filterDashboardByStatus('not-started')" title="Filter to Not Started projects">
               <div class="dashboard-stat-label">Not Started</div>
               <div class="dashboard-stat-value">${notStartedCount}</div>
               <div class="dashboard-stat-meta">${totalProjects > 0 ? Math.round((notStartedCount/totalProjects)*100) : 0}% of projects</div>
@@ -2824,7 +2856,7 @@ async function renderDashboard(){
               `;
               if(filteredProjects.length === 0) return `
                 <div style="padding:40px;text-align:center;color:#8a94a0;">
-                  <p>No projects match your search.</p>
+                  <p>${dashboardStatusFilter && !dashboardSearchQuery.trim() ? 'No projects match this status.' : 'No projects match your search.'}</p>
                 </div>
               `;
               return paginatedProjects.map(buildDashboardTableRowHtml).join('');
