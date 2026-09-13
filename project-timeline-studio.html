@@ -2976,23 +2976,26 @@ async function boot(){
 /* ---------------- rendering: shell ---------------- */
 function render(){
   const app = document.getElementById("app");
+  const isAccountTab = activeTab === "account";
   app.innerHTML = `
     <div class="topbar">
       <div class="topbar-left">
         <div class="mark"></div>
-        <div class="proj-title" contenteditable="true" spellcheck="false" onblur="onTitleChange(this.textContent)" onkeydown="if(event.key==='Enter'){event.preventDefault(); this.blur();}">${escapeHtml(projectTitle)}</div>
+        ${isAccountTab ? "" : `<div class="proj-title" contenteditable="true" spellcheck="false" onblur="onTitleChange(this.textContent)" onkeydown="if(event.key==='Enter'){event.preventDefault(); this.blur();}">${escapeHtml(projectTitle)}</div>`}
       </div>
       <div style="display:flex; align-items:center; gap:14px;">
         <button class="btn" style="background:transparent;color:#fff;border-color:rgba(255,255,255,.2);" onclick="goToDashboard()">← My Projects</button>
+        ${isAccountTab ? "" : `
         <button class="compact-pill ${compactMode?'active':''}" onclick="toggleCompact()" title="Halve the vertical spacing between timeline rows">${compactMode?"☑":"☐"} Compact</button>
         <div class="hist-controls">
           <button class="hist-btn" title="Undo (Ctrl+Z)" onclick="undo()" ${history.length===0?"disabled":""}>↶</button>
           <button class="hist-btn" title="Redo (Ctrl+Shift+Z)" onclick="redo()" ${future.length===0?"disabled":""}>↷</button>
-        </div>
+        </div>`}
         <button class="btn app-theme-toggle" style="background:transparent;color:#fff;border-color:rgba(255,255,255,.2);" onclick="toggleDarkMode()" title="Toggle Dark Mode"><span id="appThemeIcon">🌙</span> <span id="appThemeText">Dark</span></button>
         ${renderUserMenuHtml()}
       </div>
     </div>
+    ${isAccountTab ? "" : `
     <div class="tabstrip">
       <div class="tabs">
         <button class="tab-btn ${activeTab==='data'?'active':''}" onclick="setTab('data')">☰ Data</button>
@@ -3000,11 +3003,11 @@ function render(){
         <button class="tab-btn ${activeTab==='versions'?'active':''}" onclick="setTab('versions')">🗂 Versions</button>
       </div>
       <div class="toolbar" id="toolbar"></div>
-    </div>
+    </div>`}
     <div class="view" id="view"></div>
     ${modalMode ? renderModal() : ""}
   `;
-  renderToolbar();
+  if(!isAccountTab) renderToolbar();
   if(activeTab==="data") renderData();
   else if(activeTab==="timeline") renderTimeline();
   else if(activeTab==="versions") renderVersions();
@@ -3067,10 +3070,6 @@ function renderToolbar(){
   const tb = document.getElementById("toolbar");
   if(activeTab==="versions"){
     tb.innerHTML = `<button class="btn primary" onclick="quickSaveSnapshot()">💾 Save Snapshot</button>`;
-    return;
-  }
-  if(activeTab==="account"){
-    tb.innerHTML = "";
     return;
   }
   tb.innerHTML = `<button class="btn" onclick="addBottomRow('task')">+ Task</button>
