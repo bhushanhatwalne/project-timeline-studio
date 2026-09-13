@@ -97,10 +97,22 @@
   .btn:hover{border-color:var(--accent);color:var(--accent);}
   .btn.primary{background:var(--header);color:#fff;border-color:var(--header);}
   .btn.primary:hover{background:var(--header-soft);color:#fff;}
+  .btn:disabled{opacity:.45;cursor:not-allowed;}
+  .btn:disabled:hover{border-color:var(--line-strong);color:var(--ink);}
+
+  /* Compact inline switch used for the Data tab's view/edit toggle */
+  .toggle-switch{border:none;background:transparent;padding:0;margin:0;cursor:pointer;display:inline-flex;align-items:center;gap:8px;font-family:var(--font-body);font-size:12.5px;font-weight:600;color:var(--ink-soft);}
+  .toggle-switch-track{position:relative;width:36px;height:20px;border-radius:999px;background:var(--line-strong);transition:background 200ms ease;flex:0 0 auto;}
+  .toggle-switch.on .toggle-switch-track{background:var(--accent);}
+  .toggle-switch-thumb{position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.3);transition:left 200ms ease;}
+  .toggle-switch.on .toggle-switch-thumb{left:18px;}
 
   /* ===== DATA VIEW ===== */
   .view{flex:1;overflow:auto;}
   .data-wrap{padding:0 12px 40px;}
+  .data-fieldset{border:none;margin:0;padding:0;min-width:0;}
+  .data-fieldset:disabled button{opacity:.4;cursor:not-allowed;}
+  .data-fieldset:disabled .drag-handle{cursor:default;}
   table.data{width:100%;border-collapse:collapse;font-size:13px;table-layout:auto;}
   table.data thead th{text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--ink-soft);font-weight:700;padding:8px 12px;border-bottom:2px solid var(--line-strong);position:sticky;top:0;background:var(--paper);white-space:nowrap;position:relative;min-width:0;}
   table.data thead th:nth-child(1){width:24px;padding:8px 4px;}
@@ -640,6 +652,7 @@
 let uid = 100;
 let projectTitle = "Untitled Project";
 let activeTab = "data"; // data | timeline | versions | account
+let dataEditMode = false; // Data tab opens read-only; the Edit toggle in its toolbar turns this on
 let openMenuKey = null; // "<slId>-<rowId>-<isPhase>" of currently open row menu
 let dragSrc = null; // {slId, rowId, isPhase} of the row currently being dragged
 let compactMode = false; // when true, halves the vertical spacing between timeline rows
@@ -1871,7 +1884,7 @@ async function openProject(projectId){
       }
     }
 
-    activeTab = swimlanes.length > 0 ? "timeline" : "data";
+    enterTab(swimlanes.length > 0 ? "timeline" : "data");
     render();
   } else {
     console.error('[OPEN_PROJECT] Failed to load project:', res?.status);
@@ -3072,19 +3085,33 @@ function render(){
     });
   }, 0);
 }
-function setTab(t){ activeTab=t; render(); }
+// Resets Data to read-only every time it's (re)entered. Editing itself calls
+// render() directly rather than going through this, so an in-progress edit
+// session on Data never gets silently reset back to view-only.
+function enterTab(t){
+  if(t === "data") dataEditMode = false;
+  activeTab = t;
+}
+function setTab(t){ enterTab(t); render(); }
 function toggleCompact(){ compactMode = !compactMode; render(); }
+function toggleDataEditMode(){ dataEditMode = !dataEditMode; render(); }
 function renderToolbar(){
   const tb = document.getElementById("toolbar");
   if(activeTab==="versions"){
     tb.innerHTML = `<button class="btn primary" onclick="quickSaveSnapshot()">💾 Save Snapshot</button>`;
     return;
   }
-  tb.innerHTML = `<button class="btn" onclick="addBottomRow('task')">+ Task</button>
-                  <button class="btn" onclick="addBottomRow('milestone')">+ Milestone</button>
-                  <button class="btn" onclick="addSwimlane()">+ Swimlane</button>
+  const isDataView = activeTab === "data";
+  const locked = isDataView && !dataEditMode;
+  tb.innerHTML = `<button class="btn" ${locked?"disabled":""} onclick="addBottomRow('task')">+ Task</button>
+                  <button class="btn" ${locked?"disabled":""} onclick="addBottomRow('milestone')">+ Milestone</button>
+                  <button class="btn" ${locked?"disabled":""} onclick="addSwimlane()">+ Swimlane</button>
                   <span class="toolbar-sep"></span>
                   <button class="btn" onclick="openSaveModal()">💾 Save version</button>
+                  ${isDataView ? `<button class="toggle-switch ${dataEditMode?'on':''}" role="switch" aria-checked="${dataEditMode}" title="${dataEditMode ? 'Editing enabled — click to lock' : 'View only — click to enable editing'}" onclick="toggleDataEditMode()">
+                    <span class="toggle-switch-track"><span class="toggle-switch-thumb"></span></span>
+                    <span>Edit</span>
+                  </button>` : ""}
                   <button class="btn" id="exportBtn" onclick="openExportModal()">⬇ Export</button>`;
 }
 function escapeAttr(s){ return String(s).replace(/"/g,"&quot;"); }
@@ -3188,7 +3215,7 @@ function renderVersions(){
 async function setCurrentProjectAndTab(projectId, tab){
   currentProjectId = projectId;
   await openProject(projectId);
-  activeTab = tab;
+  enterTab(tab);
   render();
 }
 function versionCardHtml(v){
@@ -3385,7 +3412,7 @@ async function loadVersionDirect(id){
     swimlanes = data.swimlanes;
     projectTitle = data.projectTitle;
     versionMenuKey = null;
-    activeTab = "data";
+    enterTab("data");
     render();
   } else {
     showModal("Failed to load snapshot");
@@ -3879,6 +3906,7 @@ function renderData(){
 
   view.innerHTML = `
     <div class="data-wrap ${compactMode ? 'compact' : ''}">
+      <fieldset class="data-fieldset" ${dataEditMode ? '' : 'disabled'}>
       <table class="data">
         <thead>
           <tr>
@@ -3898,6 +3926,7 @@ function renderData(){
         </thead>
         <tbody>${rowsHtml}</tbody>
       </table>
+      </fieldset>
     </div>
   `;
 
@@ -4032,7 +4061,7 @@ function dragHandleSvg(){
   return `<svg width="10" height="16" viewBox="0 0 10 16"><circle cx="2.5" cy="2.5" r="1.4" fill="currentColor"/><circle cx="7.5" cy="2.5" r="1.4" fill="currentColor"/><circle cx="2.5" cy="8" r="1.4" fill="currentColor"/><circle cx="7.5" cy="8" r="1.4" fill="currentColor"/><circle cx="2.5" cy="13.5" r="1.4" fill="currentColor"/><circle cx="7.5" cy="13.5" r="1.4" fill="currentColor"/></svg>`;
 }
 function dragCell(slId, rowId, isPhase){
-  return `<td class="drag-cell" draggable="true"
+  return `<td class="drag-cell" draggable="${dataEditMode}"
       ondragstart="onRowDragStart(event, ${slId}, ${rowId}, ${isPhase})"
       ondragend="onRowDragEnd(event)">
       <span class="drag-handle">${dragHandleSvg()}</span>
