@@ -43,6 +43,17 @@ function endOfLocalDay(dateStr) {
   return new Date(y, m - 1, d, 23, 59, 59, 999);
 }
 
+// Same reasoning as endOfLocalDay, but for the START of that LOCAL calendar day —
+// `new Date(dateStr)` parses as UTC midnight, which in any timezone behind UTC can
+// already be in the past by the time it's evening locally, marking a task that
+// starts "tomorrow" as already started.
+function startOfLocalDay(dateStr) {
+  const parts = typeof dateStr === 'string' ? dateStr.split('-').map(Number) : null;
+  if (!parts || parts.length !== 3 || parts.some((n) => isNaN(n))) return null;
+  const [y, m, d] = parts;
+  return new Date(y, m - 1, d, 0, 0, 0, 0);
+}
+
 function calculateTaskStatus(task) {
   try {
     const actual = task.percent || 0;
@@ -55,8 +66,8 @@ function calculateTaskStatus(task) {
     if (task.status === 'on-hold') return 'On Hold';
 
     if (actual === 0) {
-      const startDate = new Date(task.start);
-      if (!isNaN(startDate.getTime()) && startDate > new Date()) return 'Not Started';
+      const startOfDay = startOfLocalDay(task.start);
+      if (startOfDay && new Date() < startOfDay) return 'Not Started';
     }
 
     // Milestones are a single-point event, not a span — don't call one off track just because
@@ -83,7 +94,6 @@ function calculateProjectStatus(swimlanes) {
   let hasOffTrackTask = false;
   let hasAtRiskTask = false;
   let hasIncompleteTask = false;
-  const today = new Date();
   const scheduledTasks = []; // flattened task children (phases excluded) for the On Hold rule below
 
   swimlanes.forEach((swimlane) => {
@@ -94,7 +104,8 @@ function calculateProjectStatus(swimlanes) {
       if (taskStatus !== 'Complete' && taskStatus !== 'Not Started') hasIncompleteTask = true;
 
       const percent = child.percent || 0;
-      if (percent > 0 || new Date(child.start) <= today) hasStartedTask = true;
+      const startOfDay = startOfLocalDay(child.start);
+      if (percent > 0 || (startOfDay && new Date() >= startOfDay)) hasStartedTask = true;
 
       scheduledTasks.push({ start: new Date(child.start), status: taskStatus });
     });
