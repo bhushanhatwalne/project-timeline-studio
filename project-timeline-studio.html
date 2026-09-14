@@ -1309,7 +1309,7 @@ function getFilteredDashboardProjects(){
 }
 
 function buildDashboardTableRowHtml(proj){
-  const { updatedStr, progress, statusClass, statusLabel, statusKey } = computeDashboardProjectRow(proj);
+  const { updatedStr, progress, statusClass, statusLabel } = computeDashboardProjectRow(proj);
   return `
     <div class="dashboard-table-row" onclick="openProject('${escapeAttr(proj.id)}')">
       <div onclick="event.stopPropagation();"><input type="checkbox" ${selectedProjects.has(proj.id) ? 'checked' : ''} onclick="toggleProjectSelect('${escapeAttr(proj.id)}')"></div>
@@ -1320,7 +1320,7 @@ function buildDashboardTableRowHtml(proj){
       <div>
         <div class="dashboard-progress">
           <div class="dashboard-progress-bar">
-            <div class="dashboard-progress-fill" style="width:${progress}%;background:${STATUS_META[statusKey]?.bar || '#0076BC'};"></div>
+            <div class="dashboard-progress-fill" style="width:${progress}%;"></div>
           </div>
           <div class="dashboard-progress-text" style="min-width:40px;text-align:right;font-weight:600;">${progress}%</div>
         </div>
