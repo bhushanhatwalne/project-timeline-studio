@@ -526,6 +526,8 @@
   html.dark-mode .dashboard-stat-card{background:#161e2e;border-color:#334155;box-shadow:0 1px 2px rgba(0,0,0,.3);}
   .dashboard-stat-card.active{border-color:#0076BC;box-shadow:0 0 0 2px rgba(0,118,188,.35);}
   html.dark-mode .dashboard-stat-card.active{border-color:#0099D8;box-shadow:0 0 0 2px rgba(0,153,216,.4);}
+  .dashboard-stat-card:focus-visible{outline:none;box-shadow:0 0 0 2px #fff,0 0 0 4px #0076BC;}
+  html.dark-mode .dashboard-stat-card:focus-visible{box-shadow:0 0 0 2px #161e2e,0 0 0 4px #0099D8;}
   .dashboard-stat-card:hover{border-color:#cbd5e1;box-shadow:0 2px 4px rgba(0,0,0,.06);}
   html.dark-mode .dashboard-stat-card:hover{border-color:#475569;box-shadow:0 2px 4px rgba(0,0,0,.2);}
   .dashboard-stat-card.total-projects{background:linear-gradient(135deg,#E8F4FF 0%,#f0f8ff 100%);border-left-color:#0076BC;}
@@ -1363,29 +1365,45 @@ function buildDashboardPaginationHtml(filteredCount){
 function onDashboardSearch(){
   const searchInput = document.getElementById("dashboardSearchInput");
   dashboardSearchQuery = searchInput?.value || "";
-  dashboardStatusFilter = null; // typing a free-text search clears any tile filter
   dashboardCurrentPage = 1;
-  syncDashboardStatTileActiveState();
+  syncDashboardFilterUI();
   reRenderDashboardTable();
 }
 
 // Clicking a stat tile filters the table below to that exact status; clicking the
-// same tile again (or "Total Projects") clears the filter. Mutually exclusive with
-// the free-text search box so the two filters never silently fight each other.
+// same tile again (or "Total Projects") clears the filter. Combines with any active
+// free-text search (AND logic) rather than clearing it - both narrow the table
+// together, and getFilteredDashboardProjects() already applies both.
 function filterDashboardByStatus(statusKey){
   dashboardStatusFilter = (dashboardStatusFilter === statusKey) ? null : statusKey;
-  dashboardSearchQuery = "";
-  const searchInput = document.getElementById("dashboardSearchInput");
-  if(searchInput) searchInput.value = "";
   dashboardCurrentPage = 1;
-  syncDashboardStatTileActiveState();
+  syncDashboardFilterUI();
   reRenderDashboardTable();
 }
 
-function syncDashboardStatTileActiveState(){
+const DASHBOARD_STATUS_FILTER_LABELS = {
+  'on-track': 'On Track Projects',
+  'at-risk': 'At Risk Projects',
+  'off-track': 'Off Track Projects',
+  'not-started': 'Not Started Projects',
+  'on-hold': 'On Hold Projects'
+};
+function dashboardSectionTitle(){
+  const label = dashboardStatusFilter ? (DASHBOARD_STATUS_FILTER_LABELS[dashboardStatusFilter] || 'All Projects') : 'All Projects';
+  return `${label} (${getFilteredDashboardProjects().length})`;
+}
+
+// Keeps the stat tiles' active/pressed state in sync with dashboardStatusFilter,
+// since reRenderDashboardTable() only touches the table below and doesn't re-render
+// the tiles. The section heading's count is refreshed inside reRenderDashboardTable()
+// itself, so it stays correct after bulk actions (delete/duplicate/etc.) too, not
+// just when a filter changes.
+function syncDashboardFilterUI(){
   document.querySelectorAll(".dashboard-stat-card").forEach(card => {
     const key = card.dataset.statusFilter;
-    card.classList.toggle("active", key ? dashboardStatusFilter === key : !dashboardStatusFilter);
+    const isActive = key ? dashboardStatusFilter === key : !dashboardStatusFilter;
+    card.classList.toggle("active", isActive);
+    card.setAttribute("aria-pressed", String(isActive));
   });
 }
 
@@ -1429,6 +1447,9 @@ function sortDashboardProjects(field){
 function reRenderDashboardTable(){
   const tableBody = document.querySelector(".dashboard-table");
   if(!tableBody) return;
+
+  const titleEl = document.getElementById("dashboardSectionTitle");
+  if(titleEl) titleEl.textContent = dashboardSectionTitle();
 
   const filteredProjects = getFilteredDashboardProjects();
   const totalPages = Math.max(1, Math.ceil(filteredProjects.length / PROJECTS_PER_PAGE));
@@ -2850,35 +2871,35 @@ async function renderDashboard(){
         </div>
 
         <div class="dashboard-content">
-          <div class="dashboard-section-title">All Projects</div>
+          <div class="dashboard-section-title" id="dashboardSectionTitle">${dashboardSectionTitle()}</div>
 
           <div class="dashboard-stats">
-            <div class="dashboard-stat-card total-projects ${!dashboardStatusFilter ? 'active' : ''}" onclick="filterDashboardByStatus(null)" title="Show all projects">
+            <div class="dashboard-stat-card total-projects ${!dashboardStatusFilter ? 'active' : ''}" role="button" tabindex="0" aria-pressed="${!dashboardStatusFilter}" onclick="filterDashboardByStatus(null)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();filterDashboardByStatus(null);}" title="Show all projects">
               <div class="dashboard-stat-label">Total Projects</div>
               <div class="dashboard-stat-value">${totalProjects}</div>
               <div class="dashboard-stat-meta">All time</div>
             </div>
-            <div class="dashboard-stat-card on-track ${dashboardStatusFilter==='on-track' ? 'active' : ''}" data-status-filter="on-track" onclick="filterDashboardByStatus('on-track')" title="Filter to On Track projects">
+            <div class="dashboard-stat-card on-track ${dashboardStatusFilter==='on-track' ? 'active' : ''}" data-status-filter="on-track" role="button" tabindex="0" aria-pressed="${dashboardStatusFilter==='on-track'}" onclick="filterDashboardByStatus('on-track')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();filterDashboardByStatus('on-track');}" title="Filter to On Track projects">
               <div class="dashboard-stat-label">On Track</div>
               <div class="dashboard-stat-value">${onTrackCount}</div>
               <div class="dashboard-stat-meta">${totalProjects > 0 ? Math.round((onTrackCount/totalProjects)*100) : 0}% of projects</div>
             </div>
-            <div class="dashboard-stat-card at-risk ${dashboardStatusFilter==='at-risk' ? 'active' : ''}" data-status-filter="at-risk" onclick="filterDashboardByStatus('at-risk')" title="Filter to At Risk projects">
+            <div class="dashboard-stat-card at-risk ${dashboardStatusFilter==='at-risk' ? 'active' : ''}" data-status-filter="at-risk" role="button" tabindex="0" aria-pressed="${dashboardStatusFilter==='at-risk'}" onclick="filterDashboardByStatus('at-risk')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();filterDashboardByStatus('at-risk');}" title="Filter to At Risk projects">
               <div class="dashboard-stat-label">At Risk</div>
               <div class="dashboard-stat-value">${atRiskCount}</div>
               <div class="dashboard-stat-meta">${totalProjects > 0 ? Math.round((atRiskCount/totalProjects)*100) : 0}% of projects</div>
             </div>
-            <div class="dashboard-stat-card off-track ${dashboardStatusFilter==='off-track' ? 'active' : ''}" data-status-filter="off-track" onclick="filterDashboardByStatus('off-track')" title="Filter to Off Track projects">
+            <div class="dashboard-stat-card off-track ${dashboardStatusFilter==='off-track' ? 'active' : ''}" data-status-filter="off-track" role="button" tabindex="0" aria-pressed="${dashboardStatusFilter==='off-track'}" onclick="filterDashboardByStatus('off-track')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();filterDashboardByStatus('off-track');}" title="Filter to Off Track projects">
               <div class="dashboard-stat-label">Off Track</div>
               <div class="dashboard-stat-value">${offTrackCount}</div>
               <div class="dashboard-stat-meta">${totalProjects > 0 ? Math.round((offTrackCount/totalProjects)*100) : 0}% of projects</div>
             </div>
-            <div class="dashboard-stat-card not-started ${dashboardStatusFilter==='not-started' ? 'active' : ''}" data-status-filter="not-started" onclick="filterDashboardByStatus('not-started')" title="Filter to Not Started projects">
+            <div class="dashboard-stat-card not-started ${dashboardStatusFilter==='not-started' ? 'active' : ''}" data-status-filter="not-started" role="button" tabindex="0" aria-pressed="${dashboardStatusFilter==='not-started'}" onclick="filterDashboardByStatus('not-started')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();filterDashboardByStatus('not-started');}" title="Filter to Not Started projects">
               <div class="dashboard-stat-label">Not Started</div>
               <div class="dashboard-stat-value">${notStartedCount}</div>
               <div class="dashboard-stat-meta">${totalProjects > 0 ? Math.round((notStartedCount/totalProjects)*100) : 0}% of projects</div>
             </div>
-            <div class="dashboard-stat-card on-hold ${dashboardStatusFilter==='on-hold' ? 'active' : ''}" data-status-filter="on-hold" onclick="filterDashboardByStatus('on-hold')" title="Filter to On Hold projects">
+            <div class="dashboard-stat-card on-hold ${dashboardStatusFilter==='on-hold' ? 'active' : ''}" data-status-filter="on-hold" role="button" tabindex="0" aria-pressed="${dashboardStatusFilter==='on-hold'}" onclick="filterDashboardByStatus('on-hold')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();filterDashboardByStatus('on-hold');}" title="Filter to On Hold projects">
               <div class="dashboard-stat-label">On Hold</div>
               <div class="dashboard-stat-value">${onHoldCount}</div>
               <div class="dashboard-stat-meta">${totalProjects > 0 ? Math.round((onHoldCount/totalProjects)*100) : 0}% of projects</div>
