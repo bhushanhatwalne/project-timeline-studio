@@ -568,10 +568,12 @@
   html.dark-mode .dashboard-table-head div{color:#94a3b8;}
   .dashboard-table-head div:last-child{text-align:right;}
   .dashboard-table-head div:hover{color:#0076BC;}
-  .dashboard-table-row{display:grid;grid-template-columns:0.3fr 2fr 1fr 1.5fr 1.5fr 0.5fr;gap:0;border-bottom:1px solid #e2e8f0;transition:background 200ms;align-items:center;}
+  .dashboard-table-row{display:grid;grid-template-columns:0.3fr 2fr 1fr 1.5fr 1.5fr 0.5fr;gap:0;border-bottom:1px solid #e2e8f0;transition:background 200ms;align-items:center;cursor:pointer;}
   html.dark-mode .dashboard-table-row{border-bottom-color:#334155;}
   .dashboard-table-row:hover{background:#f8fafc;}
   html.dark-mode .dashboard-table-row:hover{background:#1f2937;}
+  .dashboard-table-row:focus-visible{outline:none;background:#f8fafc;box-shadow:inset 0 0 0 2px #0076BC;}
+  html.dark-mode .dashboard-table-row:focus-visible{background:#1f2937;box-shadow:inset 0 0 0 2px #0099D8;}
   .dashboard-table-row:last-child{border-bottom:none;}
   .dashboard-table-row > div{padding:16px 24px;display:flex;align-items:center;transition:color 300ms ease;}
   html.dark-mode .dashboard-table-row > div{color:#e2e8f0;}
@@ -579,6 +581,8 @@
   .dashboard-project-name{font-weight:600;color:#0a2540;font-size:13px;cursor:pointer;transition:color 200ms;}
   html.dark-mode .dashboard-project-name{color:#e2e8f0;}
   .dashboard-project-name:hover{color:#0076BC;}
+  .dashboard-project-arrow{display:inline-block;margin-left:6px;color:#0076BC;opacity:0;transform:translateX(-4px);transition:opacity 150ms ease,transform 150ms ease;}
+  .dashboard-table-row:hover .dashboard-project-arrow,.dashboard-table-row:focus-visible .dashboard-project-arrow{opacity:1;transform:translateX(0);}
   .dashboard-project-desc{font-size:11px;color:#8a94a0;margin-top:2px;}
   .dashboard-status{display:inline-flex;align-items:center;padding:6px 12px;border-radius:20px;font-size:11px;font-weight:600;width:fit-content;gap:0;}
   .dashboard-status.on-track{background:#D4E4F7;color:#0055a8;border:1px solid #a3c8f2;}
@@ -1313,10 +1317,10 @@ function getFilteredDashboardProjects(){
 function buildDashboardTableRowHtml(proj){
   const { updatedStr, progress, statusClass, statusLabel } = computeDashboardProjectRow(proj);
   return `
-    <div class="dashboard-table-row" onclick="openProject('${escapeAttr(proj.id)}')">
+    <div class="dashboard-table-row" role="button" tabindex="0" aria-label="Open ${escapeAttr(proj.title)} project" onclick="openProject('${escapeAttr(proj.id)}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openProject('${escapeAttr(proj.id)}');}">
       <div onclick="event.stopPropagation();"><input type="checkbox" ${selectedProjects.has(proj.id) ? 'checked' : ''} onclick="toggleProjectSelect('${escapeAttr(proj.id)}')"></div>
       <div>
-        <div class="dashboard-project-name">${escapeHtml(proj.title)}</div>
+        <div class="dashboard-project-name">${escapeHtml(proj.title)}<span class="dashboard-project-arrow">→</span></div>
       </div>
       <div><span class="dashboard-status ${statusClass}">${statusLabel}</span></div>
       <div>
@@ -1334,6 +1338,7 @@ function buildDashboardTableRowHtml(proj){
           <div class="dashboard-project-dropdown-item" onclick="openEditProjectModal(event, '${escapeAttr(proj.id)}', '${escapeAttr(proj.title)}')">✏️ Rename</div>
           <div class="dashboard-project-dropdown-item" onclick="event.stopPropagation(); duplicateProject('${escapeAttr(proj.id)}', '${escapeAttr(proj.title)}')">📋 Duplicate</div>
           <div class="dashboard-project-dropdown-item" onclick="event.stopPropagation(); exportProjects(['${escapeAttr(proj.id)}'], '${escapeAttr(proj.title)}')">⬇️ Export</div>
+          <div class="dashboard-project-dropdown-item" onclick="event.stopPropagation(); showModal('Archive - Coming soon')">🗄️ Archive</div>
           <div class="dashboard-project-dropdown-item" onclick="event.stopPropagation(); deleteProject('${escapeAttr(proj.id)}', '${escapeAttr(proj.title)}')" style="color:#d32f2f;">🗑️ Delete</div>
         </div>
       </div>
