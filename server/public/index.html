@@ -158,6 +158,7 @@
   input.pct-in:focus{outline:none;border-color:var(--accent);background:rgba(0,118,188,.05);}
   input.assign-in{border:1px solid var(--line);background:var(--surface);font-size:12px;font-weight:600;border-radius:4px;padding:6px 8px;font-family:var(--font-body);width:100%;color:var(--ink);box-sizing:border-box;overflow:hidden;text-overflow:ellipsis;}
   input.assign-in:focus{outline:none;border-color:var(--accent);background:rgba(0,118,188,.05);}
+  .type-display,.date-display,.assign-display{display:inline-block;font-size:12px;font-weight:600;color:var(--ink);font-family:var(--font-body);padding:6px 8px;}
   select.status-sel{border:none;font-size:12px;font-weight:600;border-radius:20px;padding:5px 12px;font-family:var(--font-body);color:#fff;cursor:pointer;width:100%;box-sizing:border-box;text-align:center;overflow:hidden;text-overflow:ellipsis;}
   .eye-btn,.icon-btn{border:none;background:transparent;cursor:pointer;color:var(--ink-faint);font-size:14px;padding:4px;border-radius:4px;}
   .eye-btn:hover,.icon-btn:hover{color:var(--ink);background:var(--paper);}
@@ -220,8 +221,8 @@
   .tl-milestone-mark .today-arrow{font-size:13px;color:var(--danger);line-height:1;}
   .tl-rows{margin-top:2px;position:relative;z-index:1;}
   .tl-card.compact .tl-rows{margin-top:0;}
-  .tl-row{display:flex;align-items:center;height:40px;position:relative;}
-  .tl-card.compact .tl-row{height:20px;}
+  .tl-row{display:flex;align-items:center;min-height:40px;position:relative;}
+  .tl-card.compact .tl-row{min-height:20px;}
   .tl-card.compact .tl-row-label{font-size:12.5px;}
   .tl-card.compact .tl-row-label.phase-lbl{font-size:14px;}
   .tl-card.compact .tl-bar-caption{font-size:11px;}
@@ -229,9 +230,9 @@
   .tl-card.compact .tl-month-cell{font-size:12.5px;}
   .tl-card.compact .tl-milestone-mark .lbl{font-size:12px;}
   .tl-card.compact .tl-milestone-mark .dt{font-size:11px;}
-  .tl-row-label{flex:0 0 auto;font-size:13px;font-weight:600;color:var(--ink);font-family:var(--font-body);display:flex;align-items:center;overflow:hidden;}
+  .tl-row-label{flex:0 0 auto;font-size:13px;font-weight:600;color:var(--ink);font-family:var(--font-body);display:flex;align-items:center;}
   .tl-row-label.phase-lbl{font-family:var(--font-body);font-size:15px;font-weight:700;color:var(--ink);}
-  .tl-row-label .lbl-text{white-space:nowrap;flex:0 0 auto;padding-right:8px;}
+  .tl-row-label .lbl-text{white-space:normal;overflow-wrap:break-word;flex:0 1 auto;min-width:0;padding-right:8px;line-height:1.25;}
   .tl-row-label .lbl-fill{flex:1 1 auto;min-width:6px;height:0;border-top:1px dashed var(--line-strong);margin-right:6px;align-self:center;}
   .tl-row-track{flex:1;position:relative;height:100%;margin-right:var(--tl-gutter);}
   .tl-row-connector{position:absolute;left:0;top:50%;height:0;border-top:1px dashed var(--line-strong);}
@@ -4084,10 +4085,13 @@ function onStatusChange(slId, rowId, isPhase, val){
   if(row){ pushHistory(); row.status = val; saveFlash(); render(); }
 }
 
+const TYPE_OPTS = [["phase","Phase"],["task","Task"],["milestone","Milestone"],["major","Major Milestone"]];
+function typeLabel(type){
+  return (TYPE_OPTS.find(([v]) => v === type) || [null, type])[1];
+}
 function typeSelect(row, slId, rowId, isPhase){
-  const opts = [["phase","Phase"],["task","Task"],["milestone","Milestone"],["major","Major Milestone"]];
   return `<select class="type-sel" onchange="onTypeChange(${slId}, ${rowId}, ${isPhase}, this.value)">
-    ${opts.map(([v,l])=>`<option value="${v}" ${row.type===v?"selected":""}>${l}</option>`).join("")}
+    ${TYPE_OPTS.map(([v,l])=>`<option value="${v}" ${row.type===v?"selected":""}>${l}</option>`).join("")}
   </select>`;
 }
 function statusSelect(row, slId, rowId, isPhase){
@@ -4247,40 +4251,38 @@ function swimlaneHeaderRow(sl, p){
   }
 
   return `<tr class="swimlane-header ${p.visible? "":"hidden-row"}"
-      ondragover="onRowDragOver(event, ${slId}, ${rowId}, true)"
-      ondrop="onRowDrop(event, ${slId}, ${rowId}, true)">
-    ${dragCell(slId, rowId, true)}
-    <td><button class="eye-btn" onclick="toggleVisible(findRow(${slId}, ${rowId}, true))" title="Show/hide in timeline">${p.visible?"👁":"🚫"}</button></td>
+      ${dataEditMode ? `ondragover="onRowDragOver(event, ${slId}, ${rowId}, true)" ondrop="onRowDrop(event, ${slId}, ${rowId}, true)"` : ""}>
+    ${dataEditMode ? dragCell(slId, rowId, true) : `<td class="drag-cell"></td>`}
+    <td>${dataEditMode ? `<button class="eye-btn" onclick="toggleVisible(findRow(${slId}, ${rowId}, true))" title="Show/hide in timeline">${p.visible?"👁":"🚫"}</button>` : ""}</td>
     <td class="title-cell"><input class="title-in" value="${escapeAttr(p.title)}" onchange="onFieldChange(${slId}, ${rowId}, true, 'title', this.value)" />${noteHtml(p)}</td>
-    <td class="type-pick">${typeIconSvg(p.type, typeColor(p.type))}${typeSelect(p, slId, rowId, true)}</td>
+    <td class="type-pick">${typeIconSvg(p.type, typeColor(p.type))}${dataEditMode ? typeSelect(p, slId, rowId, true) : `<span class="type-display">${typeLabel(p.type)}</span>`}</td>
     <td class="dur">${durationLabel(p.start,p.end)}</td>
-    <td><input type="date" class="date-in" value="${p.start}" onchange="onFieldChange(${slId}, ${rowId}, true, 'start', this.value)" /></td>
-    <td><input type="date" class="date-in" value="${p.end}" onchange="onFieldChange(${slId}, ${rowId}, true, 'end', this.value)" /></td>
+    <td>${dataEditMode ? `<input type="date" class="date-in" value="${p.start}" onchange="onFieldChange(${slId}, ${rowId}, true, 'start', this.value)" />` : `<span class="date-display">${fmtD(parseD(p.start))}</span>`}</td>
+    <td>${dataEditMode ? `<input type="date" class="date-in" value="${p.end}" onchange="onFieldChange(${slId}, ${rowId}, true, 'end', this.value)" />` : `<span class="date-display">${fmtD(parseD(p.end))}</span>`}</td>
     <td><span class="pct-display" style="font-weight:600; color:var(--ink);">${childPercent}%</span></td>
-    <td><input class="assign-in" value="${escapeAttr(p.assignedTo)}" onchange="onFieldChange(${slId}, ${rowId}, true, 'assignedTo', this.value)" /></td>
+    <td>${dataEditMode ? `<input class="assign-in" value="${escapeAttr(p.assignedTo)}" onchange="onFieldChange(${slId}, ${rowId}, true, 'assignedTo', this.value)" />` : `<span class="assign-display">${escapeHtml(p.assignedTo)}</span>`}</td>
     <td><span class="status-display" style="font-weight:600; color:var(--ink);">${calculatedStatus}</span></td>
-    <td><button class="icon-btn del" onclick="deleteRow(${slId}, ${rowId}, true)" title="Delete swimlane">🗑</button></td>
-    ${menuCell(slId, rowId, true, p)}
+    <td>${dataEditMode ? `<button class="icon-btn del" onclick="deleteRow(${slId}, ${rowId}, true)" title="Delete swimlane">🗑</button>` : ""}</td>
+    ${dataEditMode ? menuCell(slId, rowId, true, p) : `<td class="menu-cell"></td>`}
   </tr>`;
 }
 
 function childRow(sl, c){
   const slId = sl.id, rowId = c.id;
   return `<tr class="child-row ${c.visible? "":"hidden-row"}"
-      ondragover="onRowDragOver(event, ${slId}, ${rowId}, false)"
-      ondrop="onRowDrop(event, ${slId}, ${rowId}, false)">
-    ${dragCell(slId, rowId, false)}
-    <td><button class="eye-btn" onclick="toggleVisible(findRow(${slId}, ${rowId}, false))" title="Show/hide in timeline">${c.visible?"👁":"🚫"}</button></td>
+      ${dataEditMode ? `ondragover="onRowDragOver(event, ${slId}, ${rowId}, false)" ondrop="onRowDrop(event, ${slId}, ${rowId}, false)"` : ""}>
+    ${dataEditMode ? dragCell(slId, rowId, false) : `<td class="drag-cell"></td>`}
+    <td>${dataEditMode ? `<button class="eye-btn" onclick="toggleVisible(findRow(${slId}, ${rowId}, false))" title="Show/hide in timeline">${c.visible?"👁":"🚫"}</button>` : ""}</td>
     <td class="title-cell"><input class="title-in" value="${escapeAttr(c.title)}" onchange="onFieldChange(${slId}, ${rowId}, false, 'title', this.value)" />${noteHtml(c)}</td>
-    <td class="type-pick">${typeIconSvg(c.type, typeColor(c.type))}${typeSelect(c, slId, rowId, false)}</td>
+    <td class="type-pick">${typeIconSvg(c.type, typeColor(c.type))}${dataEditMode ? typeSelect(c, slId, rowId, false) : `<span class="type-display">${typeLabel(c.type)}</span>`}</td>
     <td class="dur">${durationLabel(c.start,c.end)}</td>
-    <td><input type="date" class="date-in" value="${c.start}" onchange="onFieldChange(${slId}, ${rowId}, false, 'start', this.value)" /></td>
-    <td><input type="date" class="date-in" value="${c.end}" onchange="onFieldChange(${slId}, ${rowId}, false, 'end', this.value)" /></td>
-    <td><input type="number" class="pct-in" min="0" max="100" value="${c.percent}" onchange="onFieldChange(${slId}, ${rowId}, false, 'percent', parseInt(this.value)||0)" /></td>
-    <td><input class="assign-in" value="${escapeAttr(c.assignedTo)}" onchange="onFieldChange(${slId}, ${rowId}, false, 'assignedTo', this.value)" /></td>
+    <td>${dataEditMode ? `<input type="date" class="date-in" value="${c.start}" onchange="onFieldChange(${slId}, ${rowId}, false, 'start', this.value)" />` : `<span class="date-display">${fmtD(parseD(c.start))}</span>`}</td>
+    <td>${dataEditMode ? `<input type="date" class="date-in" value="${c.end}" onchange="onFieldChange(${slId}, ${rowId}, false, 'end', this.value)" />` : `<span class="date-display">${fmtD(parseD(c.end))}</span>`}</td>
+    <td>${dataEditMode ? `<input type="number" class="pct-in" min="0" max="100" value="${c.percent}" onchange="onFieldChange(${slId}, ${rowId}, false, 'percent', parseInt(this.value)||0)" />` : `<span class="pct-display">${c.percent}%</span>`}</td>
+    <td>${dataEditMode ? `<input class="assign-in" value="${escapeAttr(c.assignedTo)}" onchange="onFieldChange(${slId}, ${rowId}, false, 'assignedTo', this.value)" />` : `<span class="assign-display">${escapeHtml(c.assignedTo)}</span>`}</td>
     <td>${statusSelect(c, slId, rowId, false)}</td>
-    <td><button class="icon-btn del" onclick="deleteRow(${slId}, ${rowId}, false)" title="Delete row">🗑</button></td>
-    ${menuCell(slId, rowId, false, c)}
+    <td>${dataEditMode ? `<button class="icon-btn del" onclick="deleteRow(${slId}, ${rowId}, false)" title="Delete row">🗑</button>` : ""}</td>
+    ${dataEditMode ? menuCell(slId, rowId, false, c) : `<td class="menu-cell"></td>`}
   </tr>`;
 }
 
@@ -4358,7 +4360,7 @@ function renderTimeline(){
   const barRowsForWidth = rows.filter(r=> r.row.type==="phase" || r.row.type==="task");
   const rowFontPx = compactMode ? 11.5 : 13;
   const phaseFontPx = compactMode ? 13 : 15;
-  const FONT_STACK = `-apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif`;
+  const FONT_STACK = `"Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif`;
   function measureLabelWidth(text, bold, sizePx){
     const canvas = measureLabelWidth._c || (measureLabelWidth._c = document.createElement("canvas"));
     const ctx = canvas.getContext("2d");
