@@ -557,9 +557,6 @@
   html.dark-mode .dashboard-filter{background:#1a2332;border-color:#475569;color:#cbd5e1;}
   .dashboard-filter:hover{border-color:#0076BC;color:#0076BC;background:#f8fafc;}
   html.dark-mode .dashboard-filter:hover{background:#1f2937;}
-  .dashboard-filter.active{border-color:#0076BC;color:#0076BC;background:#eef6fd;}
-  html.dark-mode .dashboard-filter.active{background:#1f2937;border-color:#0099D8;color:#0099D8;}
-  .dashboard-filters-badge{display:inline-flex;align-items:center;justify-content:center;min-width:16px;height:16px;padding:0 4px;border-radius:8px;background:#0076BC;color:#fff;font-size:10px;font-weight:700;margin-left:2px;}
   .dashboard-filters-panel{position:fixed;display:none;background:#fff;border:1px solid #e0e6f2;border-radius:8px;box-shadow:0 8px 20px rgba(0,0,0,.12);min-width:260px;z-index:60;padding:16px;}
   .dashboard-filters-panel.active{display:block;}
   html.dark-mode .dashboard-filters-panel{background:#161e2e;border-color:#334155;box-shadow:0 8px 20px rgba(0,0,0,.4);}
@@ -1377,11 +1374,6 @@ function buildDashboardFilterChipsHtml(){
   return `${chipsHtml}<button type="button" class="dashboard-filter-chips-clear" onclick="clearDashboardFilters()">Clear all</button>`;
 }
 
-function dashboardFiltersBtnInnerHtml(){
-  const n = countActiveDashboardFilters();
-  return `<i class="fa-solid fa-sliders"></i> Filters${n > 0 ? ` <span class="dashboard-filters-badge">${n}</span>` : ''}`;
-}
-
 function removeDashboardFilterChip(kind){
   if(kind === 'progress'){ dashboardFilterProgressMin = null; dashboardFilterProgressMax = null; }
   else if(kind === 'updated'){ dashboardFilterUpdatedDays = null; }
@@ -1470,34 +1462,32 @@ function buildDashboardFiltersPanelHtml(){
   `;
 }
 
-function toggleDashboardFiltersPanel(event){
-  event.stopPropagation();
-  dashboardFiltersOpen = !dashboardFiltersOpen;
+// Opened by focusing/clicking the search box itself (see #dashboardSearchInput's
+// onfocus) rather than a separate button, so the advanced filters stay out of the
+// way until someone actually wants them.
+function openDashboardFiltersPanel(){
+  dashboardFiltersOpen = true;
   const panel = document.getElementById('dashboardFiltersPanel');
-  const btn = document.getElementById('dashboardFiltersBtn');
-  if(!panel || !btn) return;
-  if(dashboardFiltersOpen){
-    panel.innerHTML = buildDashboardFiltersPanelHtml();
-    panel.classList.add('active');
-    btn.classList.add('active');
-    const rect = btn.getBoundingClientRect();
-    panel.style.top = (rect.bottom + 6) + 'px';
-    panel.style.left = rect.left + 'px';
-  } else {
-    panel.classList.remove('active');
-    btn.classList.remove('active');
-  }
+  const anchor = document.getElementById('dashboardSearchBox');
+  if(!panel || !anchor) return;
+  panel.innerHTML = buildDashboardFiltersPanelHtml();
+  panel.classList.add('active');
+  const rect = anchor.getBoundingClientRect();
+  panel.style.top = (rect.bottom + 6) + 'px';
+  panel.style.left = rect.left + 'px';
+  panel.style.minWidth = Math.max(rect.width, 260) + 'px';
 }
 function closeDashboardFiltersPanel(){
   dashboardFiltersOpen = false;
   document.getElementById('dashboardFiltersPanel')?.classList.remove('active');
-  document.getElementById('dashboardFiltersBtn')?.classList.remove('active');
 }
 window.addEventListener('click', function(e){
   const panel = document.getElementById('dashboardFiltersPanel');
-  if(panel && panel.classList.contains('active') && !panel.contains(e.target)){
-    closeDashboardFiltersPanel();
-  }
+  const searchBox = document.getElementById('dashboardSearchBox');
+  if(!panel || !panel.classList.contains('active')) return;
+  if(panel.contains(e.target)) return;
+  if(searchBox && searchBox.contains(e.target)) return;
+  closeDashboardFiltersPanel();
 });
 
 function buildDashboardTableRowHtml(proj){
@@ -1678,9 +1668,6 @@ function reRenderDashboardTable(){
 
   const chipsEl = document.getElementById('dashboardFilterChips');
   if(chipsEl) chipsEl.innerHTML = buildDashboardFilterChipsHtml();
-
-  const filtersBtn = document.getElementById('dashboardFiltersBtn');
-  if(filtersBtn) filtersBtn.innerHTML = dashboardFiltersBtnInnerHtml();
 
   tableBody.innerHTML = `
     <div class="dashboard-table-head">
@@ -3070,11 +3057,10 @@ async function renderDashboard(){
         <div class="dashboard-topbar">
           <div style="display:flex;align-items:center;gap:24px;flex:1;">
             <button onclick="addNewProject()" style="padding:8px 16px;background:#0076BC;color:white;border:none;border-radius:6px;cursor:pointer;font-weight:600;">+ New Project</button>
-            <div class="dashboard-search">
+            <div class="dashboard-search" id="dashboardSearchBox">
               <span style="color:#8a94a0;">🔍</span>
-              <input type="text" id="dashboardSearchInput" placeholder="Search projects by name…" style="width:100%;" value="${escapeAttr(dashboardSearchQuery)}" oninput="onDashboardSearch()">
+              <input type="text" id="dashboardSearchInput" placeholder="Search projects by name…" style="width:100%;" value="${escapeAttr(dashboardSearchQuery)}" oninput="onDashboardSearch()" onfocus="openDashboardFiltersPanel()">
             </div>
-            <button class="dashboard-filter" id="dashboardFiltersBtn" onclick="toggleDashboardFiltersPanel(event)">${dashboardFiltersBtnInnerHtml()}</button>
             <div class="dashboard-filters-panel" id="dashboardFiltersPanel"></div>
           </div>
           <div class="dashboard-topbar-right">
