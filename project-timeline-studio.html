@@ -1671,7 +1671,7 @@ function reRenderDashboardTable(){
 
   tableBody.innerHTML = `
     <div class="dashboard-table-head">
-      <div style="cursor:auto;" onclick="event.stopPropagation();"><input type="checkbox" id="selectAllProjectsCheckbox" title="Select all" onclick="toggleSelectAllProjects()"></div>
+      <div style="cursor:auto;" onclick="event.stopPropagation();"><input type="checkbox" id="selectAllProjectsCheckbox" title="Select all filtered results" onclick="toggleSelectAllProjects()"></div>
       <div onclick="sortDashboardProjects('name')">Project<span class="sort-arrow" data-field="name">↑</span></div>
       <div onclick="sortDashboardProjects('status')">Status<span class="sort-arrow" data-field="status">↑</span></div>
       <div onclick="sortDashboardProjects('progress')">Progress<span class="sort-arrow" data-field="progress">↑</span></div>
@@ -1685,7 +1685,7 @@ function reRenderDashboardTable(){
   if(paginationContainer) paginationContainer.innerHTML = buildDashboardPaginationHtml(filteredProjects.length);
 
   const selectAllCb = document.getElementById('selectAllProjectsCheckbox');
-  if(selectAllCb) selectAllCb.checked = myProjects.length > 0 && myProjects.every(p => selectedProjects.has(p.id));
+  if(selectAllCb) selectAllCb.checked = filteredProjects.length > 0 && filteredProjects.every(p => selectedProjects.has(p.id));
 
   setTimeout(() => {
     const headers = document.querySelectorAll(".dashboard-table-head div");
@@ -1752,10 +1752,14 @@ function toggleProjectSelect(projectId){
   reRenderDashboardTable();
 }
 
+// Only the currently filtered/visible results are affected, not every project the
+// user owns — so selecting all under a narrow filter doesn't silently pull in rows
+// that are filtered out.
 function toggleSelectAllProjects(){
   const cb = document.getElementById('selectAllProjectsCheckbox');
-  if(cb && cb.checked) myProjects.forEach(p => selectedProjects.add(p.id));
-  else selectedProjects.clear();
+  const filtered = getFilteredDashboardProjects();
+  if(cb && cb.checked) filtered.forEach(p => selectedProjects.add(p.id));
+  else filtered.forEach(p => selectedProjects.delete(p.id));
   reRenderDashboardTable();
 }
 
@@ -1765,14 +1769,10 @@ function clearProjectSelection(){
 }
 
 function buildProjectBulkToolbarHtml(){
-  if(selectedProjects.size === 0){
-    return `<div style="color:#8a94a0;font-size:12px;margin-bottom:12px;padding:0 4px;">
-      <strong>Tip:</strong> Check the box next to a project to select it for bulk export.
-    </div>`;
-  }
+  if(selectedProjects.size === 0) return '';
   return `<div style="background:#eaf4fb;border:1px solid #0076BC;border-radius:8px;padding:12px 16px;margin-bottom:12px;display:flex;align-items:center;gap:10px;">
     <span style="flex:1;color:#0a2540;"><strong>${selectedProjects.size} project${selectedProjects.size === 1 ? '' : 's'} selected</strong></span>
-    <button class="btn" onclick="clearProjectSelection()">Deselect all</button>
+    <button class="btn" onclick="clearProjectSelection()">Clear selection</button>
     <button class="btn" style="background:#0076BC;color:#fff;border-color:#0076BC;" onclick="exportSelectedProjects()">⬇ Export selected</button>
   </div>`;
 }
@@ -1832,8 +1832,17 @@ async function exportProjects(ids, downloadNameHint){
   }
 }
 
+// Above this, an accidental click costs enough load/download time (and is easy to
+// mistake for exporting everything) that it's worth one extra confirmation step.
+const LARGE_EXPORT_CONFIRM_THRESHOLD = 20;
+
 function exportSelectedProjects(){
-  exportProjects(Array.from(selectedProjects));
+  const ids = Array.from(selectedProjects);
+  if(ids.length > LARGE_EXPORT_CONFIRM_THRESHOLD){
+    showConfirmModal(`Export ${ids.length} selected projects? This may take a moment.`, () => exportProjects(ids));
+    return;
+  }
+  exportProjects(ids);
 }
 
 function exportAllProjects(){
@@ -1841,7 +1850,12 @@ function exportAllProjects(){
     showModal('No projects to export.');
     return;
   }
-  exportProjects(myProjects.map(p => p.id));
+  const ids = myProjects.map(p => p.id);
+  if(ids.length > LARGE_EXPORT_CONFIRM_THRESHOLD){
+    showConfirmModal(`Export all ${ids.length} projects? This may take a moment.`, () => exportProjects(ids));
+    return;
+  }
+  exportProjects(ids);
 }
 
 function triggerImportProjects(){
@@ -3118,7 +3132,7 @@ async function renderDashboard(){
 
           <div class="dashboard-table">
             <div class="dashboard-table-head">
-              <div style="cursor:auto;" onclick="event.stopPropagation();"><input type="checkbox" id="selectAllProjectsCheckbox" title="Select all" ${myProjects.length > 0 && myProjects.every(p => selectedProjects.has(p.id)) ? 'checked' : ''} onclick="toggleSelectAllProjects()"></div>
+              <div style="cursor:auto;" onclick="event.stopPropagation();"><input type="checkbox" id="selectAllProjectsCheckbox" title="Select all filtered results" ${(() => { const f = getFilteredDashboardProjects(); return f.length > 0 && f.every(p => selectedProjects.has(p.id)) ? 'checked' : ''; })()} onclick="toggleSelectAllProjects()"></div>
               <div onclick="sortDashboardProjects('name')">Project<span class="sort-arrow" data-field="name">↑</span></div>
               <div onclick="sortDashboardProjects('status')">Status<span class="sort-arrow" data-field="status">↑</span></div>
               <div onclick="sortDashboardProjects('progress')">Progress<span class="sort-arrow" data-field="progress">↑</span></div>
