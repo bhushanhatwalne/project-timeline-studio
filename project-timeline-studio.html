@@ -593,13 +593,16 @@
   html.dark-mode .theme-switch-thumb{left:26px;}
   .dashboard-table{width:100%;background:#fff;transition:background 300ms ease;border-collapse:collapse;}
   html.dark-mode .dashboard-table{background:#161e2e;}
-  .dashboard-table-head{display:grid;grid-template-columns:0.3fr 2fr 1fr 1.5fr 1.5fr 0.5fr;gap:0;padding:0;background:#f8f9fb;border-bottom:1px solid #cbd5e1;transition:all 300ms ease;}
+  .dashboard-table-head{display:grid;grid-template-columns:0.3fr 2fr 1fr 1.5fr 2fr 1.5fr 0.5fr;gap:0;padding:0;background:#f8f9fb;border-bottom:1px solid #cbd5e1;transition:all 300ms ease;}
   html.dark-mode .dashboard-table-head{background:#1a2332;border-bottom-color:#475569;}
   .dashboard-table-head div{padding:16px 24px;font-weight:600;font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:.6px;text-align:left;cursor:pointer;user-select:none;transition:color 200ms ease;}
   html.dark-mode .dashboard-table-head div{color:#94a3b8;}
   .dashboard-table-head div:last-child{text-align:right;}
   .dashboard-table-head div:hover{color:#0076BC;}
-  .dashboard-table-row{display:grid;grid-template-columns:0.3fr 2fr 1fr 1.5fr 1.5fr 0.5fr;gap:0;border-bottom:1px solid #e2e8f0;transition:background 200ms;align-items:center;cursor:pointer;}
+  .dashboard-table-row{display:grid;grid-template-columns:0.3fr 2fr 1fr 1.5fr 2fr 1.5fr 0.5fr;gap:0;border-bottom:1px solid #e2e8f0;transition:background 200ms;align-items:center;cursor:pointer;}
+  .dashboard-current-task{font-size:12px;color:#475569;flex-direction:column;align-items:flex-start!important;justify-content:center;gap:3px;}
+  html.dark-mode .dashboard-current-task{color:#cbd5e1;}
+  .dashboard-current-task div{white-space:normal;overflow-wrap:anywhere;}
   html.dark-mode .dashboard-table-row{border-bottom-color:#334155;}
   .dashboard-table-row:hover{background:#f8fafc;}
   html.dark-mode .dashboard-table-row:hover{background:#1f2937;}
@@ -1287,6 +1290,21 @@ function showConfirmModal(message, onConfirm, onCancel){
 };
 
 // Computed display fields (status/progress/formatted date) for a single dashboard row.
+// Titles of every task (swimlane children only, phases excluded - same scope
+// calculateProjectStatus itself uses) whose own derived status matches the
+// project's overall status. Blank once the project is Complete, since "what's
+// the current task" stops being a meaningful question at that point.
+function getCurrentTaskTitles(projectData, projectStatus){
+  if(!projectData || !projectData.swimlanes || projectStatus === 'Complete') return [];
+  const titles = [];
+  projectData.swimlanes.forEach(swimlane => {
+    (swimlane.children || []).forEach(child => {
+      if(calculateTaskStatus(child) === projectStatus) titles.push(child.title || 'Untitled task');
+    });
+  });
+  return titles;
+}
+
 function computeDashboardProjectRow(proj){
   const updated = new Date(proj.updatedAt);
   const month = updated.toLocaleString('default', { month: 'short' });
@@ -1299,6 +1317,7 @@ function computeDashboardProjectRow(proj){
   let statusClass = 'not-started';
   let statusLabel = 'Not Started';
   let statusKey = 'not-started';
+  let currentTasks = [];
 
   if(projectDataCache[proj.id]){
     const cachedData = projectDataCache[proj.id];
@@ -1308,9 +1327,10 @@ function computeDashboardProjectRow(proj){
     statusKey = statusToKey(status);
     statusClass = statusKey === 'complete' ? 'completed' : statusKey;
     statusLabel = STATUS_META[statusKey]?.label || status;
+    currentTasks = getCurrentTaskTitles(cachedData, status);
   }
 
-  return { updatedStr, progress, status, statusClass, statusLabel, statusKey };
+  return { updatedStr, progress, status, statusClass, statusLabel, statusKey, currentTasks };
 }
 
 // myProjects filtered by: the search box (plain project-name substring match),
@@ -1491,7 +1511,8 @@ window.addEventListener('click', function(e){
 });
 
 function buildDashboardTableRowHtml(proj){
-  const { updatedStr, progress, statusClass, statusLabel } = computeDashboardProjectRow(proj);
+  const { updatedStr, progress, statusClass, statusLabel, currentTasks } = computeDashboardProjectRow(proj);
+  const currentTaskHtml = currentTasks.length === 0 ? '' : currentTasks.map(t => `<div>${escapeHtml(t)}</div>`).join('');
   return `
     <div class="dashboard-table-row" role="button" tabindex="0" aria-label="Open ${escapeAttr(proj.title)} project" onclick="openProject('${escapeAttr(proj.id)}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openProject('${escapeAttr(proj.id)}');}">
       <div onclick="event.stopPropagation();"><input type="checkbox" ${selectedProjects.has(proj.id) ? 'checked' : ''} onclick="toggleProjectSelect('${escapeAttr(proj.id)}')"></div>
@@ -1507,6 +1528,7 @@ function buildDashboardTableRowHtml(proj){
           <div class="dashboard-progress-text" style="min-width:40px;text-align:right;font-weight:600;">${progress}%</div>
         </div>
       </div>
+      <div class="dashboard-current-task">${currentTaskHtml}</div>
       <div style="font-size:12px;color:#8a94a0;">${updatedStr}</div>
       <div class="dashboard-project-menu">
         <div class="dashboard-actions" onclick="event.stopPropagation(); toggleProjectMenu(event, '${escapeAttr(proj.id)}')">⋮</div>
@@ -1675,6 +1697,7 @@ function reRenderDashboardTable(){
       <div onclick="sortDashboardProjects('name')">Project<span class="sort-arrow" data-field="name">↑</span></div>
       <div onclick="sortDashboardProjects('status')">Status<span class="sort-arrow" data-field="status">↑</span></div>
       <div onclick="sortDashboardProjects('progress')">Progress<span class="sort-arrow" data-field="progress">↑</span></div>
+      <div style="cursor:auto;">Current Task</div>
       <div onclick="sortDashboardProjects('updated')">Updated<span class="sort-arrow" data-field="updated">↑</span></div>
       <div style="cursor:auto;">Actions</div>
     </div>
@@ -3136,6 +3159,7 @@ async function renderDashboard(){
               <div onclick="sortDashboardProjects('name')">Project<span class="sort-arrow" data-field="name">↑</span></div>
               <div onclick="sortDashboardProjects('status')">Status<span class="sort-arrow" data-field="status">↑</span></div>
               <div onclick="sortDashboardProjects('progress')">Progress<span class="sort-arrow" data-field="progress">↑</span></div>
+              <div style="cursor:auto;">Current Task</div>
               <div onclick="sortDashboardProjects('updated')">Updated<span class="sort-arrow" data-field="updated">↑</span></div>
               <div style="cursor:auto;">Actions</div>
             </div>
