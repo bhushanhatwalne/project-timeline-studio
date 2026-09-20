@@ -1290,16 +1290,21 @@ function showConfirmModal(message, onConfirm, onCancel){
 };
 
 // Computed display fields (status/progress/formatted date) for a single dashboard row.
-// Titles of every task (swimlane children only, phases excluded - same scope
-// calculateProjectStatus itself uses) whose own derived status matches the
-// project's overall status. Blank once the project is Complete, since "what's
-// the current task" stops being a meaningful question at that point.
+// "Title (Assigned To) – End date" for every task (swimlane children only, phases
+// excluded - same scope calculateProjectStatus itself uses) whose own derived status
+// matches the project's overall status. Blank once the project is Complete or Not
+// Started, since "what's the current task" isn't a meaningful question yet/anymore.
 function getCurrentTaskTitles(projectData, projectStatus){
-  if(!projectData || !projectData.swimlanes || projectStatus === 'Complete') return [];
+  if(!projectData || !projectData.swimlanes || projectStatus === 'Complete' || projectStatus === 'Not Started') return [];
   const titles = [];
   projectData.swimlanes.forEach(swimlane => {
     (swimlane.children || []).forEach(child => {
-      if(calculateTaskStatus(child) === projectStatus) titles.push(child.title || 'Untitled task');
+      if(calculateTaskStatus(child) === projectStatus){
+        const assignedTo = child.assignedTo || 'Unassigned';
+        const end = parseD(child.end);
+        const endLabel = child.end && !isNaN(end.getTime()) ? fmtShort(end) : '';
+        titles.push(`${child.title || 'Untitled task'} (${assignedTo})${endLabel ? ' – ' + endLabel : ''}`);
+      }
     });
   });
   return titles;
