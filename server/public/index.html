@@ -1290,24 +1290,26 @@ function showConfirmModal(message, onConfirm, onCancel){
 };
 
 // Computed display fields (status/progress/formatted date) for a single dashboard row.
-// "Title (Assigned To) – End date" for every task (swimlane children only, phases
+// { title, assignedTo, endLabel } for every task (swimlane children only, phases
 // excluded - same scope calculateProjectStatus itself uses) whose own derived status
 // matches the project's overall status. Blank once the project is Complete or Not
 // Started, since "what's the current task" isn't a meaningful question yet/anymore.
+// Returned as parts (rather than one pre-joined string) so the title can be
+// rendered bold while the assignee/date stay regular weight.
 function getCurrentTaskTitles(projectData, projectStatus){
   if(!projectData || !projectData.swimlanes || projectStatus === 'Complete' || projectStatus === 'Not Started') return [];
-  const titles = [];
+  const tasks = [];
   projectData.swimlanes.forEach(swimlane => {
     (swimlane.children || []).forEach(child => {
       if(calculateTaskStatus(child) === projectStatus){
         const assignedTo = child.assignedTo || 'Unassigned';
         const end = parseD(child.end);
         const endLabel = child.end && !isNaN(end.getTime()) ? fmtShort(end) : '';
-        titles.push(`${child.title || 'Untitled task'} (${assignedTo})${endLabel ? ' – ' + endLabel : ''}`);
+        tasks.push({ title: child.title || 'Untitled task', assignedTo, endLabel });
       }
     });
   });
-  return titles;
+  return tasks;
 }
 
 function computeDashboardProjectRow(proj){
@@ -1517,7 +1519,7 @@ window.addEventListener('click', function(e){
 
 function buildDashboardTableRowHtml(proj){
   const { updatedStr, progress, statusClass, statusLabel, currentTasks } = computeDashboardProjectRow(proj);
-  const currentTaskHtml = currentTasks.length === 0 ? '' : currentTasks.map(t => `<div>${escapeHtml(t)}</div>`).join('');
+  const currentTaskHtml = currentTasks.map(t => `<div><strong>${escapeHtml(t.title)}</strong> (${escapeHtml(t.assignedTo)})${t.endLabel ? ' – ' + escapeHtml(t.endLabel) : ''}</div>`).join('');
   return `
     <div class="dashboard-table-row" role="button" tabindex="0" aria-label="Open ${escapeAttr(proj.title)} project" onclick="openProject('${escapeAttr(proj.id)}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openProject('${escapeAttr(proj.id)}');}">
       <div onclick="event.stopPropagation();"><input type="checkbox" ${selectedProjects.has(proj.id) ? 'checked' : ''} onclick="toggleProjectSelect('${escapeAttr(proj.id)}')"></div>
