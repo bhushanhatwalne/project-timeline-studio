@@ -553,10 +553,38 @@
   .dashboard-section-title{font-size:22px;font-weight:700;color:#0a2540;margin-bottom:22px;display:flex;justify-content:space-between;align-items:center;letter-spacing:-.5px;transition:color 300ms ease;}
   html.dark-mode .dashboard-section-title{color:#e2e8f0;}
   .dashboard-controls{display:flex;gap:12px;align-items:center;}
-  .dashboard-filter{padding:10px 14px;background:#fff;border:1px solid #cbd5e1;border-radius:8px;font-size:13px;color:#64748b;cursor:pointer;font-weight:500;transition:all 200ms;}
+  .dashboard-filter{display:inline-flex;align-items:center;gap:6px;white-space:nowrap;padding:10px 14px;background:#fff;border:1px solid #cbd5e1;border-radius:8px;font-size:13px;color:#64748b;cursor:pointer;font-weight:500;transition:all 200ms;}
   html.dark-mode .dashboard-filter{background:#1a2332;border-color:#475569;color:#cbd5e1;}
   .dashboard-filter:hover{border-color:#0076BC;color:#0076BC;background:#f8fafc;}
   html.dark-mode .dashboard-filter:hover{background:#1f2937;}
+  .dashboard-filter.active{border-color:#0076BC;color:#0076BC;background:#eef6fd;}
+  html.dark-mode .dashboard-filter.active{background:#1f2937;border-color:#0099D8;color:#0099D8;}
+  .dashboard-filters-badge{display:inline-flex;align-items:center;justify-content:center;min-width:16px;height:16px;padding:0 4px;border-radius:8px;background:#0076BC;color:#fff;font-size:10px;font-weight:700;margin-left:2px;}
+  .dashboard-filters-panel{position:fixed;display:none;background:#fff;border:1px solid #e0e6f2;border-radius:8px;box-shadow:0 8px 20px rgba(0,0,0,.12);min-width:260px;z-index:60;padding:16px;}
+  .dashboard-filters-panel.active{display:block;}
+  html.dark-mode .dashboard-filters-panel{background:#161e2e;border-color:#334155;box-shadow:0 8px 20px rgba(0,0,0,.4);}
+  .dashboard-filters-section{margin-bottom:14px;}
+  .dashboard-filters-section:last-of-type{margin-bottom:0;}
+  .dashboard-filters-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#64748b;margin-bottom:8px;}
+  html.dark-mode .dashboard-filters-label{color:#94a3b8;}
+  .dashboard-filters-range{display:flex;align-items:center;gap:8px;}
+  .dashboard-filters-range input{width:70px;padding:6px 8px;border:1px solid #cbd5e1;border-radius:6px;font-size:13px;}
+  html.dark-mode .dashboard-filters-range input{background:#1a2332;border-color:#475569;color:#f1f5f9;}
+  .dashboard-filters-section select{width:100%;padding:7px 8px;border:1px solid #cbd5e1;border-radius:6px;font-size:13px;background:#fff;color:#1e293b;}
+  html.dark-mode .dashboard-filters-section select{background:#1a2332;border-color:#475569;color:#f1f5f9;}
+  .dashboard-filters-checkboxes{display:flex;flex-direction:column;gap:6px;}
+  .dashboard-filters-checkbox{display:flex;align-items:center;gap:8px;font-size:13px;color:#1e293b;cursor:pointer;font-weight:500;}
+  html.dark-mode .dashboard-filters-checkbox{color:#f1f5f9;}
+  .dashboard-filters-actions{margin-top:14px;padding-top:12px;border-top:1px solid #e2e8f0;}
+  html.dark-mode .dashboard-filters-actions{border-top-color:#334155;}
+  .dashboard-filters-clear{background:none;border:none;color:#0076BC;font-weight:600;font-size:12px;cursor:pointer;padding:0;}
+  .dashboard-filters-clear:hover{text-decoration:underline;}
+  .dashboard-filter-chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;}
+  .dashboard-filter-chips:empty{margin-bottom:0;}
+  .dashboard-filter-chip{display:inline-flex;align-items:center;gap:6px;padding:5px 8px 5px 12px;border-radius:20px;background:#eef6fd;border:1px solid #cfe4f7;color:#0055a8;font-size:12px;font-weight:600;}
+  html.dark-mode .dashboard-filter-chip{background:rgba(0,118,188,.18);border-color:rgba(0,118,188,.4);color:#7cc4f0;}
+  .dashboard-filter-chip button{background:none;border:none;color:inherit;cursor:pointer;font-size:14px;line-height:1;padding:0 2px;font-weight:700;}
+  .dashboard-filter-chip button:hover{opacity:.7;}
   .theme-switch{border:none;background:transparent;padding:0;margin:0;cursor:pointer;display:inline-flex;align-items:center;}
   .theme-switch-track{position:relative;width:50px;height:26px;border-radius:999px;background:#cbd5e1;transition:background 200ms ease;}
   html.dark-mode .theme-switch-track{background:var(--accent);}
@@ -682,10 +710,25 @@ let projectDataCache = {}; // cache for project swimlanes data
 let dashboardSortField = 'updated'; // current sort field
 let dashboardSortAsc = false; // sort ascending
 let dashboardCurrentPage = 1; // current page for pagination
-let dashboardSearchQuery = ''; // live search box text, filters myProjects before pagination
+let dashboardSearchQuery = ''; // live search box text — matched against project name only
 let dashboardStatusFilter = null; // 'on-track'|'at-risk'|'off-track'|'not-started'|null, set by clicking a stat tile
 let selectedProjects = new Set(); // ids of projects selected for bulk export
 const PROJECTS_PER_PAGE = 5; // projects per page
+
+// Advanced filters (Filters panel), independent of the single-select stat-tile
+// filter above — these AND together with it and with the search box.
+let dashboardFiltersOpen = false; // whether the Filters panel is currently shown
+let dashboardFilterProgressMin = null; // number|null, inclusive
+let dashboardFilterProgressMax = null; // number|null, inclusive
+let dashboardFilterUpdatedDays = null; // number|null — "updated within the last N days"
+let dashboardFilterStatuses = new Set(); // statusKeys — lets users combine statuses the tiles can't (e.g. On Track + At Risk)
+
+const DASHBOARD_UPDATED_FILTER_OPTIONS = [
+  { days: 7, label: 'Last 7 days' },
+  { days: 30, label: 'Last 30 days' },
+  { days: 90, label: 'Last 90 days' }
+];
+const DASHBOARD_FILTER_STATUS_ORDER = ['on-track', 'at-risk', 'off-track', 'not-started', 'on-hold', 'complete'];
 
 /* API wrapper with auth */
 async function apiFetch(path, opts={}, attemptCount=0){
@@ -1242,36 +1285,6 @@ function showConfirmModal(message, onConfirm, onCancel){
   });
 };
 
-function matchesSearchQuery(projectName, statusText, progress, query){
-  if(!query) return true;
-
-  const parts = query.split(/\s+/);
-  return parts.every(part => {
-    if(!part) return true;
-
-    // Check if it's a progress filter (contains > < >= <= =)
-    const progressMatch = part.match(/^([><=]+)(\d+)%?$/);
-    if(progressMatch){
-      const operator = progressMatch[1];
-      const value = parseInt(progressMatch[2]);
-      if(operator === '>') return progress > value;
-      if(operator === '<') return progress < value;
-      if(operator === '>=') return progress >= value;
-      if(operator === '<=') return progress <= value;
-      if(operator === '=') return progress === value;
-      return false;
-    }
-
-    // Check project name
-    if(projectName.includes(part)) return true;
-
-    // Check status
-    if(statusText.includes(part)) return true;
-
-    return false;
-  });
-}
-
 // Computed display fields (status/progress/formatted date) for a single dashboard row.
 function computeDashboardProjectRow(proj){
   const updated = new Date(proj.updatedAt);
@@ -1299,22 +1312,188 @@ function computeDashboardProjectRow(proj){
   return { updatedStr, progress, status, statusClass, statusLabel, statusKey };
 }
 
-// myProjects filtered by dashboardSearchQuery (evaluated against the SAME computed
-// status/progress used for display, not just the raw title — so "on track" or ">50%"
-// match too) and by dashboardStatusFilter (an exact status-key match set by clicking
-// one of the dashboard stat tiles).
+// myProjects filtered by: the search box (plain project-name substring match),
+// dashboardStatusFilter (exact status-key match set by clicking one of the dashboard
+// stat tiles), and the advanced Filters panel (progress range / last-updated window /
+// status checkboxes). All active filters AND together.
 function getFilteredDashboardProjects(){
-  let list = myProjects;
-  if(dashboardStatusFilter){
-    list = list.filter(proj => computeDashboardProjectRow(proj).statusKey === dashboardStatusFilter);
-  }
   const query = dashboardSearchQuery.toLowerCase().trim();
-  if(!query) return list;
-  return list.filter(proj => {
+  const updatedCutoff = dashboardFilterUpdatedDays != null
+    ? Date.now() - dashboardFilterUpdatedDays * 24 * 60 * 60 * 1000
+    : null;
+
+  return myProjects.filter(proj => {
     const row = computeDashboardProjectRow(proj);
-    return matchesSearchQuery((proj.title || "").toLowerCase(), (row.status || "").toLowerCase(), row.progress, query);
+    if(dashboardStatusFilter && row.statusKey !== dashboardStatusFilter) return false;
+    if(dashboardFilterStatuses.size > 0 && !dashboardFilterStatuses.has(row.statusKey)) return false;
+    if(dashboardFilterProgressMin != null && row.progress < dashboardFilterProgressMin) return false;
+    if(dashboardFilterProgressMax != null && row.progress > dashboardFilterProgressMax) return false;
+    if(updatedCutoff != null && new Date(proj.updatedAt).getTime() < updatedCutoff) return false;
+    if(query && !(proj.title || "").toLowerCase().includes(query)) return false;
+    return true;
   });
 }
+
+function countActiveDashboardFilters(){
+  let n = 0;
+  if(dashboardFilterProgressMin != null || dashboardFilterProgressMax != null) n++;
+  if(dashboardFilterUpdatedDays != null) n++;
+  if(dashboardFilterStatuses.size > 0) n++;
+  return n;
+}
+function hasActiveDashboardFilters(){
+  return countActiveDashboardFilters() > 0;
+}
+
+function dashboardEmptyStateMessage(){
+  if(dashboardSearchQuery.trim()) return 'No projects match your search.';
+  if(dashboardStatusFilter || hasActiveDashboardFilters()) return 'No projects match the selected filters.';
+  return 'No projects match your search.';
+}
+
+function buildDashboardFilterChipsHtml(){
+  const chips = [];
+  if(dashboardFilterProgressMin != null || dashboardFilterProgressMax != null){
+    let label;
+    if(dashboardFilterProgressMin != null && dashboardFilterProgressMax != null) label = `${dashboardFilterProgressMin}–${dashboardFilterProgressMax}%`;
+    else if(dashboardFilterProgressMin != null) label = `Over ${dashboardFilterProgressMin}%`;
+    else label = `Under ${dashboardFilterProgressMax}%`;
+    chips.push({ kind: 'progress', label: `Progress: ${label}` });
+  }
+  if(dashboardFilterUpdatedDays != null){
+    const opt = DASHBOARD_UPDATED_FILTER_OPTIONS.find(o => o.days === dashboardFilterUpdatedDays);
+    chips.push({ kind: 'updated', label: `Updated: ${opt ? opt.label : `Last ${dashboardFilterUpdatedDays} days`}` });
+  }
+  if(dashboardFilterStatuses.size > 0){
+    const labels = DASHBOARD_FILTER_STATUS_ORDER.filter(k => dashboardFilterStatuses.has(k)).map(k => STATUS_META[k]?.label || k);
+    chips.push({ kind: 'status', label: `Status: ${labels.join(', ')}` });
+  }
+  if(chips.length === 0) return '';
+  return chips.map(c => `<span class="dashboard-filter-chip">${escapeHtml(c.label)}<button type="button" aria-label="Remove ${escapeAttr(c.label)} filter" onclick="removeDashboardFilterChip('${c.kind}')">×</button></span>`).join('');
+}
+
+function dashboardFiltersBtnInnerHtml(){
+  const n = countActiveDashboardFilters();
+  return `<i class="fa-solid fa-sliders"></i> Filters${n > 0 ? ` <span class="dashboard-filters-badge">${n}</span>` : ''}`;
+}
+
+function removeDashboardFilterChip(kind){
+  if(kind === 'progress'){ dashboardFilterProgressMin = null; dashboardFilterProgressMax = null; }
+  else if(kind === 'updated'){ dashboardFilterUpdatedDays = null; }
+  else if(kind === 'status'){ dashboardFilterStatuses = new Set(); }
+  dashboardCurrentPage = 1;
+  const panel = document.getElementById('dashboardFiltersPanel');
+  if(panel && dashboardFiltersOpen) panel.innerHTML = buildDashboardFiltersPanelHtml();
+  reRenderDashboardTable();
+}
+
+function parseDashboardFilterProgressValue(value){
+  if(value === '' || value == null) return null;
+  const parsed = parseInt(value, 10);
+  if(Number.isNaN(parsed)) return null;
+  return Math.max(0, Math.min(100, parsed));
+}
+function onDashboardFilterProgressMinChange(value){
+  dashboardFilterProgressMin = parseDashboardFilterProgressValue(value);
+  dashboardCurrentPage = 1;
+  reRenderDashboardTable();
+}
+function onDashboardFilterProgressMaxChange(value){
+  dashboardFilterProgressMax = parseDashboardFilterProgressValue(value);
+  dashboardCurrentPage = 1;
+  reRenderDashboardTable();
+}
+function onDashboardFilterUpdatedChange(value){
+  dashboardFilterUpdatedDays = value === '' ? null : parseInt(value, 10);
+  dashboardCurrentPage = 1;
+  reRenderDashboardTable();
+}
+function onDashboardFilterStatusToggle(statusKey, checked){
+  if(checked) dashboardFilterStatuses.add(statusKey);
+  else dashboardFilterStatuses.delete(statusKey);
+  dashboardCurrentPage = 1;
+  reRenderDashboardTable();
+}
+function clearDashboardFilters(){
+  dashboardFilterProgressMin = null;
+  dashboardFilterProgressMax = null;
+  dashboardFilterUpdatedDays = null;
+  dashboardFilterStatuses = new Set();
+  dashboardCurrentPage = 1;
+  const panel = document.getElementById('dashboardFiltersPanel');
+  if(panel && dashboardFiltersOpen) panel.innerHTML = buildDashboardFiltersPanelHtml();
+  reRenderDashboardTable();
+}
+
+function buildDashboardFiltersPanelHtml(){
+  const updatedOptionsHtml = DASHBOARD_UPDATED_FILTER_OPTIONS.map(o =>
+    `<option value="${o.days}" ${dashboardFilterUpdatedDays === o.days ? 'selected' : ''}>${o.label}</option>`
+  ).join('');
+
+  const statusCheckboxesHtml = DASHBOARD_FILTER_STATUS_ORDER.map(key => {
+    const meta = STATUS_META[key];
+    if(!meta) return '';
+    return `<label class="dashboard-filters-checkbox">
+      <input type="checkbox" ${dashboardFilterStatuses.has(key) ? 'checked' : ''} onchange="onDashboardFilterStatusToggle('${key}', this.checked)">
+      <span>${meta.label}</span>
+    </label>`;
+  }).join('');
+
+  return `
+    <div class="dashboard-filters-section">
+      <div class="dashboard-filters-label">Progress range</div>
+      <div class="dashboard-filters-range">
+        <input type="number" min="0" max="100" placeholder="Min %" value="${dashboardFilterProgressMin ?? ''}" onchange="onDashboardFilterProgressMinChange(this.value)">
+        <span>–</span>
+        <input type="number" min="0" max="100" placeholder="Max %" value="${dashboardFilterProgressMax ?? ''}" onchange="onDashboardFilterProgressMaxChange(this.value)">
+      </div>
+    </div>
+    <div class="dashboard-filters-section">
+      <div class="dashboard-filters-label">Last updated</div>
+      <select onchange="onDashboardFilterUpdatedChange(this.value)">
+        <option value="" ${dashboardFilterUpdatedDays == null ? 'selected' : ''}>Any time</option>
+        ${updatedOptionsHtml}
+      </select>
+    </div>
+    <div class="dashboard-filters-section">
+      <div class="dashboard-filters-label">Status</div>
+      <div class="dashboard-filters-checkboxes">${statusCheckboxesHtml}</div>
+    </div>
+    <div class="dashboard-filters-actions">
+      <button type="button" class="dashboard-filters-clear" onclick="clearDashboardFilters()">Clear all filters</button>
+    </div>
+  `;
+}
+
+function toggleDashboardFiltersPanel(event){
+  event.stopPropagation();
+  dashboardFiltersOpen = !dashboardFiltersOpen;
+  const panel = document.getElementById('dashboardFiltersPanel');
+  const btn = document.getElementById('dashboardFiltersBtn');
+  if(!panel || !btn) return;
+  if(dashboardFiltersOpen){
+    panel.innerHTML = buildDashboardFiltersPanelHtml();
+    panel.classList.add('active');
+    btn.classList.add('active');
+    const rect = btn.getBoundingClientRect();
+    panel.style.top = (rect.bottom + 6) + 'px';
+    panel.style.left = rect.left + 'px';
+  } else {
+    panel.classList.remove('active');
+    btn.classList.remove('active');
+  }
+}
+function closeDashboardFiltersPanel(){
+  dashboardFiltersOpen = false;
+  document.getElementById('dashboardFiltersPanel')?.classList.remove('active');
+  document.getElementById('dashboardFiltersBtn')?.classList.remove('active');
+}
+window.addEventListener('click', function(e){
+  const panel = document.getElementById('dashboardFiltersPanel');
+  if(panel && panel.classList.contains('active') && !panel.contains(e.target)){
+    closeDashboardFiltersPanel();
+  }
+});
 
 function buildDashboardTableRowHtml(proj){
   const { updatedStr, progress, statusClass, statusLabel } = computeDashboardProjectRow(proj);
@@ -1472,12 +1651,18 @@ function reRenderDashboardTable(){
     </div>
   ` : filteredProjects.length === 0 ? `
     <div style="padding:40px;text-align:center;color:#8a94a0;">
-      <p>${dashboardStatusFilter && !dashboardSearchQuery.trim() ? 'No projects match this status.' : 'No projects match your search.'}</p>
+      <p>${dashboardEmptyStateMessage()}</p>
     </div>
   ` : paginatedProjects.map(buildDashboardTableRowHtml).join('');
 
   const toolbar = document.getElementById('projectBulkToolbar');
   if(toolbar) toolbar.innerHTML = buildProjectBulkToolbarHtml();
+
+  const chipsEl = document.getElementById('dashboardFilterChips');
+  if(chipsEl) chipsEl.innerHTML = buildDashboardFilterChipsHtml();
+
+  const filtersBtn = document.getElementById('dashboardFiltersBtn');
+  if(filtersBtn) filtersBtn.innerHTML = dashboardFiltersBtnInnerHtml();
 
   tableBody.innerHTML = `
     <div class="dashboard-table-head">
@@ -2869,8 +3054,10 @@ async function renderDashboard(){
             <button onclick="addNewProject()" style="padding:8px 16px;background:#0076BC;color:white;border:none;border-radius:6px;cursor:pointer;font-weight:600;">+ New Project</button>
             <div class="dashboard-search">
               <span style="color:#8a94a0;">🔍</span>
-              <input type="text" id="dashboardSearchInput" placeholder="Search by name, status, or progress (e.g., '>50%', 'on track')..." style="width:100%;" value="${escapeAttr(dashboardSearchQuery)}" oninput="onDashboardSearch()">
+              <input type="text" id="dashboardSearchInput" placeholder="Search projects by name…" style="width:100%;" value="${escapeAttr(dashboardSearchQuery)}" oninput="onDashboardSearch()">
             </div>
+            <button class="dashboard-filter" id="dashboardFiltersBtn" onclick="toggleDashboardFiltersPanel(event)">${dashboardFiltersBtnInnerHtml()}</button>
+            <div class="dashboard-filters-panel" id="dashboardFiltersPanel"></div>
           </div>
           <div class="dashboard-topbar-right">
             <button class="theme-switch" id="themeToggleBtn" role="switch" aria-checked="false" title="Switch to Dark Mode" onclick="toggleDarkMode()">
@@ -2921,6 +3108,7 @@ async function renderDashboard(){
             </div>
           </div>
 
+          <div class="dashboard-filter-chips" id="dashboardFilterChips">${buildDashboardFilterChipsHtml()}</div>
 
           <div id="projectBulkToolbar">${buildProjectBulkToolbarHtml()}</div>
 
@@ -2948,7 +3136,7 @@ async function renderDashboard(){
               `;
               if(filteredProjects.length === 0) return `
                 <div style="padding:40px;text-align:center;color:#8a94a0;">
-                  <p>${dashboardStatusFilter && !dashboardSearchQuery.trim() ? 'No projects match this status.' : 'No projects match your search.'}</p>
+                  <p>${dashboardEmptyStateMessage()}</p>
                 </div>
               `;
               return paginatedProjects.map(buildDashboardTableRowHtml).join('');
