@@ -542,6 +542,8 @@
   html.dark-mode .dashboard-stat-card.not-started{background:linear-gradient(135deg,rgba(119,120,123,.32) 0%,rgba(119,120,123,.18) 100%);}
   .dashboard-stat-card.on-hold{background:linear-gradient(135deg,#F3E5F9 0%,#faf5fc 100%);border-left-color:#8E44AD;}
   html.dark-mode .dashboard-stat-card.on-hold{background:linear-gradient(135deg,rgba(142,68,173,.32) 0%,rgba(142,68,173,.18) 100%);}
+  .dashboard-stat-card.complete{background:linear-gradient(135deg,#D7F5E3 0%,#eefdf4 100%);border-left-color:#0E8A45;}
+  html.dark-mode .dashboard-stat-card.complete{background:linear-gradient(135deg,rgba(14,138,69,.32) 0%,rgba(14,138,69,.18) 100%);}
   .dashboard-stat-label{font-size:11px;font-weight:700;color:#64748b;margin-bottom:10px;text-transform:uppercase;letter-spacing:.6px;transition:color 300ms ease;}
   html.dark-mode .dashboard-stat-label{color:#94a3b8;}
   .dashboard-stat-value{font-size:36px;font-weight:800;color:#1e293b;margin-bottom:4px;transition:color 300ms ease;}
@@ -1391,7 +1393,8 @@ const DASHBOARD_STATUS_FILTER_LABELS = {
   'at-risk': 'At Risk Projects',
   'off-track': 'Off Track Projects',
   'not-started': 'Not Started Projects',
-  'on-hold': 'On Hold Projects'
+  'on-hold': 'On Hold Projects',
+  'complete': 'Complete Projects'
 };
 function dashboardSectionTitle(){
   const label = dashboardStatusFilter ? (DASHBOARD_STATUS_FILTER_LABELS[dashboardStatusFilter] || 'All Projects') : 'All Projects';
@@ -2809,6 +2812,7 @@ async function renderDashboard(){
   let offTrackCount = 0;
   let notStartedCount = 0;
   let onHoldCount = 0;
+  let completeCount = 0;
 
   myProjects.forEach(proj => {
     const projectData = projectDataCache[proj.id];
@@ -2819,6 +2823,7 @@ async function renderDashboard(){
       else if(status === 'Off Track') offTrackCount++;
       else if(status === 'Not Started') notStartedCount++;
       else if(status === 'On Hold') onHoldCount++;
+      else if(status === 'Complete') completeCount++;
     }
   });
 
@@ -2908,6 +2913,11 @@ async function renderDashboard(){
               <div class="dashboard-stat-label">On Hold</div>
               <div class="dashboard-stat-value">${onHoldCount}</div>
               <div class="dashboard-stat-meta">${totalProjects > 0 ? Math.round((onHoldCount/totalProjects)*100) : 0}% of projects</div>
+            </div>
+            <div class="dashboard-stat-card complete ${dashboardStatusFilter==='complete' ? 'active' : ''}" data-status-filter="complete" role="button" tabindex="0" aria-pressed="${dashboardStatusFilter==='complete'}" onclick="filterDashboardByStatus('complete')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();filterDashboardByStatus('complete');}" title="Filter to Complete projects">
+              <div class="dashboard-stat-label">Complete</div>
+              <div class="dashboard-stat-value">${completeCount}</div>
+              <div class="dashboard-stat-meta">${totalProjects > 0 ? Math.round((completeCount/totalProjects)*100) : 0}% of projects</div>
             </div>
           </div>
 
