@@ -599,6 +599,11 @@
   html.dark-mode .dashboard-table-head div{color:#94a3b8;}
   .dashboard-table-head div:last-child{text-align:right;}
   .dashboard-table-head div:hover{color:#0076BC;}
+  .sort-arrow{display:inline-block;margin-left:4px;opacity:0;transition:opacity 150ms ease;}
+  .dashboard-table-head div:hover .sort-arrow{opacity:.6;}
+  .dashboard-table-head div.sorted{color:#0076BC;}
+  html.dark-mode .dashboard-table-head div.sorted{color:#0099D8;}
+  .dashboard-table-head div.sorted .sort-arrow{opacity:1;font-weight:700;}
   .dashboard-table-row{display:grid;grid-template-columns:0.3fr 2fr 1fr 1.5fr 2fr 1.5fr 0.5fr;gap:0;border-bottom:1px solid #e2e8f0;transition:background 200ms;align-items:center;cursor:pointer;}
   .dashboard-current-task{font-size:12px;color:#475569;flex-direction:column;align-items:flex-start!important;justify-content:center;gap:3px;}
   html.dark-mode .dashboard-current-task{color:#cbd5e1;}
@@ -1658,6 +1663,15 @@ function syncDashboardFilterUI(){
   });
 }
 
+// A sortable table-head cell: shows a persistent, highlighted arrow for the active
+// sort column, and a neutral ↕ (revealed on hover via CSS) for every other one - so
+// it's never ambiguous which single column is actually driving the table's order.
+function sortHeaderHtml(field, label){
+  const isActive = dashboardSortField === field;
+  const arrow = isActive ? (dashboardSortAsc ? '↑' : '↓') : '↕';
+  return `<div class="${isActive ? 'sorted' : ''}" onclick="sortDashboardProjects('${field}')">${label}<span class="sort-arrow" data-field="${field}">${arrow}</span></div>`;
+}
+
 function sortDashboardProjects(field){
   if(dashboardSortField === field){
     dashboardSortAsc = !dashboardSortAsc;
@@ -1728,11 +1742,11 @@ function reRenderDashboardTable(){
   tableBody.innerHTML = `
     <div class="dashboard-table-head">
       <div style="cursor:auto;" onclick="event.stopPropagation();"><input type="checkbox" id="selectAllProjectsCheckbox" title="Select all filtered results" onclick="toggleSelectAllProjects()"></div>
-      <div onclick="sortDashboardProjects('name')">Project<span class="sort-arrow" data-field="name">↑</span></div>
-      <div onclick="sortDashboardProjects('status')">Status<span class="sort-arrow" data-field="status">↑</span></div>
-      <div onclick="sortDashboardProjects('progress')">Progress<span class="sort-arrow" data-field="progress">↑</span></div>
+      ${sortHeaderHtml('name', 'Project')}
+      ${sortHeaderHtml('status', 'Status')}
+      ${sortHeaderHtml('progress', 'Progress')}
       <div style="cursor:auto;">Current Tasks</div>
-      <div onclick="sortDashboardProjects('updated')">Updated<span class="sort-arrow" data-field="updated">↑</span></div>
+      ${sortHeaderHtml('updated', 'Updated')}
       <div style="cursor:auto;">Actions</div>
     </div>
     ${contentHtml}
@@ -1743,20 +1757,6 @@ function reRenderDashboardTable(){
 
   const selectAllCb = document.getElementById('selectAllProjectsCheckbox');
   if(selectAllCb) selectAllCb.checked = filteredProjects.length > 0 && filteredProjects.every(p => selectedProjects.has(p.id));
-
-  setTimeout(() => {
-    const headers = document.querySelectorAll(".dashboard-table-head div");
-    headers.forEach(header => {
-      const arrow = header.querySelector(".sort-arrow");
-      if(arrow && arrow.dataset.field === dashboardSortField){
-        header.classList.add("sorted");
-        arrow.textContent = dashboardSortAsc ? "↑" : "↓";
-      } else {
-        header.classList.remove("sorted");
-        if(arrow) arrow.textContent = "↑";
-      }
-    });
-  }, 0);
 }
 
 async function duplicateProject(projectId, projectTitle){
@@ -3190,11 +3190,11 @@ async function renderDashboard(){
           <div class="dashboard-table">
             <div class="dashboard-table-head">
               <div style="cursor:auto;" onclick="event.stopPropagation();"><input type="checkbox" id="selectAllProjectsCheckbox" title="Select all filtered results" ${(() => { const f = getFilteredDashboardProjects(); return f.length > 0 && f.every(p => selectedProjects.has(p.id)) ? 'checked' : ''; })()} onclick="toggleSelectAllProjects()"></div>
-              <div onclick="sortDashboardProjects('name')">Project<span class="sort-arrow" data-field="name">↑</span></div>
-              <div onclick="sortDashboardProjects('status')">Status<span class="sort-arrow" data-field="status">↑</span></div>
-              <div onclick="sortDashboardProjects('progress')">Progress<span class="sort-arrow" data-field="progress">↑</span></div>
+              ${sortHeaderHtml('name', 'Project')}
+              ${sortHeaderHtml('status', 'Status')}
+              ${sortHeaderHtml('progress', 'Progress')}
               <div style="cursor:auto;">Current Tasks</div>
-              <div onclick="sortDashboardProjects('updated')">Updated<span class="sort-arrow" data-field="updated">↑</span></div>
+              ${sortHeaderHtml('updated', 'Updated')}
               <div style="cursor:auto;">Actions</div>
             </div>
             ${(() => {
@@ -3256,21 +3256,6 @@ async function renderDashboard(){
       }
     }
   }
-
-  // Update sort arrows in table headers
-  setTimeout(() => {
-    const headers = document.querySelectorAll(".dashboard-table-head div");
-    headers.forEach(header => {
-      const arrow = header.querySelector(".sort-arrow");
-      if(arrow && arrow.dataset.field === dashboardSortField){
-        header.classList.add("sorted");
-        arrow.textContent = dashboardSortAsc ? "↑" : "↓";
-      } else {
-        header.classList.remove("sorted");
-        if(arrow) arrow.textContent = "↑";
-      }
-    });
-  }, 0);
 }
 
 function setProjectViewMode(mode){
