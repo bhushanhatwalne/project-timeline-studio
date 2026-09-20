@@ -603,6 +603,10 @@
   .dashboard-current-task{font-size:12px;color:#475569;flex-direction:column;align-items:flex-start!important;justify-content:center;gap:3px;}
   html.dark-mode .dashboard-current-task{color:#cbd5e1;}
   .dashboard-current-task div{white-space:normal;overflow-wrap:anywhere;}
+  .dashboard-current-task-empty{color:#94a3b8;font-style:italic;}
+  html.dark-mode .dashboard-current-task-empty{color:#64748b;}
+  .dashboard-task-overdue{color:#C0392B;font-weight:700;}
+  html.dark-mode .dashboard-task-overdue{color:#f28b82;}
   html.dark-mode .dashboard-table-row{border-bottom-color:#334155;}
   .dashboard-table-row:hover{background:#f8fafc;}
   html.dark-mode .dashboard-table-row:hover{background:#1f2937;}
@@ -1290,26 +1294,36 @@ function showConfirmModal(message, onConfirm, onCancel){
 };
 
 // Computed display fields (status/progress/formatted date) for a single dashboard row.
-// { title, assignedTo, endLabel } for every task (swimlane children only, phases
-// excluded - same scope calculateProjectStatus itself uses) whose own derived status
-// matches the project's overall status. Blank once the project is Complete or Not
-// Started, since "what's the current task" isn't a meaningful question yet/anymore.
-// Returned as parts (rather than one pre-joined string) so the title can be
-// rendered bold while the assignee/date stay regular weight.
-function getCurrentTaskTitles(projectData, projectStatus){
-  if(!projectData || !projectData.swimlanes || projectStatus === 'Complete' || projectStatus === 'Not Started') return [];
+// State for the "Current Tasks" column, always one explicit state rather than a
+// possibly-empty list, so a viewer never has to guess whether a blank cell means
+// "no data" or "nothing to show":
+//   { kind: 'complete' }               -> project is Complete
+//   { kind: 'not-started' }            -> project hasn't started
+//   { kind: 'tasks', tasks: [...] }    -> one row per task whose own derived status
+//                                          matches the project's overall status
+//                                          (swimlane children only, phases excluded -
+//                                          same scope calculateProjectStatus uses),
+//                                          each flagged overdue once its end date has
+//                                          fully elapsed.
+function getCurrentTasksState(projectData, projectStatus){
+  if(projectStatus === 'Complete') return { kind: 'complete' };
+  if(projectStatus === 'Not Started') return { kind: 'not-started' };
+  if(!projectData || !projectData.swimlanes) return { kind: 'tasks', tasks: [] };
+
+  const now = new Date();
   const tasks = [];
   projectData.swimlanes.forEach(swimlane => {
     (swimlane.children || []).forEach(child => {
       if(calculateTaskStatus(child) === projectStatus){
-        const assignedTo = child.assignedTo || 'Unassigned';
         const end = parseD(child.end);
         const endLabel = child.end && !isNaN(end.getTime()) ? fmtShort(end) : '';
-        tasks.push({ title: child.title || 'Untitled task', assignedTo, endLabel });
+        const endOfDay = endOfLocalDay(child.end);
+        const overdue = !!endOfDay && endOfDay < now;
+        tasks.push({ title: child.title || 'Untitled task', endLabel, overdue });
       }
     });
   });
-  return tasks;
+  return { kind: 'tasks', tasks };
 }
 
 function computeDashboardProjectRow(proj){
@@ -1324,7 +1338,7 @@ function computeDashboardProjectRow(proj){
   let statusClass = 'not-started';
   let statusLabel = 'Not Started';
   let statusKey = 'not-started';
-  let currentTasks = [];
+  let currentTasksState = { kind: 'not-started' };
 
   if(projectDataCache[proj.id]){
     const cachedData = projectDataCache[proj.id];
@@ -1334,10 +1348,10 @@ function computeDashboardProjectRow(proj){
     statusKey = statusToKey(status);
     statusClass = statusKey === 'complete' ? 'completed' : statusKey;
     statusLabel = STATUS_META[statusKey]?.label || status;
-    currentTasks = getCurrentTaskTitles(cachedData, status);
+    currentTasksState = getCurrentTasksState(cachedData, status);
   }
 
-  return { updatedStr, progress, status, statusClass, statusLabel, statusKey, currentTasks };
+  return { updatedStr, progress, status, statusClass, statusLabel, statusKey, currentTasksState };
 }
 
 // myProjects filtered by: the search box (plain project-name substring match),
@@ -1517,9 +1531,22 @@ window.addEventListener('click', function(e){
   closeDashboardFiltersPanel();
 });
 
+// Renders the explicit-state "Current Tasks" cell content: a plain status line for
+// Complete/Not Started, or one line per active task ("[Overdue · ]Title · Date").
+function buildCurrentTasksCellHtml(state){
+  if(state.kind === 'complete') return `<div class="dashboard-current-task-empty">No active tasks — Complete</div>`;
+  if(state.kind === 'not-started') return `<div class="dashboard-current-task-empty">Not started</div>`;
+  if(state.tasks.length === 0) return `<div class="dashboard-current-task-empty">No active tasks</div>`;
+  return state.tasks.map(t => {
+    const overduePrefix = t.overdue ? `<span class="dashboard-task-overdue">Overdue</span> · ` : '';
+    const dateSuffix = t.endLabel ? ` · ${escapeHtml(t.endLabel)}` : '';
+    return `<div>${overduePrefix}<strong>${escapeHtml(t.title)}</strong>${dateSuffix}</div>`;
+  }).join('');
+}
+
 function buildDashboardTableRowHtml(proj){
-  const { updatedStr, progress, statusClass, statusLabel, currentTasks } = computeDashboardProjectRow(proj);
-  const currentTaskHtml = currentTasks.map(t => `<div><strong>${escapeHtml(t.title)}</strong> (${escapeHtml(t.assignedTo)})${t.endLabel ? ' – ' + escapeHtml(t.endLabel) : ''}</div>`).join('');
+  const { updatedStr, progress, statusClass, statusLabel, currentTasksState } = computeDashboardProjectRow(proj);
+  const currentTaskHtml = buildCurrentTasksCellHtml(currentTasksState);
   return `
     <div class="dashboard-table-row" role="button" tabindex="0" aria-label="Open ${escapeAttr(proj.title)} project" onclick="openProject('${escapeAttr(proj.id)}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openProject('${escapeAttr(proj.id)}');}">
       <div onclick="event.stopPropagation();"><input type="checkbox" ${selectedProjects.has(proj.id) ? 'checked' : ''} onclick="toggleProjectSelect('${escapeAttr(proj.id)}')"></div>
@@ -1704,7 +1731,7 @@ function reRenderDashboardTable(){
       <div onclick="sortDashboardProjects('name')">Project<span class="sort-arrow" data-field="name">↑</span></div>
       <div onclick="sortDashboardProjects('status')">Status<span class="sort-arrow" data-field="status">↑</span></div>
       <div onclick="sortDashboardProjects('progress')">Progress<span class="sort-arrow" data-field="progress">↑</span></div>
-      <div style="cursor:auto;">Current Task</div>
+      <div style="cursor:auto;">Current Tasks</div>
       <div onclick="sortDashboardProjects('updated')">Updated<span class="sort-arrow" data-field="updated">↑</span></div>
       <div style="cursor:auto;">Actions</div>
     </div>
@@ -3166,7 +3193,7 @@ async function renderDashboard(){
               <div onclick="sortDashboardProjects('name')">Project<span class="sort-arrow" data-field="name">↑</span></div>
               <div onclick="sortDashboardProjects('status')">Status<span class="sort-arrow" data-field="status">↑</span></div>
               <div onclick="sortDashboardProjects('progress')">Progress<span class="sort-arrow" data-field="progress">↑</span></div>
-              <div style="cursor:auto;">Current Task</div>
+              <div style="cursor:auto;">Current Tasks</div>
               <div onclick="sortDashboardProjects('updated')">Updated<span class="sort-arrow" data-field="updated">↑</span></div>
               <div style="cursor:auto;">Actions</div>
             </div>
