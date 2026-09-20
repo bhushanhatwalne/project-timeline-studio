@@ -627,7 +627,20 @@
   .dashboard-project-arrow{display:inline-block;margin-left:6px;color:#0076BC;opacity:0;transform:translateX(-4px);transition:opacity 150ms ease,transform 150ms ease;}
   .dashboard-table-row:hover .dashboard-project-arrow,.dashboard-table-row:focus-visible .dashboard-project-arrow{opacity:1;transform:translateX(0);}
   .dashboard-project-desc{font-size:11px;color:#8a94a0;margin-top:2px;}
-  .dashboard-status{display:inline-flex;align-items:center;padding:6px 12px;border-radius:20px;font-size:11px;font-weight:600;width:fit-content;gap:0;}
+  .dashboard-status{display:inline-flex;align-items:center;padding:6px 12px;border-radius:20px;font-size:11px;font-weight:600;width:fit-content;gap:0;cursor:pointer;}
+  .dashboard-status:focus-visible{outline:2px solid #0076BC;outline-offset:2px;}
+  .dashboard-status-popover{position:fixed;display:none;background:#fff;border:1px solid #e0e6f2;border-radius:8px;box-shadow:0 8px 20px rgba(0,0,0,.12);min-width:220px;max-width:280px;padding:14px 16px;z-index:60;}
+  .dashboard-status-popover.active{display:block;}
+  html.dark-mode .dashboard-status-popover{background:#161e2e;border-color:#334155;box-shadow:0 8px 20px rgba(0,0,0,.4);}
+  .dashboard-status-popover-title{font-size:13px;font-weight:700;color:#0a2540;margin-bottom:4px;}
+  html.dark-mode .dashboard-status-popover-title{color:#f1f5f9;}
+  .dashboard-status-popover-reason{font-size:12px;color:#475569;margin-bottom:10px;}
+  html.dark-mode .dashboard-status-popover-reason{color:#cbd5e1;}
+  .dashboard-status-popover-row{font-size:12px;color:#334155;margin-bottom:4px;line-height:1.5;}
+  .dashboard-status-popover-row:last-child{margin-bottom:0;}
+  .dashboard-status-popover-row span{color:#94a3b8;margin-right:4px;}
+  html.dark-mode .dashboard-status-popover-row{color:#e2e8f0;}
+  html.dark-mode .dashboard-status-popover-row span{color:#64748b;}
   .dashboard-status.on-track{background:#D4E4F7;color:#0055a8;border:1px solid #a3c8f2;}
   .dashboard-status.at-risk{background:#FDEBD8;color:#a8570f;border:1px solid #ffd9b3;}
   .dashboard-status.completed{background:#D4F4DD;color:#0d6d42;border:1px solid #a8e6b8;}
@@ -1331,6 +1344,68 @@ function getCurrentTasksState(projectData, projectStatus){
   return { kind: 'tasks', tasks };
 }
 
+function fmtLongDate(d){
+  const months=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  return months[d.getMonth()] + " " + d.getDate() + ", " + d.getFullYear();
+}
+
+// Powers the status badge's "why is this the status?" popover. Mirrors the exact
+// reasoning calculateProjectStatus itself applies, so the explanation can never
+// drift out of sync with the badge it's explaining:
+//   Not Started -> no task has started yet
+//   Complete    -> every task is done, so there's no single driving task
+//   On Hold     -> the started task with the LATEST scheduled start date is On
+//                  Hold (calculateProjectStatus's own On Hold rule) - that exact
+//                  task is the one cited
+//   otherwise   -> among tasks whose own status matches the project's, the one
+//                  with the nearest due date (i.e. the most urgent/current one)
+function getProjectStatusExplanation(projectData, projectStatus){
+  const REASONS = {
+    'Not Started': 'No task has started',
+    'Complete': 'All tasks are complete',
+    'On Hold': 'Latest active task is On Hold',
+    'Off Track': 'Current task is Off Track',
+    'At Risk': 'Current task is At Risk',
+    'On Track': 'Current task is On Track'
+  };
+  const reason = REASONS[projectStatus] || '';
+
+  if(!projectData || !projectData.swimlanes || projectStatus === 'Complete' || projectStatus === 'Not Started'){
+    return { reason, derivedFrom: null };
+  }
+
+  const allTasks = [];
+  projectData.swimlanes.forEach(swimlane => (swimlane.children || []).forEach(child => allTasks.push(child)));
+
+  let driver = null;
+  if(projectStatus === 'On Hold'){
+    const started = allTasks
+      .map(task => ({ task, status: calculateTaskStatus(task), start: startOfLocalDay(task.start) }))
+      .filter(t => t.status !== 'Not Started' && t.start)
+      .sort((a, b) => a.start - b.start);
+    if(started.length > 0 && started[started.length - 1].status === 'On Hold'){
+      driver = started[started.length - 1].task;
+    }
+  } else {
+    const matching = allTasks
+      .filter(task => calculateTaskStatus(task) === projectStatus)
+      .sort((a, b) => parseD(a.end) - parseD(b.end));
+    driver = matching[0] || null;
+  }
+
+  if(!driver) return { reason, derivedFrom: null };
+
+  const end = parseD(driver.end);
+  return {
+    reason,
+    derivedFrom: {
+      title: driver.title || 'Untitled task',
+      statusLabel: calculateTaskStatus(driver),
+      endLabel: driver.end && !isNaN(end.getTime()) ? fmtLongDate(end) : '—'
+    }
+  };
+}
+
 function computeDashboardProjectRow(proj){
   const updated = new Date(proj.updatedAt);
   const month = updated.toLocaleString('default', { month: 'short' });
@@ -1344,6 +1419,7 @@ function computeDashboardProjectRow(proj){
   let statusLabel = 'Not Started';
   let statusKey = 'not-started';
   let currentTasksState = { kind: 'not-started' };
+  let statusExplanation = { reason: 'No task has started', derivedFrom: null };
 
   if(projectDataCache[proj.id]){
     const cachedData = projectDataCache[proj.id];
@@ -1354,9 +1430,10 @@ function computeDashboardProjectRow(proj){
     statusClass = statusKey === 'complete' ? 'completed' : statusKey;
     statusLabel = STATUS_META[statusKey]?.label || status;
     currentTasksState = getCurrentTasksState(cachedData, status);
+    statusExplanation = getProjectStatusExplanation(cachedData, status);
   }
 
-  return { updatedStr, progress, status, statusClass, statusLabel, statusKey, currentTasksState };
+  return { updatedStr, progress, status, statusClass, statusLabel, statusKey, currentTasksState, statusExplanation };
 }
 
 // myProjects filtered by: the search box (plain project-name substring match),
@@ -1549,16 +1626,39 @@ function buildCurrentTasksCellHtml(state){
   }).join('');
 }
 
+// Content for the status badge's "why is this the status?" popover - a title, the
+// one-line reasoning, and (when there's a specific driving task) the task itself,
+// its own activity status, its due date, and when the project data last changed.
+function buildStatusPopoverHtml(proj, statusLabel, explanation){
+  const { reason, derivedFrom } = explanation;
+  const lastChanged = fmtLongDate(new Date(proj.updatedAt));
+  const driverHtml = derivedFrom ? `
+    <div class="dashboard-status-popover-row"><span>Derived from:</span> <strong>${escapeHtml(derivedFrom.title)}</strong></div>
+    <div class="dashboard-status-popover-row"><span>Activity status:</span> ${escapeHtml(derivedFrom.statusLabel)}</div>
+    <div class="dashboard-status-popover-row"><span>Due:</span> ${escapeHtml(derivedFrom.endLabel)}</div>
+  ` : '';
+  return `
+    <div class="dashboard-status-popover-title">${escapeHtml(statusLabel)}</div>
+    <div class="dashboard-status-popover-reason">${escapeHtml(reason)}</div>
+    ${driverHtml}
+    <div class="dashboard-status-popover-row"><span>Last changed:</span> ${escapeHtml(lastChanged)}</div>
+  `;
+}
+
 function buildDashboardTableRowHtml(proj){
-  const { updatedStr, progress, statusClass, statusLabel, currentTasksState } = computeDashboardProjectRow(proj);
+  const { updatedStr, progress, statusClass, statusLabel, currentTasksState, statusExplanation } = computeDashboardProjectRow(proj);
   const currentTaskHtml = buildCurrentTasksCellHtml(currentTasksState);
+  const statusPopoverHtml = buildStatusPopoverHtml(proj, statusLabel, statusExplanation);
   return `
     <div class="dashboard-table-row" role="button" tabindex="0" aria-label="Open ${escapeAttr(proj.title)} project" onclick="openProject('${escapeAttr(proj.id)}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openProject('${escapeAttr(proj.id)}');}">
       <div onclick="event.stopPropagation();"><input type="checkbox" ${selectedProjects.has(proj.id) ? 'checked' : ''} onclick="toggleProjectSelect('${escapeAttr(proj.id)}')"></div>
       <div>
         <div class="dashboard-project-name">${escapeHtml(proj.title)}<span class="dashboard-project-arrow">→</span></div>
       </div>
-      <div><span class="dashboard-status ${statusClass}">${statusLabel}</span></div>
+      <div>
+        <span class="dashboard-status ${statusClass}" role="button" tabindex="0" title="Why this status?" onclick="toggleStatusExplanation(event, '${escapeAttr(proj.id)}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleStatusExplanation(event, '${escapeAttr(proj.id)}');}">${statusLabel}</span>
+        <div class="dashboard-status-popover" id="status-explain-${escapeAttr(proj.id)}" onclick="event.stopPropagation();">${statusPopoverHtml}</div>
+      </div>
       <div>
         <div class="dashboard-progress">
           <div class="dashboard-progress-bar">
@@ -2942,6 +3042,28 @@ function toggleProjectMenu(event, projectId){
 window.addEventListener('click', function(){
   const dropdowns = document.querySelectorAll('.dashboard-project-dropdown.active');
   dropdowns.forEach(dropdown => dropdown.classList.remove('active'));
+});
+
+function toggleStatusExplanation(event, projectId){
+  event.stopPropagation();
+  const popover = document.getElementById(`status-explain-${projectId}`);
+  document.querySelectorAll('.dashboard-status-popover.active').forEach(p => {
+    if(p.id !== `status-explain-${projectId}`) p.classList.remove('active');
+  });
+
+  if(popover){
+    popover.classList.toggle('active');
+    if(popover.classList.contains('active')){
+      const badge = event.target.closest('.dashboard-status');
+      const rect = badge.getBoundingClientRect();
+      popover.style.top = (rect.bottom + 6) + 'px';
+      popover.style.left = rect.left + 'px';
+    }
+  }
+}
+
+window.addEventListener('click', function(){
+  document.querySelectorAll('.dashboard-status-popover.active').forEach(p => p.classList.remove('active'));
 });
 
 function openEditProjectModal(event, projectId, projectName){
