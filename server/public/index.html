@@ -585,6 +585,10 @@
   html.dark-mode .dashboard-filter-chip{background:rgba(0,118,188,.18);border-color:rgba(0,118,188,.4);color:#7cc4f0;}
   .dashboard-filter-chip button{background:none;border:none;color:inherit;cursor:pointer;font-size:14px;line-height:1;padding:0 2px;font-weight:700;}
   .dashboard-filter-chip button:hover{opacity:.7;}
+  .dashboard-filter-chips-clear{background:none;border:none;color:#64748b;font-size:12px;font-weight:600;cursor:pointer;padding:5px 4px;align-self:center;}
+  .dashboard-filter-chips-clear:hover{color:#0076BC;text-decoration:underline;}
+  html.dark-mode .dashboard-filter-chips-clear{color:#94a3b8;}
+  html.dark-mode .dashboard-filter-chips-clear:hover{color:#0099D8;}
   .theme-switch{border:none;background:transparent;padding:0;margin:0;cursor:pointer;display:inline-flex;align-items:center;}
   .theme-switch-track{position:relative;width:50px;height:26px;border-radius:999px;background:#cbd5e1;transition:background 200ms ease;}
   html.dark-mode .theme-switch-track{background:var(--accent);}
@@ -1369,7 +1373,8 @@ function buildDashboardFilterChipsHtml(){
     chips.push({ kind: 'status', label: `Status: ${labels.join(', ')}` });
   }
   if(chips.length === 0) return '';
-  return chips.map(c => `<span class="dashboard-filter-chip">${escapeHtml(c.label)}<button type="button" aria-label="Remove ${escapeAttr(c.label)} filter" onclick="removeDashboardFilterChip('${c.kind}')">×</button></span>`).join('');
+  const chipsHtml = chips.map(c => `<span class="dashboard-filter-chip">${escapeHtml(c.label)}<button type="button" aria-label="Remove ${escapeAttr(c.label)} filter" onclick="removeDashboardFilterChip('${c.kind}')">×</button></span>`).join('');
+  return `${chipsHtml}<button type="button" class="dashboard-filter-chips-clear" onclick="clearDashboardFilters()">Clear all</button>`;
 }
 
 function dashboardFiltersBtnInnerHtml(){
@@ -1575,9 +1580,22 @@ const DASHBOARD_STATUS_FILTER_LABELS = {
   'on-hold': 'On Hold Projects',
   'complete': 'Complete Projects'
 };
+// "All Projects (N)" only when nothing is actually filtering the table. A stat tile
+// click keeps its specific label ("On Track Projects"); search text or the advanced
+// Filters panel (with no tile active) get the generic "Projects (shown of total)" so
+// the heading never claims to show "All" when it isn't.
 function dashboardSectionTitle(){
-  const label = dashboardStatusFilter ? (DASHBOARD_STATUS_FILTER_LABELS[dashboardStatusFilter] || 'All Projects') : 'All Projects';
-  return `${label} (${getFilteredDashboardProjects().length})`;
+  const total = myProjects.length;
+  const filteredCount = getFilteredDashboardProjects().length;
+
+  if(dashboardStatusFilter){
+    const label = DASHBOARD_STATUS_FILTER_LABELS[dashboardStatusFilter] || 'Projects';
+    return `${label} (${filteredCount})`;
+  }
+  if(dashboardSearchQuery.trim() || hasActiveDashboardFilters()){
+    return `Projects (${filteredCount} of ${total})`;
+  }
+  return `All Projects (${total})`;
 }
 
 // Keeps the stat tiles' active/pressed state in sync with dashboardStatusFilter,
