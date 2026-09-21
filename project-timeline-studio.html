@@ -1350,8 +1350,7 @@ function showConfirmModal(message, onConfirm, onCancel){
 //   { kind: 'complete' }             -> every task/milestone (swimlane children only,
 //                                        phases excluded - same scope calculateProjectStatus
 //                                        uses) is Complete, or there are none at all
-//   { kind: 'not-started', task }    -> project hasn't started yet; task is still the
-//                                        earliest-due activity, shown with a "Next" prefix
+//   { kind: 'not-started' }          -> project hasn't started yet
 //   { kind: 'task', task }           -> the single most urgent activity: the earliest due
 //                                        date wins, and an overdue activity (due date already
 //                                        elapsed) always sorts ahead of an upcoming one since
@@ -1361,6 +1360,7 @@ function showConfirmModal(message, onConfirm, onCancel){
 //                                        swimlane/child (schedule) order
 // `task` is { title, assignedTo, endLabel, overdue }.
 function getNextDueTaskState(projectData, projectStatus){
+  if(projectStatus === 'Not Started') return { kind: 'not-started' };
   if(!projectData || !projectData.swimlanes) return { kind: 'complete' };
 
   const now = new Date();
@@ -1383,7 +1383,7 @@ function getNextDueTaskState(projectData, projectStatus){
   });
 
   if(!best) return { kind: 'complete' };
-  return { kind: projectStatus === 'Not Started' ? 'not-started' : 'task', task: best };
+  return { kind: 'task', task: best };
 }
 
 function fmtLongDate(d){
@@ -1460,7 +1460,7 @@ function computeDashboardProjectRow(proj){
   let statusClass = 'not-started';
   let statusLabel = 'Not Started';
   let statusKey = 'not-started';
-  let nextDueTaskState = { kind: 'complete' };
+  let nextDueTaskState = { kind: 'not-started' };
   let statusExplanation = { reason: 'No task has started', derivedFrom: null };
 
   if(projectDataCache[proj.id]){
@@ -1655,15 +1655,13 @@ window.addEventListener('click', function(e){
   closeDashboardFiltersPanel();
 });
 
-// Renders the explicit-state "Next Due Task" cell content: a plain status line when
-// there's no pending activity, otherwise exactly one line -
-// "[Overdue · |Next · ]Title · Owner · Date".
+// Renders the explicit-state "Next Due Task" cell content: a plain status line for
+// Complete/Not Started, otherwise exactly one line - "[Overdue · ]Title · Owner · Date".
 function buildNextDueTaskCellHtml(state){
   if(state.kind === 'complete') return `<div class="dashboard-current-task-empty">No pending tasks — Complete</div>`;
+  if(state.kind === 'not-started') return `<div class="dashboard-current-task-empty">Not started</div>`;
   const t = state.task;
-  const prefix = state.kind === 'not-started' ? 'Next · '
-    : t.overdue ? `<span class="dashboard-task-overdue">Overdue</span> · `
-    : '';
+  const prefix = t.overdue ? `<span class="dashboard-task-overdue">Overdue</span> · ` : '';
   const owner = escapeHtml(t.assignedTo || 'Unassigned');
   return `<div>${prefix}<strong>${escapeHtml(t.title)}</strong> · ${owner} · ${escapeHtml(t.endLabel)}</div>`;
 }
