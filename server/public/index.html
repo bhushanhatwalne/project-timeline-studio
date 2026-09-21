@@ -57,6 +57,7 @@
     --dm-header:#0a1628;
     --dm-topbar:#0d1424;
     --dm-st-notstarted-track:#334155;
+    --dm-accent-soft:#0d3a56;
   }
 
   html.dark-mode {
@@ -68,6 +69,11 @@
     --line: var(--dm-line);
     --line-strong: var(--dm-line-strong);
     --st-notstarted-track: var(--dm-st-notstarted-track);
+    /* --accent-soft is a light-blue highlight (e.g. the Data-tab title input's
+       focus background) - without a dark override it stayed light-blue while the
+       text on top of it switched to --dm-ink's near-white, making edited text
+       unreadable. */
+    --accent-soft: var(--dm-accent-soft);
   }
   *{box-sizing:border-box;}
   html,body{margin:0;padding:0;background:var(--paper);color:var(--ink);font-family:'Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;}
@@ -720,6 +726,23 @@
 <script>
 /* ---------------- state ---------------- */
 let uid = 100;
+
+// `uid` only ever counts up within a single page session, but a project's rows can
+// carry ids assigned in an earlier session (or a restored version). Without this,
+// loading a project whose rows already exceed the fresh `uid = 100` baseline lets a
+// later duplicate/add reuse an id that's still in use elsewhere in the tree - the
+// clone then silently shares identity with an existing row (same id, different
+// swimlane position), so edits to one can appear to hit the other instead. Call
+// this right after replacing `swimlanes` wholesale from the server/a version.
+function resyncUidFromSwimlanes(){
+  let maxId = uid;
+  swimlanes.forEach(sl => {
+    maxId = Math.max(maxId, sl.id || 0);
+    if(sl.phase) maxId = Math.max(maxId, sl.phase.id || 0);
+    (sl.children || []).forEach(c => { maxId = Math.max(maxId, c.id || 0); });
+  });
+  uid = maxId;
+}
 let projectTitle = "Untitled Project";
 let activeTab = "data"; // data | timeline | versions | account
 let dataEditMode = false; // Data tab opens read-only; the Edit toggle in its toolbar turns this on
@@ -1117,8 +1140,18 @@ function onFieldChange(slId, rowId, isPhase, field, val){
             row[field] = val;
             console.log('[FIELD_CHANGE] Milestone: corrected end date to match start date');
           }
+        } else if(field === 'start'){
+          // For tasks/phases: shift the end date by the same number of days the
+          // start date moved, so the task's duration stays fixed instead of
+          // silently shrinking or growing.
+          const oldStart = new Date(row.start + 'T00:00:00');
+          const durationMs = end.getTime() - oldStart.getTime();
+          const newEnd = new Date(start.getTime() + durationMs);
+          row.start = val;
+          row.end = newEnd.getFullYear() + "-" + String(newEnd.getMonth() + 1).padStart(2, "0") + "-" + String(newEnd.getDate()).padStart(2, "0");
+          console.log('[FIELD_CHANGE] Shifted end date to preserve duration ->', row.end);
         } else {
-          // For tasks: end date must be >= start date
+          // field === 'end': end date must be >= start date
           if(end < start){
             alert('End date must be on or after the start date');
             console.log('[FIELD_CHANGE] Invalid: end date before start date');
@@ -2355,6 +2388,7 @@ async function openProject(projectId){
       }
     }
 
+    resyncUidFromSwimlanes();
     enterTab(swimlanes.length > 0 ? "timeline" : "data");
     render();
   } else {
@@ -3906,6 +3940,7 @@ async function loadVersionDirect(id){
     pushHistory();
     swimlanes = data.swimlanes;
     projectTitle = data.projectTitle;
+    resyncUidFromSwimlanes();
     versionMenuKey = null;
     enterTab("data");
     render();
