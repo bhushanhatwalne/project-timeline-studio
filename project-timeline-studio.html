@@ -1345,36 +1345,45 @@ function showConfirmModal(message, onConfirm, onCancel){
 };
 
 // Computed display fields (status/progress/formatted date) for a single dashboard row.
-// State for the "Current Tasks" column, always one explicit state rather than a
-// possibly-empty list, so a viewer never has to guess whether a blank cell means
-// "no data" or "nothing to show":
-//   { kind: 'complete' }               -> project is Complete
-//   { kind: 'not-started' }            -> project hasn't started
-//   { kind: 'tasks', tasks: [...] }    -> one row per task whose own derived status
-//                                          matches the project's overall status
-//                                          (swimlane children only, phases excluded -
-//                                          same scope calculateProjectStatus uses),
-//                                          each flagged overdue once its end date has
-//                                          fully elapsed.
-function getCurrentTasksState(projectData, projectStatus){
-  if(projectStatus === 'Complete') return { kind: 'complete' };
-  if(projectStatus === 'Not Started') return { kind: 'not-started' };
-  if(!projectData || !projectData.swimlanes) return { kind: 'tasks', tasks: [] };
+// State for the "Next Due Task" column: exactly one task/milestone per project, never
+// a list, so a viewer can scan the column at a glance without weighing several rows:
+//   { kind: 'complete' }             -> every task/milestone (swimlane children only,
+//                                        phases excluded - same scope calculateProjectStatus
+//                                        uses) is Complete, or there are none at all
+//   { kind: 'not-started', task }    -> project hasn't started yet; task is still the
+//                                        earliest-due activity, shown with a "Next" prefix
+//   { kind: 'task', task }           -> the single most urgent activity: the earliest due
+//                                        date wins, and an overdue activity (due date already
+//                                        elapsed) always sorts ahead of an upcoming one since
+//                                        its end date is necessarily earlier than today, which
+//                                        is in turn earlier than any upcoming end date; ties on
+//                                        due date keep whichever activity comes first in
+//                                        swimlane/child (schedule) order
+// `task` is { title, assignedTo, endLabel, overdue }.
+function getNextDueTaskState(projectData, projectStatus){
+  if(!projectData || !projectData.swimlanes) return { kind: 'complete' };
 
   const now = new Date();
-  const tasks = [];
+  let best = null;
   projectData.swimlanes.forEach(swimlane => {
     (swimlane.children || []).forEach(child => {
-      if(calculateTaskStatus(child) === projectStatus){
-        const end = parseD(child.end);
-        const endLabel = child.end && !isNaN(end.getTime()) ? fmtShort(end) : '';
-        const endOfDay = endOfLocalDay(child.end);
-        const overdue = !!endOfDay && endOfDay < now;
-        tasks.push({ title: child.title || 'Untitled task', endLabel, overdue });
-      }
+      if(calculateTaskStatus(child) === 'Complete') return;
+      const end = parseD(child.end);
+      if(!child.end || isNaN(end.getTime())) return;
+      if(best && end >= best.end) return;
+      const endOfDay = endOfLocalDay(child.end);
+      best = {
+        title: child.title || 'Untitled task',
+        assignedTo: child.assignedTo || '',
+        end,
+        endLabel: fmtShort(end),
+        overdue: !!endOfDay && endOfDay < now
+      };
     });
   });
-  return { kind: 'tasks', tasks };
+
+  if(!best) return { kind: 'complete' };
+  return { kind: projectStatus === 'Not Started' ? 'not-started' : 'task', task: best };
 }
 
 function fmtLongDate(d){
@@ -1451,7 +1460,7 @@ function computeDashboardProjectRow(proj){
   let statusClass = 'not-started';
   let statusLabel = 'Not Started';
   let statusKey = 'not-started';
-  let currentTasksState = { kind: 'not-started' };
+  let nextDueTaskState = { kind: 'complete' };
   let statusExplanation = { reason: 'No task has started', derivedFrom: null };
 
   if(projectDataCache[proj.id]){
@@ -1462,11 +1471,11 @@ function computeDashboardProjectRow(proj){
     statusKey = statusToKey(status);
     statusClass = statusKey === 'complete' ? 'completed' : statusKey;
     statusLabel = STATUS_META[statusKey]?.label || status;
-    currentTasksState = getCurrentTasksState(cachedData, status);
+    nextDueTaskState = getNextDueTaskState(cachedData, status);
     statusExplanation = getProjectStatusExplanation(cachedData, status);
   }
 
-  return { updatedStr, progress, status, statusClass, statusLabel, statusKey, currentTasksState, statusExplanation };
+  return { updatedStr, progress, status, statusClass, statusLabel, statusKey, nextDueTaskState, statusExplanation };
 }
 
 // myProjects filtered by: the search box (plain project-name substring match),
@@ -1646,17 +1655,17 @@ window.addEventListener('click', function(e){
   closeDashboardFiltersPanel();
 });
 
-// Renders the explicit-state "Current Tasks" cell content: a plain status line for
-// Complete/Not Started, or one line per active task ("[Overdue · ]Title · Date").
-function buildCurrentTasksCellHtml(state){
-  if(state.kind === 'complete') return `<div class="dashboard-current-task-empty">No active tasks — Complete</div>`;
-  if(state.kind === 'not-started') return `<div class="dashboard-current-task-empty">Not started</div>`;
-  if(state.tasks.length === 0) return `<div class="dashboard-current-task-empty">No active tasks</div>`;
-  return state.tasks.map(t => {
-    const overduePrefix = t.overdue ? `<span class="dashboard-task-overdue">Overdue</span> · ` : '';
-    const dateSuffix = t.endLabel ? ` · ${escapeHtml(t.endLabel)}` : '';
-    return `<div>${overduePrefix}<strong>${escapeHtml(t.title)}</strong>${dateSuffix}</div>`;
-  }).join('');
+// Renders the explicit-state "Next Due Task" cell content: a plain status line when
+// there's no pending activity, otherwise exactly one line -
+// "[Overdue · |Next · ]Title · Owner · Date".
+function buildNextDueTaskCellHtml(state){
+  if(state.kind === 'complete') return `<div class="dashboard-current-task-empty">No pending tasks — Complete</div>`;
+  const t = state.task;
+  const prefix = state.kind === 'not-started' ? 'Next · '
+    : t.overdue ? `<span class="dashboard-task-overdue">Overdue</span> · `
+    : '';
+  const owner = escapeHtml(t.assignedTo || 'Unassigned');
+  return `<div>${prefix}<strong>${escapeHtml(t.title)}</strong> · ${owner} · ${escapeHtml(t.endLabel)}</div>`;
 }
 
 // Content for the status badge's "why is this the status?" popover - a title, the
@@ -1679,8 +1688,8 @@ function buildStatusPopoverHtml(proj, statusLabel, explanation){
 }
 
 function buildDashboardTableRowHtml(proj){
-  const { updatedStr, progress, statusClass, statusLabel, currentTasksState, statusExplanation } = computeDashboardProjectRow(proj);
-  const currentTaskHtml = buildCurrentTasksCellHtml(currentTasksState);
+  const { updatedStr, progress, statusClass, statusLabel, nextDueTaskState, statusExplanation } = computeDashboardProjectRow(proj);
+  const currentTaskHtml = buildNextDueTaskCellHtml(nextDueTaskState);
   const statusPopoverHtml = buildStatusPopoverHtml(proj, statusLabel, statusExplanation);
   return `
     <div class="dashboard-table-row" role="button" tabindex="0" aria-label="Open ${escapeAttr(proj.title)} project" onclick="openProject('${escapeAttr(proj.id)}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openProject('${escapeAttr(proj.id)}');}">
@@ -1878,7 +1887,7 @@ function reRenderDashboardTable(){
       ${sortHeaderHtml('name', 'Project')}
       ${sortHeaderHtml('status', 'Status')}
       ${sortHeaderHtml('progress', 'Progress')}
-      <div style="cursor:auto;">Current Tasks</div>
+      <div style="cursor:auto;">Next Due Task</div>
       ${sortHeaderHtml('updated', 'Updated')}
       <div style="cursor:auto;">Actions</div>
     </div>
@@ -3349,7 +3358,7 @@ async function renderDashboard(){
               ${sortHeaderHtml('name', 'Project')}
               ${sortHeaderHtml('status', 'Status')}
               ${sortHeaderHtml('progress', 'Progress')}
-              <div style="cursor:auto;">Current Tasks</div>
+              <div style="cursor:auto;">Next Due Task</div>
               ${sortHeaderHtml('updated', 'Updated')}
               <div style="cursor:auto;">Actions</div>
             </div>
